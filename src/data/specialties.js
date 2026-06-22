@@ -1,0 +1,23 @@
+export const specialties = [
+  { name: 'Cardiologia', services: ['Consulta cardiologica', 'Control de presion arterial', 'Evaluacion cardiovascular', 'Seguimiento de factores de riesgo'] },
+  { name: 'Clinica medica', services: ['Consulta clinica', 'Control general de salud', 'Seguimiento de enfermedades cronicas', 'Apto medico'] },
+  { name: 'Pediatria', services: ['Control pediatrico', 'Seguimiento de crecimiento', 'Consulta por enfermedad frecuente', 'Orientacion familiar'] },
+  { name: 'Ginecologia', services: ['Consulta ginecologica', 'Control anual', 'Orientacion anticonceptiva', 'Seguimiento ginecologico'] },
+  { name: 'Traumatologia', services: ['Consulta traumatologica', 'Dolor articular', 'Lesiones deportivas', 'Control postratamiento'] },
+  { name: 'Dermatologia', services: ['Consulta dermatologica', 'Control de lunares', 'Acne', 'Dermatitis y alergias cutaneas'] },
+  { name: 'Odontologia', services: ['Consulta odontologica', 'Limpieza dental', 'Control bucal', 'Tratamientos preventivos'] },
+  { name: 'Oftalmologia', services: ['Consulta oftalmologica', 'Control visual', 'Receta de lentes', 'Seguimiento ocular'] },
+  { name: 'Neurologia', services: ['Consulta neurologica', 'Cefaleas', 'Mareos y vertigo', 'Seguimiento neurologico'] },
+  { name: 'Nutricion', services: ['Consulta nutricional', 'Plan alimentario personalizado', 'Educacion alimentaria', 'Seguimiento nutricional'] },
+  { name: 'Psicologia', services: ['Consulta psicologica', 'Orientacion terapeutica', 'Acompanamiento emocional', 'Espacio de escucha'] },
+  { name: 'Kinesiologia', services: ['Evaluacion kinesica', 'Rehabilitacion funcional', 'Tratamiento del dolor', 'Ejercicios terapeuticos'] },
+  { name: 'Urologia', services: ['Consulta urologica', 'Control prostatico', 'Infecciones urinarias', 'Seguimiento urologico'] },
+  { name: 'Gastroenterologia', services: ['Consulta gastroenterologica', 'Dolor abdominal', 'Reflujo y acidez', 'Seguimiento digestivo'] },
+  { name: 'Neumonologia', services: ['Consulta neumonologica', 'Asma y EPOC', 'Tos persistente', 'Seguimiento respiratorio'] },
+  { name: 'Endocrinologia', services: ['Consulta endocrinologica', 'Diabetes', 'Tiroides', 'Seguimiento metabolico'] },
+  { name: 'Reumatologia', services: ['Consulta reumatologica', 'Dolor articular', 'Artritis', 'Seguimiento reumatologico'] },
+  { name: 'Otorrinolaringologia', services: ['Consulta ORL', 'Oido, nariz y garganta', 'Rinitis y sinusitis', 'Control auditivo inicial'] },
+  { name: 'Diagnostico por imagenes', services: ['Turnos para estudios', 'Ecografias generales', 'Informes medicos', 'Orientacion administrativa'] },
+  { name: 'Laboratorio', services: ['Analisis clinicos', 'Extracciones', 'Controles de rutina', 'Resultados de laboratorio'] },
+  { name: 'Otra', services: [] }
+];

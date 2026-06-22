@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flyer Clinico Prompt Builder</title>
+    <meta name="description" content="Generador local de prompts para disenar flyers clinicos con ChatGPT.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%238b5cf6'/%3E%3Cpath d='M31 15h6v14h14v6H37v14h-6V35H17v-6h14z' fill='white'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="assets/css/styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Generador local para ChatGPT</p>
+        <h1>Flyer Clinico Prompt Builder</h1>
+        <p class="lead">Completa los datos del profesional, la clinica y el estilo visual para generar un prompt listo para pegar en la conversacion anclada "Diseno de flyer clinico".</p>
+      </div>
+      <p class="privacy-note">Todo se procesa en tu navegador. Las imagenes seleccionadas no se suben a internet. El prompt generado debe copiarse manualmente en ChatGPT.</p>
+    </header>
+
+    <main class="app-shell">
+      <section class="workspace" aria-label="Formulario de configuracion">
+        <nav class="step-nav" aria-label="Secciones del formulario">
+          <button class="step-button is-active" type="button" data-step-target="clinica">Clinica</button>
+          <button class="step-button" type="button" data-step-target="medico">Medico</button>
+          <button class="step-button" type="button" data-step-target="prestaciones">Prestaciones</button>
+          <button class="step-button" type="button" data-step-target="atencion">Atencion</button>
+          <button class="step-button" type="button" data-step-target="diseno">Diseno</button>
+          <button class="step-button" type="button" data-step-target="imagenes">Imagenes</button>
+          <button class="step-button" type="button" data-step-target="observaciones">Avanzado</button>
+          <button class="step-button" type="button" data-step-target="resultado">Resultado</button>
+        </nav>
+
+        <div class="progress-wrap" aria-label="Progreso de campos recomendados">
+          <div class="progress-meta">
+            <span>Campos recomendados completos</span>
+            <strong id="progressText">0%</strong>
+          </div>
+          <div class="progress-bar" aria-hidden="true">
+            <span id="progressBar"></span>
+          </div>
+        </div>
+
+        <form id="promptForm" novalidate>
+          <section class="form-section is-current" id="clinica" data-step="clinica">
+            <div class="section-heading">
+              <span>1</span>
+              <div>
+                <h2>Datos de clinica</h2>
+                <p>Informacion institucional y de contacto para el flyer.</p>
+              </div>
+            </div>
+            <div id="clinicFields" class="field-grid"></div>
+          </section>
+
+          <section class="form-section" id="medico" data-step="medico">
+            <div class="section-heading">
+              <span>2</span>
+              <div>
+                <h2>Datos del medico</h2>
+                <p>Identidad profesional y datos visibles del especialista.</p>
+              </div>
+            </div>
+            <div id="doctorFields" class="field-grid"></div>
+          </section>
+
+          <section class="form-section" id="prestaciones" data-step="prestaciones">
+            <div class="section-heading">
+              <span>3</span>
+              <div>
+                <h2>Especialidad y prestaciones</h2>
+                <p>Servicios principales, sugerencias prudentes y alcance autorizado.</p>
+              </div>
+            </div>
+            <div id="serviceFields" class="field-grid"></div>
+            <div class="list-editor">
+              <div class="list-title">
+                <label for="newService">Lista editable de prestaciones</label>
+                <button class="secondary-button" type="button" id="addServiceButton">Agregar prestacion</button>
+              </div>
+              <div class="inline-entry">
+                <input id="newService" type="text" placeholder="Ej: Consulta cardiologica">
+              </div>
+              <ul id="servicesList" class="editable-list"></ul>
+            </div>
+          </section>
+
+          <section class="form-section" id="atencion" data-step="atencion">
+            <div class="section-heading">
+              <span>4</span>
+              <div>
+                <h2>Atencion</h2>
+                <p>Dias, horarios, cobertura y modalidad de atencion.</p>
+              </div>
+            </div>
+            <div id="careFields" class="field-grid"></div>
+          </section>
+
+          <section class="form-section" id="diseno" data-step="diseno">
+            <div class="section-heading">
+              <span>5</span>
+              <div>
+                <h2>Diseno visual</h2>
+                <p>Formato, colores, estilo y recursos graficos esperados.</p>
+              </div>
+            </div>
+            <div id="designFields" class="field-grid"></div>
+          </section>
+
+          <section class="form-section" id="imagenes" data-step="imagenes">
+            <div class="section-heading">
+              <span>6</span>
+              <div>
+                <h2>Imagenes</h2>
+                <p>Seleccion local para recordar que adjuntos enviar a ChatGPT.</p>
+              </div>
+            </div>
+            <div id="imageFields" class="field-grid"></div>
+            <p class="warning-text">Estas imagenes no se suben ni se guardan en internet. Deberas adjuntarlas manualmente en ChatGPT antes de pegar el prompt.</p>
+            <ul id="imageList" class="image-list"></ul>
+          </section>
+
+          <section class="form-section" id="observaciones" data-step="observaciones">
+            <div class="section-heading">
+              <span>7</span>
+              <div>
+                <h2>Observaciones avanzadas</h2>
+                <p>Preferencias finas, frases a evitar e instrucciones libres.</p>
+              </div>
+            </div>
+            <div id="advancedFields" class="field-grid"></div>
+          </section>
+
+          <section class="form-section" id="resultado" data-step="resultado">
+            <div class="section-heading">
+              <span>8</span>
+              <div>
+                <h2>Resultado final</h2>
+                <p>Prompt completo, checklist y acciones de exportacion.</p>
+              </div>
+            </div>
+            <div class="result-grid">
+              <div>
+                <h3>Checklist</h3>
+                <ul id="checklist" class="checklist"></ul>
+                <h3>Advertencias</h3>
+                <ul id="warnings" class="warnings"></ul>
+              </div>
+              <div>
+                <label for="promptOutput">Prompt generado</label>
+                <textarea id="promptOutput" class="prompt-output" readonly></textarea>
+              </div>
+            </div>
+          </section>
+        </form>
+      </section>
+
+      <aside class="side-panel" aria-label="Resumen y acciones">
+        <div class="panel-block">
+          <h2>Resumen</h2>
+          <div id="summaryPanel" class="summary-panel"></div>
+        </div>
+        <div class="panel-block">
+          <h2>Acciones</h2>
+          <div class="action-grid">
+            <button class="primary-button" type="button" id="copyPromptButton">Copiar prompt</button>
+            <button class="secondary-button" type="button" id="downloadPromptButton">Descargar TXT</button>
+            <button class="secondary-button" type="button" id="saveTemplateButton">Guardar plantilla</button>
+            <button class="secondary-button" type="button" id="loadTemplateButton">Cargar plantilla</button>
+            <button class="secondary-button" type="button" id="exportJsonButton">Exportar JSON</button>
+            <label class="file-action">
+              Importar JSON
+              <input type="file" id="importJsonInput" accept="application/json,.json">
+            </label>
+            <button class="danger-button" type="button" id="clearButton">Limpiar</button>
+          </div>
+          <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
