@@ -9,13 +9,43 @@
     <link rel="stylesheet" href="assets/css/styles.css">
   </head>
   <body>
+    <div class="page-glow page-glow-one" aria-hidden="true"></div>
+    <div class="page-glow page-glow-two" aria-hidden="true"></div>
+
     <header class="app-header">
-      <div>
+      <div class="header-copy">
         <p class="eyebrow">Generador local para ChatGPT</p>
-        <h1>Flyer Clinico Prompt Builder</h1>
-        <p class="lead">Completa los datos del profesional, la clinica y el estilo visual para generar un prompt listo para pegar en la conversacion anclada "Diseno de flyer clinico".</p>
+        <div class="brand-row">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img">
+              <rect x="6" y="6" width="52" height="52" rx="16"></rect>
+              <path d="M30 17h6v12h12v6H36v12h-6V35H18v-6h12z"></path>
+            </svg>
+          </span>
+          <div>
+            <h1>Flyer Clinico Prompt Builder</h1>
+            <p class="lead">Completa datos clinicos, estilo visual y adjuntos para generar un prompt listo para crear flyers finales en la conversacion anclada "Diseno de flyer clinico".</p>
+          </div>
+        </div>
+
+        <div class="hero-tags" aria-label="Funciones principales">
+          <span>2 alternativas separadas</span>
+          <span>Estado / historia sin scroll</span>
+          <span>Sin backend</span>
+          <span>Adjuntos guiados</span>
+        </div>
       </div>
-      <p class="privacy-note">Todo se procesa en tu navegador. Las imagenes seleccionadas no se suben a internet. El prompt generado debe copiarse manualmente en ChatGPT.</p>
+
+      <aside class="hero-card" aria-label="Privacidad y flujo">
+        <div class="hero-card-icon" aria-hidden="true">✦</div>
+        <h2>Prompt clinico controlado</h2>
+        <p>Todo se procesa en tu navegador. Las imagenes seleccionadas no se suben a internet. El prompt generado debe copiarse manualmente en ChatGPT.</p>
+        <div class="hero-mini-grid">
+          <span><strong>Local</strong>Privado</span>
+          <span><strong>V2</strong>Modelo nuevo</span>
+          <span><strong>Demo</strong>Pruebas rapidas</span>
+        </div>
+      </aside>
     </header>
 
     <main class="app-shell">
@@ -161,16 +191,22 @@
       </section>
 
       <aside class="side-panel" aria-label="Resumen y acciones">
-        <div class="panel-block">
-          <h2>Resumen</h2>
+        <div class="panel-block summary-block">
+          <div class="panel-title-row">
+            <h2>Resumen</h2>
+            <span>Vista rapida</span>
+          </div>
           <div id="summaryPanel" class="summary-panel"></div>
         </div>
-        <div class="panel-block">
-          <h2>Acciones</h2>
+        <div class="panel-block action-block">
+          <div class="panel-title-row">
+            <h2>Acciones</h2>
+            <span>Produccion</span>
+          </div>
           <div class="action-grid">
             <button class="primary-button" type="button" id="copyPromptButton">Copiar prompt</button>
             <button class="secondary-button" type="button" id="copyAttachmentsButton">Copiar checklist de adjuntos</button>
-            <button class="secondary-button" type="button" id="loadDemoButton">Cargar datos demo</button>
+            <button class="secondary-button demo-button" type="button" id="loadDemoButton">Cargar datos demo</button>
             <button class="secondary-button" type="button" id="downloadPromptButton">Descargar TXT</button>
             <button class="secondary-button" type="button" id="saveTemplateButton">Guardar plantilla</button>
             <button class="secondary-button" type="button" id="loadTemplateButton">Cargar plantilla</button>
