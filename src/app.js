@@ -101,7 +101,7 @@ update(true);
 
 function update(renderFields = false) {
   const legacyState = toLegacyState(state);
-  const validation = validateState(legacyState);
+  const validation = validateState(state);
   const prompt = buildPrompt(legacyState);
   if (renderFields) renderForm(state, handlers);
   renderPreview(state, validation);
@@ -126,6 +126,7 @@ function bindStaticActions() {
 
   document.querySelector('#copyPromptButton').addEventListener('click', copyPrompt);
   document.querySelector('#copyAttachmentsButton').addEventListener('click', copyAttachmentsChecklist);
+  document.querySelector('#loadDemoButton')?.addEventListener('click', loadDemoData);
   document.querySelector('#downloadPromptButton').addEventListener('click', downloadPrompt);
   document.querySelector('#saveTemplateButton').addEventListener('click', () => {
     saveTemplate(state);
@@ -147,6 +148,149 @@ function bindStaticActions() {
     update(true);
     showStatus('Formulario limpio.');
   });
+}
+
+function loadDemoData() {
+  state = createDemoState();
+  update(true);
+  showStatus('Datos demo cargados. Revisá el prompt de salida.');
+}
+
+function createDemoState() {
+  const demo = createDefaultState();
+
+  demo.clinic = {
+    ...demo.clinic,
+    name: 'Centro Médico Rincón',
+    address: 'Av. San Martín 2450, San José del Rincón',
+    primaryPhone: '342 555-2488',
+    institutionalPhrase: 'Atención médica cercana, profesional y humana',
+    showContactData: true,
+    socialLinks: [
+      { id: 'social_demo_instagram', type: 'Instagram', value: '@centromedicorincon' },
+      { id: 'social_demo_facebook', type: 'Facebook', value: 'Centro Médico Rincón' },
+      { id: 'social_demo_web', type: 'Sitio web', value: 'www.centromedicorincon.com.ar' }
+    ]
+  };
+
+  demo.professional = {
+    ...demo.professional,
+    title: 'Dra.',
+    fullName: 'Mariana López',
+    license: 'MP 12345',
+    roleNote: 'Clínica médica y diabetología',
+    showPhoto: true
+  };
+
+  demo.specialty = {
+    ...demo.specialty,
+    primaryProfessionalSpecialty: 'Clínica médica',
+    additionalSpecialties: ['Diabetología'],
+    communicationFocus: 'Control metabólico y factores de riesgo',
+    visibleSpecialtyText: 'Clínica médica y diabetología'
+  };
+
+  demo.services = {
+    ...demo.services,
+    mainHighlightedService: 'Atención clínica integral y control metabólico',
+    visibleServices: [
+      'Control clínico general',
+      'Control de diabetes',
+      'Control de hipertensión arterial',
+      'Evaluación de riesgo cardiovascular',
+      'Seguimiento de enfermedades crónicas'
+    ],
+    contextServices: [
+      'Interpretación de estudios de laboratorio',
+      'Educación sobre hábitos saludables',
+      'Prevención de complicaciones metabólicas'
+    ],
+    allowServiceExpansion: true,
+    expansionInstructions: 'Podés agregar solo actividades generales y razonables de consultorio clínico vinculadas con diabetes, hipertensión y control metabólico. No inventes procedimientos complejos ni prácticas no informadas.'
+  };
+
+  demo.schedule = {
+    ...demo.schedule,
+    items: [
+      { id: 'schedule_demo_tuesday', days: 'Martes', from: '16:30', to: '18:30', note: 'Atención con turno previo' },
+      { id: 'schedule_demo_thursday', days: 'Jueves', from: '09:00', to: '12:00', note: 'Consultorio clínico' }
+    ],
+    requiresAppointment: true,
+    appointmentText: 'Solicitar turno por WhatsApp',
+    modality: 'presencial',
+    administrativeNote: 'Agenda sujeta a disponibilidad semanal'
+  };
+
+  demo.coverage = {
+    ...demo.coverage,
+    insurance: true,
+    privatePatients: true
+  };
+
+  demo.design = {
+    ...demo.design,
+    format: 'Historia Instagram 1080x1920',
+    primaryColor: 'lila',
+    secondaryColor: 'lavanda',
+    customPrimaryColor: '',
+    customSecondaryColor: '',
+    visualStyle: 'moderno',
+    typography: 'moderna sans serif',
+    visualImpact: 'medio',
+    includeMedicalIcons: true,
+    includeThematicBackground: true,
+    useAutomaticTheme: true,
+    usePinnedConversationStyle: true,
+    contentDensity: 'balanced'
+  };
+
+  demo.attachments = {
+    ...demo.attachments,
+    items: [
+      {
+        id: 'attachment_demo_logo',
+        role: ATTACHMENT_ROLES.clinicLogo,
+        fileName: 'logo-centro-medico-rincon.png',
+        mimeType: 'image/png',
+        status: 'selected',
+        instruction: 'Usar como logo institucional superior o inferior, respetando proporciones.'
+      },
+      {
+        id: 'attachment_demo_photo',
+        role: ATTACHMENT_ROLES.professionalPhoto,
+        fileName: 'dra-mariana-lopez.jpg',
+        mimeType: 'image/jpeg',
+        status: 'selected',
+        instruction: 'Integrar como foto profesional sin deformar rostro ni alterar identidad.'
+      },
+      {
+        id: 'attachment_demo_reference',
+        role: ATTACHMENT_ROLES.referenceFlyer,
+        fileName: 'referencia-flyer-clinico-lila.png',
+        mimeType: 'image/png',
+        status: 'selected',
+        instruction: 'Tomar como referencia general de estilo, composición y paleta.'
+      }
+    ]
+  };
+
+  demo.promptOptions = {
+    ...demo.promptOptions,
+    promptType: 'finalFlyer',
+    finalAlternativesCount: 2,
+    requireSeparateImages: true,
+    preventCollage: true,
+    requireMobileSafeArea: true,
+    allowVisualCreativity: true,
+    visualCreativityLevel: 'moderada',
+    suggestedPhrase: 'Cuidá tu salud, controlá tus factores de riesgo',
+    forbiddenPhrases: 'No usar frases alarmistas ni promesas de curación',
+    highlightData: 'Nombre de la médica, clínica médica y diabetología, días y horarios de atención, WhatsApp para turnos',
+    smallData: 'Matrícula, dirección, redes sociales y nota administrativa',
+    freeInstructions: 'Crear un flyer sobrio, moderno y claro. Puede incluir recursos visuales relacionados con clínica médica, diabetes, metabolismo, control de glucemia, corazón o signos vitales, sin sobrecargar el diseño.'
+  };
+
+  return demo;
 }
 
 function addService() {
