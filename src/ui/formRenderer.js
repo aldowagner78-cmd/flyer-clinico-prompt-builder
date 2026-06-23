@@ -3,6 +3,7 @@ import { specialties } from '../data/specialties.js';
 
 const titles = ['Dr.', 'Dra.', 'Lic.', 'Prof.', 'Otro'];
 const modalities = ['presencial', 'virtual', 'ambas'];
+const socialTypes = ['Instagram', 'Facebook', 'TikTok', 'Sitio web', 'WhatsApp', 'Otra'];
 const creativityOptions = [
   'No: respetar estrictamente los datos cargados.',
   'Si, moderada: permitir recursos visuales relacionados con la especialidad.',
@@ -10,21 +11,24 @@ const creativityOptions = [
 ];
 
 export function renderForm(state, handlers) {
+  const specialtyNames = specialties.map(item => item.name);
+  const colorKeys = Object.keys(colorPresets).filter(key => !['naranja', 'gris', 'personalizado'].includes(key));
+
   renderFields('#clinicFields', [
     text('Nombre de clinica', 'clinic.name', state.clinic.name, true),
     text('Direccion', 'clinic.address', state.clinic.address),
-    text('Telefono / WhatsApp', 'clinic.phone', state.clinic.phone, true),
-    text('Instagram / redes', 'clinic.social', state.clinic.social),
+    text('Telefono / WhatsApp principal', 'clinic.phone', state.clinic.phone, true),
     textarea('Frase institucional', 'clinic.tagline', state.clinic.tagline),
     file('Logo de clinica opcional', 'images.logoName'),
     toggle('Mostrar datos de contacto', 'clinic.showContact', state.clinic.showContact),
     toggle('Guardar estos datos como predeterminados', 'clinic.saveAsDefault', state.clinic.saveAsDefault)
   ], handlers);
+  renderSocialLinks(state, handlers);
 
   renderFields('#doctorFields', [
     select('Titulo', 'doctor.title', state.doctor.title, titles),
     text('Nombre completo del medico', 'doctor.name', state.doctor.name, true),
-    text('Especialidad', 'doctor.specialty', state.doctor.specialty),
+    text('Especialidad declarada del profesional', 'doctor.specialty', state.doctor.specialty),
     text('Matricula opcional', 'doctor.license', state.doctor.license),
     file('Foto del medico opcional', 'images.doctorPhotoName'),
     toggle('Mostrar foto del medico', 'doctor.showPhoto', state.doctor.showPhoto),
@@ -32,15 +36,15 @@ export function renderForm(state, handlers) {
   ], handlers);
 
   renderFields('#serviceFields', [
-    select('Especialidad principal', 'services.specialty', state.services.specialty, specialties.map(item => item.name), true),
+    select('Especialidad principal', 'services.primarySpecialty', state.services.primarySpecialty, specialtyNames, true),
+    text('Area destacada del flyer', 'services.highlightedArea', state.services.highlightedArea),
     text('Prestacion principal destacada', 'services.featured', state.services.featured, true),
     toggle('Permitir que ChatGPT agregue prestaciones generales razonables', 'services.allowExpansion', state.services.allowExpansion),
     textarea('Instrucciones sobre ampliacion de tareas', 'services.expansionNotes', state.services.expansionNotes, false, !state.services.allowExpansion)
   ], handlers);
+  renderAdditionalSpecialties(state, handlers, specialtyNames);
 
   renderFields('#careFields', [
-    text('Dia o dias de atencion', 'care.days', state.care.days, true),
-    text('Horario', 'care.hours', state.care.hours, true),
     toggle('Atiende por obra social', 'care.insurance', state.care.insurance),
     toggle('Atiende particulares', 'care.privateCare', state.care.privateCare),
     toggle('Requiere turno previo', 'care.requiresAppointment', state.care.requiresAppointment),
@@ -48,12 +52,14 @@ export function renderForm(state, handlers) {
     select('Modalidad', 'care.modality', state.care.modality, modalities, true),
     textarea('Observacion administrativa opcional', 'care.adminNote', state.care.adminNote)
   ], handlers);
+  renderSchedules(state, handlers);
 
   renderFields('#designFields', [
     select('Formato', 'design.format', state.design.format, formats),
-    select('Color principal', 'design.primaryColor', state.design.primaryColor, Object.keys(colorPresets), true, key => colorPresets[key].label),
-    text('Color secundario', 'design.secondaryColor', state.design.secondaryColor),
-    text('Color personalizado', 'design.customColor', state.design.customColor, false, state.design.primaryColor !== 'personalizado'),
+    select('Color principal', 'design.primaryColor', state.design.primaryColor, colorKeys, true, key => colorPresets[key].label),
+    text('Otro color principal', 'design.primaryCustomColor', state.design.primaryCustomColor, false, !isOtherColor(state.design.primaryColor)),
+    select('Color secundario', 'design.secondaryColor', state.design.secondaryColor, colorKeys, false, key => colorPresets[key].label),
+    text('Otro color secundario', 'design.secondaryCustomColor', state.design.secondaryCustomColor, false, !isOtherColor(state.design.secondaryColor)),
     select('Estilo visual', 'design.visualStyle', state.design.visualStyle, visualStyles),
     select('Tipografia sugerida', 'design.typography', state.design.typography, typographyOptions),
     select('Nivel de impacto visual', 'design.impact', state.design.impact, impactLevels),
@@ -117,6 +123,86 @@ function renderField(field) {
   return `<label class="field${disabled}"><span>${field.label}${required}</span><input type="text" data-path="${field.path}" value="${escapeHtml(field.value)}"></label>`;
 }
 
+function renderSocialLinks(state, handlers) {
+  const target = document.querySelector('#socialLinksEditor');
+  target.innerHTML = `
+    <div class="list-title">
+      <label>Redes sociales</label>
+      <button class="secondary-button" type="button" id="addSocialLinkButton">Agregar red</button>
+    </div>
+    <div class="repeatable-list">
+      ${state.clinic.socialLinks.map((item, index) => `
+        <div class="repeatable-row" data-warning-path="clinic.socialLinks.${index}">
+          <label class="field"><span>Tipo de red</span><select data-social-index="${index}" data-social-key="type">${socialTypes.map(type => `<option value="${type}" ${type === item.type ? 'selected' : ''}>${type}</option>`).join('')}</select></label>
+          <label class="field"><span>Usuario, texto o URL</span><input type="text" value="${escapeHtml(item.value)}" data-social-index="${index}" data-social-key="value"></label>
+          <button type="button" class="icon-button" data-remove-social="${index}">Quitar</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  target.querySelector('#addSocialLinkButton').addEventListener('click', handlers.onAddSocialLink);
+  target.querySelectorAll('[data-remove-social]').forEach(button => {
+    button.addEventListener('click', () => handlers.onRemoveSocialLink(Number(button.dataset.removeSocial)));
+  });
+  target.querySelectorAll('[data-social-index]').forEach(input => {
+    input.addEventListener('input', () => handlers.onUpdateSocialLink(Number(input.dataset.socialIndex), input.dataset.socialKey, input.value));
+    input.addEventListener('change', () => handlers.onUpdateSocialLink(Number(input.dataset.socialIndex), input.dataset.socialKey, input.value));
+  });
+}
+
+function renderAdditionalSpecialties(state, handlers, specialtyNames) {
+  const target = document.querySelector('#additionalSpecialtiesEditor');
+  target.innerHTML = `
+    <div class="list-title">
+      <label for="additionalSpecialtySelect">Especialidades adicionales</label>
+      <button class="secondary-button" type="button" id="addSpecialtyButton">Agregar especialidad</button>
+    </div>
+    <div class="inline-entry">
+      <select id="additionalSpecialtySelect">${specialtyNames.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}</select>
+    </div>
+    <ul class="editable-list">
+      ${state.services.additionalSpecialties.map((item, index) => `
+        <li><span>${escapeHtml(item)}</span><button type="button" class="icon-button" data-remove-specialty="${index}">Quitar</button></li>
+      `).join('')}
+    </ul>
+  `;
+  target.querySelector('#addSpecialtyButton').addEventListener('click', () => {
+    handlers.onAddAdditionalSpecialty(target.querySelector('#additionalSpecialtySelect').value);
+  });
+  target.querySelectorAll('[data-remove-specialty]').forEach(button => {
+    button.addEventListener('click', () => handlers.onRemoveAdditionalSpecialty(Number(button.dataset.removeSpecialty)));
+  });
+}
+
+function renderSchedules(state, handlers) {
+  const target = document.querySelector('#schedulesEditor');
+  target.innerHTML = `
+    <div class="list-title">
+      <label>Horarios de atencion</label>
+      <button class="secondary-button" type="button" id="addScheduleButton">Agregar horario</button>
+    </div>
+    <div class="repeatable-list">
+      ${state.care.schedules.map((item, index) => `
+        <div class="repeatable-row schedule-row" data-warning-path="care.schedules.${index}">
+          <label class="field"><span>Dia o dias</span><input type="text" value="${escapeHtml(item.days)}" data-schedule-index="${index}" data-schedule-key="days"></label>
+          <label class="field"><span>Hora desde</span><input type="time" value="${escapeHtml(item.from)}" data-schedule-index="${index}" data-schedule-key="from"></label>
+          <label class="field"><span>Hora hasta</span><input type="time" value="${escapeHtml(item.to)}" data-schedule-index="${index}" data-schedule-key="to"></label>
+          <label class="field"><span>Observacion</span><input type="text" value="${escapeHtml(item.note)}" data-schedule-index="${index}" data-schedule-key="note"></label>
+          <button type="button" class="icon-button" data-remove-schedule="${index}">Quitar</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  target.querySelector('#addScheduleButton').addEventListener('click', handlers.onAddSchedule);
+  target.querySelectorAll('[data-remove-schedule]').forEach(button => {
+    button.addEventListener('click', () => handlers.onRemoveSchedule(Number(button.dataset.removeSchedule)));
+  });
+  target.querySelectorAll('[data-schedule-index]').forEach(input => {
+    input.addEventListener('input', () => handlers.onUpdateSchedule(Number(input.dataset.scheduleIndex), input.dataset.scheduleKey, input.value));
+    input.addEventListener('change', () => handlers.onUpdateSchedule(Number(input.dataset.scheduleIndex), input.dataset.scheduleKey, input.value));
+  });
+}
+
 function renderServices(state, handlers) {
   const list = document.querySelector('#servicesList');
   list.innerHTML = state.services.items.map((item, index) => `
@@ -141,6 +227,10 @@ function renderImages(state) {
   document.querySelector('#imageList').innerHTML = imageNames.length
     ? imageNames.map(([label, name]) => `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(name)}</li>`).join('')
     : '<li>No hay imagenes seleccionadas.</li>';
+}
+
+function isOtherColor(value) {
+  return value === 'otro' || value === 'personalizado';
 }
 
 function text(label, path, value, recommended = false, hidden = false) {

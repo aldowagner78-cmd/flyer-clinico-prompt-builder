@@ -236,6 +236,7 @@ h3 {
 }
 
 input[type="text"],
+input[type="time"],
 select,
 textarea {
   width: 100%;
@@ -263,7 +264,8 @@ textarea:focus {
 
 .field.has-warning input,
 .field.has-warning select,
-.field.has-warning textarea {
+.field.has-warning textarea,
+.repeatable-row.has-warning {
   border-color: var(--warning);
   background: #fffbeb;
 }
@@ -306,6 +308,26 @@ textarea:focus {
 .inline-entry {
   display: grid;
   gap: 8px;
+}
+
+.repeatable-list {
+  display: grid;
+  gap: 10px;
+}
+
+.repeatable-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.8fr) minmax(180px, 1.2fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.schedule-row {
+  grid-template-columns: minmax(150px, 1.1fr) minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(150px, 1fr) auto;
 }
 
 .editable-list,
@@ -502,7 +524,10 @@ textarea:focus {
   }
 
   .editable-list li,
-  .image-list li {
+  .image-list li,
+  .repeatable-row,
+  .schedule-row {
+    grid-template-columns: 1fr;
     align-items: stretch;
     flex-direction: column;
   }

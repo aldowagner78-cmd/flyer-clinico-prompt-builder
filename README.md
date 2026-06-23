@@ -38,6 +38,11 @@ Todo se procesa en el navegador. Los datos se guardan en `localStorage` del disp
 
 - Formulario guiado por secciones.
 - Presets prudentes por especialidad.
+- Especialidad principal, especialidades adicionales y area destacada del flyer.
+- Redes sociales multiples con tipo y usuario/URL.
+- Horarios flexibles por dia en filas repetibles.
+- Colores sugeridos por nombre, con opcion "Otro...".
+- Checklist de archivos adjuntos para copiar antes de pegar el prompt.
 - Validacion visual de campos recomendados.
 - Prompt generado en espanol.
 - Copiar prompt y descargar TXT.

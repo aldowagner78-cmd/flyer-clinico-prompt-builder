@@ -51,6 +51,7 @@
               </div>
             </div>
             <div id="clinicFields" class="field-grid"></div>
+            <div id="socialLinksEditor" class="list-editor"></div>
           </section>
 
           <section class="form-section" id="medico" data-step="medico">
@@ -73,6 +74,7 @@
               </div>
             </div>
             <div id="serviceFields" class="field-grid"></div>
+            <div id="additionalSpecialtiesEditor" class="list-editor"></div>
             <div class="list-editor">
               <div class="list-title">
                 <label for="newService">Lista editable de prestaciones</label>
@@ -94,6 +96,7 @@
               </div>
             </div>
             <div id="careFields" class="field-grid"></div>
+            <div id="schedulesEditor" class="list-editor"></div>
           </section>
 
           <section class="form-section" id="diseno" data-step="diseno">
@@ -143,6 +146,8 @@
               <div>
                 <h3>Checklist</h3>
                 <ul id="checklist" class="checklist"></ul>
+                <h3>Adjuntos antes de enviar</h3>
+                <ul id="attachmentsChecklist" class="checklist"></ul>
                 <h3>Advertencias</h3>
                 <ul id="warnings" class="warnings"></ul>
               </div>
@@ -164,6 +169,7 @@
           <h2>Acciones</h2>
           <div class="action-grid">
             <button class="primary-button" type="button" id="copyPromptButton">Copiar prompt</button>
+            <button class="secondary-button" type="button" id="copyAttachmentsButton">Copiar checklist de adjuntos</button>
             <button class="secondary-button" type="button" id="downloadPromptButton">Descargar TXT</button>
             <button class="secondary-button" type="button" id="saveTemplateButton">Guardar plantilla</button>
             <button class="secondary-button" type="button" id="loadTemplateButton">Cargar plantilla</button>

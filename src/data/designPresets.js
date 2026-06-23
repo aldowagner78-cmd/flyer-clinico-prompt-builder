@@ -1,12 +1,22 @@
 export const colorPresets = {
-  lila: { label: 'Lila', primary: '#8b5cf6', secondary: '#ede9fe' },
-  naranja: { label: 'Naranja', primary: '#f97316', secondary: '#fff7ed' },
-  azul: { label: 'Azul', primary: '#2563eb', secondary: '#eff6ff' },
-  celeste: { label: 'Celeste', primary: '#0284c7', secondary: '#e0f2fe' },
-  verde: { label: 'Verde', primary: '#16a34a', secondary: '#f0fdf4' },
-  rojo: { label: 'Rojo', primary: '#dc2626', secondary: '#fef2f2' },
-  gris: { label: 'Gris institucional', primary: '#475569', secondary: '#f1f5f9' },
-  personalizado: { label: 'Personalizado', primary: '#8b5cf6', secondary: '#f5f3ff' }
+  lila: { label: 'Lila', css: '#8b5cf6', soft: '#ede9fe' },
+  lavanda: { label: 'Lavanda', css: '#a78bfa', soft: '#f3e8ff' },
+  violetaSuave: { label: 'Violeta suave', css: '#7c3aed', soft: '#ede9fe' },
+  blanco: { label: 'Blanco', css: '#ffffff', soft: '#f8fafc' },
+  grisClaro: { label: 'Gris claro', css: '#cbd5e1', soft: '#f8fafc' },
+  grisInstitucional: { label: 'Gris institucional', css: '#475569', soft: '#f1f5f9' },
+  azul: { label: 'Azul', css: '#2563eb', soft: '#eff6ff' },
+  celeste: { label: 'Celeste', css: '#0284c7', soft: '#e0f2fe' },
+  verdeAgua: { label: 'Verde agua', css: '#14b8a6', soft: '#ccfbf1' },
+  verde: { label: 'Verde', css: '#16a34a', soft: '#f0fdf4' },
+  naranjaSuave: { label: 'Naranja suave', css: '#fb923c', soft: '#fff7ed' },
+  rosaSuave: { label: 'Rosa suave', css: '#f9a8d4', soft: '#fdf2f8' },
+  beige: { label: 'Beige', css: '#d6c7a1', soft: '#faf7ef' },
+  negro: { label: 'Negro', css: '#111827', soft: '#f3f4f6' },
+  otro: { label: 'Otro...', css: '#8b5cf6', soft: '#f5f3ff' },
+  naranja: { label: 'Naranja suave', css: '#fb923c', soft: '#fff7ed' },
+  gris: { label: 'Gris institucional', css: '#475569', soft: '#f1f5f9' },
+  personalizado: { label: 'Otro...', css: '#8b5cf6', soft: '#f5f3ff' }
 };
 
 export const formats = [

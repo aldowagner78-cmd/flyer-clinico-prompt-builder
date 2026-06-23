@@ -12,13 +12,47 @@ let state = mergeState(createDefaultState(), loadState());
 const handlers = {
   onFieldChange(path, value) {
     setByPath(state, path, value);
-    if (path === 'services.specialty') applySpecialtyPreset(value);
-    if (path === 'design.primaryColor') applyColorPreset(value);
+    if (path === 'services.primarySpecialty') applySpecialtyPreset(value);
+    if (path === 'design.primaryColor') applyPrimaryColorPreset(value);
     update(shouldRenderForm(path));
   },
   onRemoveService(index) {
     state.services.items.splice(index, 1);
     update(true);
+  },
+  onAddAdditionalSpecialty(value) {
+    if (value && value !== state.services.primarySpecialty && !state.services.additionalSpecialties.includes(value)) {
+      state.services.additionalSpecialties.push(value);
+      update(true);
+    }
+  },
+  onRemoveAdditionalSpecialty(index) {
+    state.services.additionalSpecialties.splice(index, 1);
+    update(true);
+  },
+  onAddSocialLink() {
+    state.clinic.socialLinks.push({ type: 'Instagram', value: '' });
+    update(true);
+  },
+  onRemoveSocialLink(index) {
+    state.clinic.socialLinks.splice(index, 1);
+    update(true);
+  },
+  onUpdateSocialLink(index, key, value) {
+    state.clinic.socialLinks[index][key] = value;
+    update(false);
+  },
+  onAddSchedule() {
+    state.care.schedules.push({ days: '', from: '', to: '', note: '' });
+    update(true);
+  },
+  onRemoveSchedule(index) {
+    state.care.schedules.splice(index, 1);
+    update(true);
+  },
+  onUpdateSchedule(index, key, value) {
+    state.care.schedules[index][key] = value;
+    update(false);
   }
 };
 
@@ -27,11 +61,11 @@ update(true);
 
 function createDefaultState() {
   return {
-    clinic: { ...defaultClinic },
+    clinic: { ...defaultClinic, socialLinks: [] },
     doctor: { title: 'Dr.', name: '', specialty: '', license: '', showPhoto: true, roleNote: '' },
-    services: { specialty: 'Cardiologia', featured: '', items: [], allowExpansion: false, expansionNotes: '' },
-    care: { days: '', hours: '', insurance: true, privateCare: true, requiresAppointment: true, appointmentText: 'Solicitar turno por WhatsApp.', modality: 'presencial', adminNote: '' },
-    design: { format: 'Historia Instagram 1080x1920', primaryColor: 'lila', secondaryColor: colorPresets.lila.secondary, customColor: '', visualStyle: 'moderno', typography: 'moderna sans serif', impact: 'medio', includeIcons: true, includeThemeBackground: true, autoTheme: true, usePinnedStyle: true },
+    services: { primarySpecialty: 'Cardiologia', additionalSpecialties: [], highlightedArea: '', specialty: 'Cardiologia', featured: '', items: [], allowExpansion: false, expansionNotes: '' },
+    care: { schedules: [], days: '', hours: '', insurance: true, privateCare: true, requiresAppointment: true, appointmentText: 'Solicitar turno por WhatsApp.', modality: 'presencial', adminNote: '' },
+    design: { format: 'Historia Instagram 1080x1920', primaryColor: 'lila', primaryCustomColor: '', secondaryColor: 'lavanda', secondaryCustomColor: '', customColor: '', visualStyle: 'moderno', typography: 'moderna sans serif', impact: 'medio', includeIcons: true, includeThemeBackground: true, autoTheme: true, usePinnedStyle: true },
     images: { logoName: '', doctorPhotoName: '', referenceName: '', themeName: '' },
     advanced: { suggestedPhrase: '', forbiddenPhrases: '', highlightData: '', smallData: '', freeInstructions: '', creativity: 'Si, moderada: permitir recursos visuales relacionados con la especialidad.' }
   };
@@ -42,7 +76,7 @@ function update(renderFields = false) {
   const prompt = buildPrompt(state);
   if (renderFields) renderForm(state, handlers);
   renderPreview(state, validation);
-  renderResult(prompt, validation);
+  renderResult(prompt, validation, state);
   markRecommendedFields(validation);
   applyTheme();
   saveState(state);
@@ -62,6 +96,7 @@ function bindStaticActions() {
   });
 
   document.querySelector('#copyPromptButton').addEventListener('click', copyPrompt);
+  document.querySelector('#copyAttachmentsButton').addEventListener('click', copyAttachmentsChecklist);
   document.querySelector('#downloadPromptButton').addEventListener('click', downloadPrompt);
   document.querySelector('#saveTemplateButton').addEventListener('click', () => {
     saveTemplate(state);
@@ -98,20 +133,23 @@ function applySpecialtyPreset(name) {
   const preset = specialties.find(item => item.name === name);
   if (!preset) return;
   state.doctor.specialty = state.doctor.specialty || name;
+  state.services.specialty = name;
   if (!state.services.items.length) state.services.items = [...preset.services];
   if (!state.services.featured && preset.services[0]) state.services.featured = preset.services[0];
 }
 
-function applyColorPreset(key) {
+function applyPrimaryColorPreset(key) {
   const preset = colorPresets[key] || colorPresets.lila;
-  state.design.secondaryColor = preset.secondary;
+  if (!state.design.secondaryColor || isLegacyColorValue(state.design.secondaryColor)) {
+    state.design.secondaryColor = preset.label === 'Blanco' ? 'grisClaro' : 'lavanda';
+  }
 }
 
 function applyTheme() {
   const preset = colorPresets[state.design.primaryColor] || colorPresets.lila;
-  const primary = state.design.primaryColor === 'personalizado' && state.design.customColor ? state.design.customColor : preset.primary;
-  document.documentElement.style.setProperty('--accent', primary);
-  document.documentElement.style.setProperty('--accent-soft', state.design.secondaryColor || preset.secondary);
+  const uiAccent = ['blanco', 'grisClaro', 'beige', 'rosaSuave'].includes(state.design.primaryColor) ? '#475569' : preset.css;
+  document.documentElement.style.setProperty('--accent', uiAccent);
+  document.documentElement.style.setProperty('--accent-soft', colorPresets[state.design.secondaryColor]?.soft || preset.soft);
 }
 
 function showStep(step) {
@@ -128,6 +166,25 @@ async function copyPrompt() {
     document.querySelector('#promptOutput').select();
     document.execCommand('copy');
     showStatus('Prompt copiado.');
+  }
+}
+
+async function copyAttachmentsChecklist() {
+  const text = buildAttachmentsChecklistText();
+  try {
+    await navigator.clipboard.writeText(text);
+    showStatus('Checklist de adjuntos copiado.');
+  } catch {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    textarea.remove();
+    showStatus('Checklist de adjuntos copiado.');
   }
 }
 
@@ -167,28 +224,22 @@ function downloadFile(filename, content, type) {
 }
 
 function markRecommendedFields(validation) {
-  document.querySelectorAll('.field').forEach(field => field.classList.remove('has-warning'));
-  if (validation.warnings.some(item => item.includes('Nombre del medico'))) markPath('doctor.name');
-  if (validation.warnings.some(item => item.includes('Especialidad'))) markPath('services.specialty');
-  if (validation.warnings.some(item => item.includes('Dia y horario'))) {
-    markPath('care.days');
-    markPath('care.hours');
-  }
-  if (validation.warnings.some(item => item.includes('Prestaciones'))) markPath('services.featured');
-  if (validation.warnings.some(item => item.includes('Modalidad'))) markPath('care.modality');
-  if (validation.warnings.some(item => item.includes('Color'))) markPath('design.primaryColor');
-  if (validation.warnings.some(item => item.includes('contacto'))) markPath('clinic.phone');
+  document.querySelectorAll('.field, .repeatable-row').forEach(field => field.classList.remove('has-warning'));
+  validation.fieldPaths.forEach(markPath);
 }
 
 function markPath(path) {
   const input = document.querySelector(`[data-path="${path}"]`);
+  const row = document.querySelector(`[data-warning-path="${path}"]`);
   input?.closest('.field')?.classList.add('has-warning');
+  row?.classList.add('has-warning');
 }
 
 function shouldRenderForm(path) {
-  return path === 'services.specialty'
+  return path === 'services.primarySpecialty'
     || path === 'services.allowExpansion'
     || path === 'design.primaryColor'
+    || path === 'design.secondaryColor'
     || path.startsWith('images.');
 }
 
@@ -201,7 +252,7 @@ function setByPath(target, path, value) {
 
 function mergeState(base, saved) {
   if (!saved) return base;
-  return {
+  const merged = {
     ...base,
     ...saved,
     clinic: { ...base.clinic, ...saved.clinic },
@@ -212,6 +263,64 @@ function mergeState(base, saved) {
     images: { ...base.images, ...saved.images },
     advanced: { ...base.advanced, ...saved.advanced }
   };
+  return migrateState(merged, saved);
+}
+
+function migrateState(merged, saved) {
+  const legacySocial = saved?.clinic?.social || '';
+  if (!Array.isArray(merged.clinic.socialLinks)) merged.clinic.socialLinks = [];
+  if (legacySocial && !merged.clinic.socialLinks.length) {
+    merged.clinic.socialLinks = [{ type: 'Instagram', value: legacySocial }];
+  }
+
+  if (!merged.services.primarySpecialty) merged.services.primarySpecialty = merged.services.specialty || 'Cardiologia';
+  merged.services.specialty = merged.services.primarySpecialty;
+  if (!Array.isArray(merged.services.additionalSpecialties)) merged.services.additionalSpecialties = [];
+
+  if (!Array.isArray(merged.care.schedules)) merged.care.schedules = [];
+  if (!merged.care.schedules.length && (merged.care.days || merged.care.hours)) {
+    merged.care.schedules = [{ days: merged.care.days || '', from: '', to: '', note: merged.care.hours || '' }];
+  }
+
+  if (isLegacyColorValue(merged.design.primaryColor)) {
+    merged.design.primaryCustomColor = merged.design.primaryColor;
+    merged.design.primaryColor = 'otro';
+  }
+  if (isLegacyColorValue(merged.design.secondaryColor)) {
+    merged.design.secondaryCustomColor = merged.design.secondaryColor;
+    merged.design.secondaryColor = 'otro';
+  }
+  if (merged.design.customColor && !merged.design.primaryCustomColor) merged.design.primaryCustomColor = merged.design.customColor;
+  if (merged.design.primaryColor === 'personalizado') merged.design.primaryColor = 'otro';
+  if (merged.design.secondaryColor === 'personalizado') merged.design.secondaryColor = 'otro';
+  if (merged.design.primaryColor === 'gris') merged.design.primaryColor = 'grisInstitucional';
+  if (merged.design.secondaryColor === 'gris') merged.design.secondaryColor = 'grisInstitucional';
+  if (merged.design.primaryColor === 'naranja') merged.design.primaryColor = 'naranjaSuave';
+  if (merged.design.secondaryColor === 'naranja') merged.design.secondaryColor = 'naranjaSuave';
+  if (!colorPresets[merged.design.primaryColor]) merged.design.primaryColor = 'lila';
+  if (!colorPresets[merged.design.secondaryColor]) merged.design.secondaryColor = 'lavanda';
+  return merged;
+}
+
+function buildAttachmentsChecklistText() {
+  const files = [
+    ['Logo de clinica', state.images.logoName],
+    ['Foto del medico', state.images.doctorPhotoName],
+    ['Imagen de referencia del flyer', state.images.referenceName],
+    ['Imagen tematica opcional', state.images.themeName]
+  ].filter(([, value]) => value);
+  if (!files.length) return 'No hay archivos seleccionados para adjuntar antes de pegar el prompt.';
+  return ['Antes de pegar el prompt en ChatGPT, adjunta estos archivos:']
+    .concat(files.map(([label, value]) => `- ${label}: ${value}`))
+    .join('\n');
+}
+
+function isOtherColor(value) {
+  return value === 'otro' || value === 'personalizado';
+}
+
+function isLegacyColorValue(value) {
+  return typeof value === 'string' && (value.startsWith('#') || value.includes('rgb('));
 }
 
 function showStatus(message) {
