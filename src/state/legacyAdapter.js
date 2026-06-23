@@ -1,8 +1,8 @@
 import { ATTACHMENT_ROLES } from './schema.js';
 
-// Temporary adapter for Etapa 1: the persisted state is schema v2, while
-// the current form, validation and prompt builder still read legacy paths.
-// Remove this adapter when Etapa 2 migrates the UI to the v2 model.
+// Temporary adapter: the form already uses schema v2, while validation and
+// promptBuilder still read legacy paths. Remove this when those modules move
+// fully to the v2 model in later stages.
 export function toLegacyState(state) {
   return {
     clinic: {
@@ -77,99 +77,8 @@ export function toLegacyState(state) {
   };
 }
 
-export function updateFromLegacyPath(state, path, value) {
-  const stringValue = typeof value === 'string' ? value : value;
-  const handlers = {
-    'clinic.name': () => { state.clinic.name = stringValue; },
-    'clinic.address': () => { state.clinic.address = stringValue; },
-    'clinic.phone': () => { state.clinic.primaryPhone = stringValue; },
-    'clinic.tagline': () => { state.clinic.institutionalPhrase = stringValue; },
-    'clinic.showContact': () => { state.clinic.showContactData = Boolean(value); },
-    'clinic.saveAsDefault': () => { state.clinic.saveAsDefault = Boolean(value); },
-    'doctor.title': () => { state.professional.title = stringValue; },
-    'doctor.name': () => { state.professional.fullName = stringValue; },
-    'doctor.specialty': () => { state.specialty.primaryProfessionalSpecialty = stringValue; },
-    'doctor.license': () => { state.professional.license = stringValue; },
-    'doctor.showPhoto': () => { state.professional.showPhoto = Boolean(value); },
-    'doctor.roleNote': () => { state.professional.roleNote = stringValue; },
-    'services.primarySpecialty': () => { state.specialty.primaryProfessionalSpecialty = stringValue; },
-    'services.highlightedArea': () => { state.specialty.communicationFocus = stringValue; },
-    'services.featured': () => { state.services.mainHighlightedService = stringValue; },
-    'services.allowExpansion': () => { state.services.allowServiceExpansion = Boolean(value); },
-    'services.expansionNotes': () => { state.services.expansionInstructions = stringValue; },
-    'care.insurance': () => { state.coverage.insurance = Boolean(value); },
-    'care.privateCare': () => { state.coverage.privatePatients = Boolean(value); },
-    'care.requiresAppointment': () => { state.schedule.requiresAppointment = Boolean(value); },
-    'care.appointmentText': () => { state.schedule.appointmentText = stringValue; },
-    'care.modality': () => { state.schedule.modality = stringValue; },
-    'care.adminNote': () => { state.schedule.administrativeNote = stringValue; },
-    'design.format': () => { state.design.format = stringValue; },
-    'design.primaryColor': () => { state.design.primaryColor = stringValue; },
-    'design.primaryCustomColor': () => { state.design.customPrimaryColor = stringValue; },
-    'design.secondaryColor': () => { state.design.secondaryColor = stringValue; },
-    'design.secondaryCustomColor': () => { state.design.customSecondaryColor = stringValue; },
-    'design.visualStyle': () => { state.design.visualStyle = stringValue; },
-    'design.typography': () => { state.design.typography = stringValue; },
-    'design.impact': () => { state.design.visualImpact = stringValue; },
-    'design.includeIcons': () => { state.design.includeMedicalIcons = Boolean(value); },
-    'design.includeThemeBackground': () => { state.design.includeThematicBackground = Boolean(value); },
-    'design.autoTheme': () => { state.design.useAutomaticTheme = Boolean(value); },
-    'design.usePinnedStyle': () => { state.design.usePinnedConversationStyle = Boolean(value); },
-    'images.logoName': () => setAttachmentFileName(state, ATTACHMENT_ROLES.clinicLogo, stringValue, 'Usar como logo de la clinica.'),
-    'images.doctorPhotoName': () => setAttachmentFileName(state, ATTACHMENT_ROLES.professionalPhoto, stringValue, 'Usar como foto del profesional, sin deformar rostro ni alterar identidad.'),
-    'images.referenceName': () => setAttachmentFileName(state, ATTACHMENT_ROLES.referenceFlyer, stringValue, 'Usar como referencia visual del flyer.'),
-    'images.themeName': () => setAttachmentFileName(state, ATTACHMENT_ROLES.thematicImage, stringValue, 'Usar como imagen tematica opcional.'),
-    'advanced.suggestedPhrase': () => { state.promptOptions.suggestedPhrase = stringValue; },
-    'advanced.forbiddenPhrases': () => { state.promptOptions.forbiddenPhrases = stringValue; },
-    'advanced.highlightData': () => { state.promptOptions.highlightData = stringValue; },
-    'advanced.smallData': () => { state.promptOptions.smallData = stringValue; },
-    'advanced.freeInstructions': () => { state.promptOptions.freeInstructions = stringValue; },
-    'advanced.creativity': () => updateCreativity(state, stringValue)
-  };
-  handlers[path]?.();
-}
-
-export function getLegacyAttachmentFiles(state) {
-  return [
-    ['Logo de clinica', getAttachmentFileName(state, ATTACHMENT_ROLES.clinicLogo)],
-    ['Foto del medico', getAttachmentFileName(state, ATTACHMENT_ROLES.professionalPhoto)],
-    ['Imagen de referencia del flyer', getAttachmentFileName(state, ATTACHMENT_ROLES.referenceFlyer)],
-    ['Imagen tematica opcional', getAttachmentFileName(state, ATTACHMENT_ROLES.thematicImage)]
-  ].filter(([, value]) => value);
-}
-
 function getAttachmentFileName(state, role) {
   return state.attachments.items.find(item => item.role === role)?.fileName || '';
-}
-
-function setAttachmentFileName(state, role, fileName, instruction) {
-  const existingIndex = state.attachments.items.findIndex(item => item.role === role);
-  if (!fileName) {
-    if (existingIndex >= 0) state.attachments.items.splice(existingIndex, 1);
-    return;
-  }
-  const item = {
-    id: `attachment_${role}`,
-    role,
-    fileName,
-    mimeType: '',
-    status: 'selected',
-    instruction
-  };
-  if (existingIndex >= 0) state.attachments.items.splice(existingIndex, 1, item);
-  else state.attachments.items.push(item);
-}
-
-function updateCreativity(state, value) {
-  const normalized = value.toLowerCase();
-  state.promptOptions.allowVisualCreativity = !normalized.startsWith('no');
-  if (normalized.includes('amplia')) {
-    state.promptOptions.visualCreativityLevel = 'broad';
-  } else if (normalized.startsWith('no')) {
-    state.promptOptions.visualCreativityLevel = 'strict';
-  } else {
-    state.promptOptions.visualCreativityLevel = 'moderate';
-  }
 }
 
 function toLegacyCreativity(promptOptions) {

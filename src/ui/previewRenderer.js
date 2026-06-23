@@ -5,13 +5,17 @@ export function renderPreview(state, validation) {
   summary.innerHTML = `
     <dl>
       <div><dt>Clinica</dt><dd>${escapeHtml(state.clinic.name) || 'Sin completar'}</dd></div>
-      <div><dt>Profesional</dt><dd>${escapeHtml([state.doctor.title, state.doctor.name].filter(Boolean).join(' ')) || 'Sin completar'}</dd></div>
-      <div><dt>Especialidad principal</dt><dd>${escapeHtml(state.services.primarySpecialty) || 'Sin completar'}</dd></div>
-      <div><dt>Especialidades adicionales</dt><dd>${escapeHtml(listOrFallback(state.services.additionalSpecialties))}</dd></div>
-      <div><dt>Area destacada</dt><dd>${escapeHtml(getHighlightedArea(state))}</dd></div>
-      <div><dt>Prestacion destacada</dt><dd>${escapeHtml(state.services.featured) || 'Sin completar'}</dd></div>
-      <div><dt>Atencion</dt><dd>${escapeHtml(formatSchedules(state.care.schedules))}</dd></div>
-      <div><dt>Color</dt><dd>${escapeHtml(getColorName(state.design.primaryColor, state.design.primaryCustomColor))}</dd></div>
+      <div><dt>Profesional</dt><dd>${escapeHtml([state.professional.title, state.professional.fullName].filter(Boolean).join(' ')) || 'Sin completar'}</dd></div>
+      <div><dt>Especialidad principal</dt><dd>${escapeHtml(state.specialty.primaryProfessionalSpecialty) || 'Sin completar'}</dd></div>
+      <div><dt>Adicionales</dt><dd>${escapeHtml(listOrFallback(state.specialty.additionalSpecialties))}</dd></div>
+      <div><dt>Enfoque</dt><dd>${escapeHtml(state.specialty.communicationFocus) || 'Sin completar'}</dd></div>
+      <div><dt>Texto visible</dt><dd>${escapeHtml(state.specialty.visibleSpecialtyText) || 'Sin completar'}</dd></div>
+      <div><dt>Prestaciones visibles</dt><dd>${escapeHtml(listOrFallback(state.services.visibleServices))}</dd></div>
+      <div><dt>Atencion</dt><dd>${escapeHtml(formatSchedules(state.schedule.items))}</dd></div>
+      <div><dt>Redes</dt><dd>${escapeHtml(formatSocialLinks(state.clinic.socialLinks))}</dd></div>
+      <div><dt>Adjuntos</dt><dd>${escapeHtml(formatAttachments(state.attachments.items))}</dd></div>
+      <div><dt>Densidad</dt><dd>${escapeHtml(labelContentDensity(state.design.contentDensity))}</dd></div>
+      <div><dt>Color</dt><dd>${escapeHtml(getColorName(state.design.primaryColor, state.design.customPrimaryColor))}</dd></div>
       <div><dt>Estilo</dt><dd>${escapeHtml(state.design.visualStyle)}</dd></div>
     </dl>
   `;
@@ -32,30 +36,31 @@ export function renderResult(prompt, validation, state) {
 }
 
 function renderAttachmentsChecklist(state) {
-  const files = [
-    ['Logo de clinica', state.images.logoName],
-    ['Foto del medico', state.images.doctorPhotoName],
-    ['Imagen de referencia del flyer', state.images.referenceName],
-    ['Imagen tematica opcional', state.images.themeName]
-  ].filter(([, value]) => value);
+  const files = state.attachments.items.filter(item => item.fileName);
 
   if (!files.length) return '<li class="missing"><span>Sin adjuntos</span>No hay archivos seleccionados.</li>';
   return [
     '<li class="ok"><span>Antes</span>Antes de pegar el prompt en ChatGPT, adjunta estos archivos:</li>',
-    ...files.map(([label, value]) => `<li class="ok"><span>Adjuntar</span>${escapeHtml(label)}: ${escapeHtml(value)}</li>`)
+    ...files.map(item => `<li class="ok"><span>Adjuntar</span>${escapeHtml(labelAttachmentRole(item.role))}: ${escapeHtml(item.fileName)}${item.instruction ? ` - ${escapeHtml(item.instruction)}` : ''}</li>`)
   ].join('');
-}
-
-function getHighlightedArea(state) {
-  if (state.services.highlightedArea.trim()) return state.services.highlightedArea.trim();
-  const specialties = [state.services.primarySpecialty, ...state.services.additionalSpecialties].filter(Boolean);
-  return specialties.length > 1 ? joinReadable(specialties) : specialties[0] || 'Sin completar';
 }
 
 function formatSchedules(schedules) {
   const complete = schedules.filter(item => item.days && item.from && item.to);
   if (!complete.length) return 'Sin completar';
   return complete.map(item => `${item.days}: ${item.from} a ${item.to}${item.note ? ` (${item.note})` : ''}`).join(' / ');
+}
+
+function formatSocialLinks(socialLinks) {
+  const filled = socialLinks.filter(item => item.value);
+  if (!filled.length) return 'Sin completar';
+  return filled.map(item => `${item.type}: ${item.value}`).join(' / ');
+}
+
+function formatAttachments(attachments) {
+  const filled = attachments.filter(item => item.fileName);
+  if (!filled.length) return 'Sin adjuntos';
+  return filled.map(item => `${labelAttachmentRole(item.role)}: ${item.fileName}`).join(' / ');
 }
 
 function getColorName(key, custom) {
@@ -67,9 +72,22 @@ function listOrFallback(values) {
   return values.length ? values.join(', ') : 'Sin adicionales';
 }
 
-function joinReadable(values) {
-  if (values.length <= 2) return values.join(' y ');
-  return `${values.slice(0, -1).join(', ')} y ${values.at(-1)}`;
+function labelContentDensity(value) {
+  return {
+    brief: 'Breve',
+    balanced: 'Equilibrado',
+    detailed: 'Detallado'
+  }[value] || value || 'Sin completar';
+}
+
+function labelAttachmentRole(value) {
+  return {
+    clinicLogo: 'Logo de clinica',
+    professionalPhoto: 'Foto profesional',
+    referenceFlyer: 'Flyer de referencia',
+    thematicImage: 'Imagen tematica',
+    other: 'Otro'
+  }[value] || value;
 }
 
 function escapeHtml(value = '') {

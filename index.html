@@ -22,12 +22,12 @@
       <section class="workspace" aria-label="Formulario de configuracion">
         <nav class="step-nav" aria-label="Secciones del formulario">
           <button class="step-button is-active" type="button" data-step-target="clinica">Clinica</button>
-          <button class="step-button" type="button" data-step-target="medico">Medico</button>
+          <button class="step-button" type="button" data-step-target="medico">Profesional</button>
           <button class="step-button" type="button" data-step-target="prestaciones">Prestaciones</button>
           <button class="step-button" type="button" data-step-target="atencion">Atencion</button>
           <button class="step-button" type="button" data-step-target="diseno">Diseno</button>
-          <button class="step-button" type="button" data-step-target="imagenes">Imagenes</button>
-          <button class="step-button" type="button" data-step-target="observaciones">Avanzado</button>
+          <button class="step-button" type="button" data-step-target="imagenes">Adjuntos</button>
+          <button class="step-button" type="button" data-step-target="observaciones">Prompt</button>
           <button class="step-button" type="button" data-step-target="resultado">Resultado</button>
         </nav>
 
@@ -58,8 +58,8 @@
             <div class="section-heading">
               <span>2</span>
               <div>
-                <h2>Datos del medico</h2>
-                <p>Identidad profesional y datos visibles del especialista.</p>
+                <h2>Datos del profesional</h2>
+                <p>Identidad profesional y datos visibles.</p>
               </div>
             </div>
             <div id="doctorFields" class="field-grid"></div>
@@ -77,7 +77,7 @@
             <div id="additionalSpecialtiesEditor" class="list-editor"></div>
             <div class="list-editor">
               <div class="list-title">
-                <label for="newService">Lista editable de prestaciones</label>
+                <label for="newService">Prestaciones visibles en el flyer</label>
                 <button class="secondary-button" type="button" id="addServiceButton">Agregar prestacion</button>
               </div>
               <div class="inline-entry">
@@ -114,12 +114,12 @@
             <div class="section-heading">
               <span>6</span>
               <div>
-                <h2>Imagenes</h2>
-                <p>Seleccion local para recordar que adjuntos enviar a ChatGPT.</p>
+                <h2>Adjuntos</h2>
+                <p>Seleccion local para recordar que archivos enviar manualmente a ChatGPT.</p>
               </div>
             </div>
             <div id="imageFields" class="field-grid"></div>
-            <p class="warning-text">Estas imagenes no se suben ni se guardan en internet. Deberas adjuntarlas manualmente en ChatGPT antes de pegar el prompt.</p>
+            <p class="warning-text">Estos archivos no se suben ni se guardan en internet. Deberas adjuntarlos manualmente en ChatGPT antes de pegar el prompt.</p>
             <ul id="imageList" class="image-list"></ul>
           </section>
 
@@ -127,7 +127,7 @@
             <div class="section-heading">
               <span>7</span>
               <div>
-                <h2>Observaciones avanzadas</h2>
+                <h2>Opciones del prompt</h2>
                 <p>Preferencias finas, frases a evitar e instrucciones libres.</p>
               </div>
             </div>

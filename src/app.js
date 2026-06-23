@@ -2,7 +2,8 @@ import { colorPresets } from './data/designPresets.js';
 import { specialties } from './data/specialties.js';
 import { buildPrompt } from './prompt/promptBuilder.js';
 import { createDefaultState } from './state/defaultState.js';
-import { getLegacyAttachmentFiles, toLegacyState, updateFromLegacyPath } from './state/legacyAdapter.js';
+import { ATTACHMENT_ROLES } from './state/schema.js';
+import { toLegacyState } from './state/legacyAdapter.js';
 import { migrateState } from './state/migrations.js';
 import { clearState, loadState, loadTemplate, saveState, saveTemplate } from './state/storage.js';
 import { renderForm } from './ui/formRenderer.js';
@@ -13,13 +14,23 @@ let state = loadState();
 
 const handlers = {
   onFieldChange(path, value) {
-    updateFromLegacyPath(state, path, value);
-    if (path === 'services.primarySpecialty') applySpecialtyPreset(value);
+    setByPath(state, path, value);
+    if (path === 'specialty.primaryProfessionalSpecialty') applySpecialtyPreset(value);
     if (path === 'design.primaryColor') applyPrimaryColorPreset(value);
     update(shouldRenderForm(path));
   },
   onRemoveService(index) {
     state.services.visibleServices.splice(index, 1);
+    update(true);
+  },
+  onAddContextService(value) {
+    const normalized = value.trim();
+    if (!normalized) return;
+    state.services.contextServices.push(normalized);
+    update(true);
+  },
+  onRemoveContextService(index) {
+    state.services.contextServices.splice(index, 1);
     update(true);
   },
   onAddAdditionalSpecialty(value) {
@@ -55,6 +66,33 @@ const handlers = {
   onUpdateSchedule(index, key, value) {
     state.schedule.items[index][key] = value;
     update(false);
+  },
+  onAddAttachment() {
+    state.attachments.items.push({
+      id: `attachment_${Date.now()}`,
+      role: ATTACHMENT_ROLES.other,
+      fileName: '',
+      mimeType: '',
+      status: 'missing',
+      instruction: ''
+    });
+    update(true);
+  },
+  onRemoveAttachment(index) {
+    state.attachments.items.splice(index, 1);
+    update(true);
+  },
+  onUpdateAttachment(index, key, value) {
+    if (!state.attachments.items[index]) return;
+    if (key === 'file') {
+      state.attachments.items[index].fileName = value.fileName;
+      state.attachments.items[index].mimeType = value.mimeType;
+      state.attachments.items[index].status = value.fileName ? 'selected' : 'missing';
+    } else {
+      state.attachments.items[index][key] = value;
+      if (key === 'fileName') state.attachments.items[index].status = value ? 'selected' : 'missing';
+    }
+    update(key === 'role' || key === 'file');
   }
 };
 
@@ -65,9 +103,9 @@ function update(renderFields = false) {
   const legacyState = toLegacyState(state);
   const validation = validateState(legacyState);
   const prompt = buildPrompt(legacyState);
-  if (renderFields) renderForm(legacyState, handlers);
-  renderPreview(legacyState, validation);
-  renderResult(prompt, validation, legacyState);
+  if (renderFields) renderForm(state, handlers);
+  renderPreview(state, validation);
+  renderResult(prompt, validation, state);
   markRecommendedFields(validation);
   applyTheme();
   saveState(state);
@@ -215,7 +253,7 @@ function downloadFile(filename, content, type) {
 
 function markRecommendedFields(validation) {
   document.querySelectorAll('.field, .repeatable-row').forEach(field => field.classList.remove('has-warning'));
-  validation.fieldPaths.forEach(markPath);
+  validation.fieldPaths.map(mapLegacyWarningPath).forEach(markPath);
 }
 
 function markPath(path) {
@@ -226,19 +264,56 @@ function markPath(path) {
 }
 
 function shouldRenderForm(path) {
-  return path === 'services.primarySpecialty'
-    || path === 'services.allowExpansion'
+  return path === 'specialty.primaryProfessionalSpecialty'
+    || path === 'services.allowServiceExpansion'
     || path === 'design.primaryColor'
     || path === 'design.secondaryColor'
-    || path.startsWith('images.');
+    || path === 'promptOptions.allowVisualCreativity'
+    || path.startsWith('attachments.');
+}
+
+function mapLegacyWarningPath(path) {
+  const exactPaths = {
+    'clinic.phone': 'clinic.primaryPhone',
+    'doctor.name': 'professional.fullName',
+    'services.primarySpecialty': 'specialty.primaryProfessionalSpecialty',
+    'services.highlightedArea': 'specialty.communicationFocus',
+    'services.featured': 'services.mainHighlightedService',
+    'care.modality': 'schedule.modality',
+    'design.primaryCustomColor': 'design.customPrimaryColor',
+    'design.secondaryCustomColor': 'design.customSecondaryColor'
+  };
+  if (exactPaths[path]) return exactPaths[path];
+  if (path.startsWith('clinic.socialLinks.')) return path;
+  if (path.startsWith('care.schedules.')) return path.replace('care.schedules.', 'schedule.items.');
+  return path;
 }
 
 function buildAttachmentsChecklistText() {
-  const files = getLegacyAttachmentFiles(state);
+  const files = state.attachments.items
+    .filter(item => item.fileName)
+    .map(item => [labelAttachmentRole(item.role), item.fileName]);
   if (!files.length) return 'No hay archivos seleccionados para adjuntar antes de pegar el prompt.';
   return ['Antes de pegar el prompt en ChatGPT, adjunta estos archivos:']
     .concat(files.map(([label, value]) => `- ${label}: ${value}`))
     .join('\n');
+}
+
+function setByPath(target, path, value) {
+  const parts = path.split('.');
+  const key = parts.pop();
+  const owner = parts.reduce((object, part) => object[part], target);
+  owner[key] = value;
+}
+
+function labelAttachmentRole(value) {
+  return {
+    clinicLogo: 'Logo de clinica',
+    professionalPhoto: 'Foto profesional',
+    referenceFlyer: 'Flyer de referencia',
+    thematicImage: 'Imagen tematica',
+    other: 'Otro'
+  }[value] || value;
 }
 
 function isLegacyColorValue(value) {

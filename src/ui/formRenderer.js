@@ -1,14 +1,13 @@
 import { colorPresets, formats, impactLevels, typographyOptions, visualStyles } from '../data/designPresets.js';
 import { specialties } from '../data/specialties.js';
+import { ATTACHMENT_ROLES, CONTENT_DENSITIES, PROMPT_TYPES } from '../state/schema.js';
 
 const titles = ['Dr.', 'Dra.', 'Lic.', 'Prof.', 'Otro'];
 const modalities = ['presencial', 'virtual', 'ambas'];
 const socialTypes = ['Instagram', 'Facebook', 'TikTok', 'Sitio web', 'WhatsApp', 'Otra'];
-const creativityOptions = [
-  'No: respetar estrictamente los datos cargados.',
-  'Si, moderada: permitir recursos visuales relacionados con la especialidad.',
-  'Si, amplia: permitir imagenes o recursos graficos aleatorios relacionados con la especialidad, sin inventar datos medicos.'
-];
+const contentDensityOptions = Object.values(CONTENT_DENSITIES);
+const creativityLevels = ['strict', 'moderate', 'broad'];
+const attachmentRoles = Object.values(ATTACHMENT_ROLES);
 
 export function renderForm(state, handlers) {
   const specialtyNames = specialties.map(item => item.name);
@@ -17,76 +16,75 @@ export function renderForm(state, handlers) {
   renderFields('#clinicFields', [
     text('Nombre de clinica', 'clinic.name', state.clinic.name, true),
     text('Direccion', 'clinic.address', state.clinic.address),
-    text('Telefono / WhatsApp principal', 'clinic.phone', state.clinic.phone, true),
-    textarea('Frase institucional', 'clinic.tagline', state.clinic.tagline),
-    file('Logo de clinica opcional', 'images.logoName'),
-    toggle('Mostrar datos de contacto', 'clinic.showContact', state.clinic.showContact),
+    text('Telefono / WhatsApp principal', 'clinic.primaryPhone', state.clinic.primaryPhone, true),
+    textarea('Frase institucional', 'clinic.institutionalPhrase', state.clinic.institutionalPhrase),
+    toggle('Mostrar datos de contacto', 'clinic.showContactData', state.clinic.showContactData),
     toggle('Guardar estos datos como predeterminados', 'clinic.saveAsDefault', state.clinic.saveAsDefault)
   ], handlers);
   renderSocialLinks(state, handlers);
 
   renderFields('#doctorFields', [
-    select('Titulo', 'doctor.title', state.doctor.title, titles),
-    text('Nombre completo del medico', 'doctor.name', state.doctor.name, true),
-    text('Especialidad declarada del profesional', 'doctor.specialty', state.doctor.specialty),
-    text('Matricula opcional', 'doctor.license', state.doctor.license),
-    file('Foto del medico opcional', 'images.doctorPhotoName'),
-    toggle('Mostrar foto del medico', 'doctor.showPhoto', state.doctor.showPhoto),
-    textarea('Aclaracion o cargo opcional', 'doctor.roleNote', state.doctor.roleNote)
+    select('Titulo', 'professional.title', state.professional.title, titles),
+    text('Nombre completo', 'professional.fullName', state.professional.fullName, true),
+    text('Matricula opcional', 'professional.license', state.professional.license),
+    textarea('Aclaracion o cargo opcional', 'professional.roleNote', state.professional.roleNote),
+    toggle('Mostrar foto profesional', 'professional.showPhoto', state.professional.showPhoto)
   ], handlers);
 
   renderFields('#serviceFields', [
-    select('Especialidad principal', 'services.primarySpecialty', state.services.primarySpecialty, specialtyNames, true),
-    text('Area destacada del flyer', 'services.highlightedArea', state.services.highlightedArea),
-    text('Prestacion principal destacada', 'services.featured', state.services.featured, true),
-    toggle('Permitir que ChatGPT agregue prestaciones generales razonables', 'services.allowExpansion', state.services.allowExpansion),
-    textarea('Instrucciones sobre ampliacion de tareas', 'services.expansionNotes', state.services.expansionNotes, false, !state.services.allowExpansion)
+    select('Especialidad profesional principal', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
+    text('Enfoque comunicacional del flyer', 'specialty.communicationFocus', state.specialty.communicationFocus),
+    text('Texto visible recomendado para el flyer', 'specialty.visibleSpecialtyText', state.specialty.visibleSpecialtyText),
+    text('Prestacion principal destacada', 'services.mainHighlightedService', state.services.mainHighlightedService, true),
+    toggle('Permitir que ChatGPT amplie prestaciones generales razonables', 'services.allowServiceExpansion', state.services.allowServiceExpansion),
+    textarea('Instrucciones para ampliacion', 'services.expansionInstructions', state.services.expansionInstructions, false, !state.services.allowServiceExpansion)
   ], handlers);
-  renderAdditionalSpecialties(state, handlers, specialtyNames);
+  renderAdditionalSpecialtiesAndContext(state, handlers, specialtyNames);
 
   renderFields('#careFields', [
-    toggle('Atiende por obra social', 'care.insurance', state.care.insurance),
-    toggle('Atiende particulares', 'care.privateCare', state.care.privateCare),
-    toggle('Requiere turno previo', 'care.requiresAppointment', state.care.requiresAppointment),
-    text('Texto personalizado para turnos', 'care.appointmentText', state.care.appointmentText),
-    select('Modalidad', 'care.modality', state.care.modality, modalities, true),
-    textarea('Observacion administrativa opcional', 'care.adminNote', state.care.adminNote)
+    toggle('Atiende por obra social', 'coverage.insurance', state.coverage.insurance),
+    toggle('Atiende particulares', 'coverage.privatePatients', state.coverage.privatePatients),
+    toggle('Requiere turno previo', 'schedule.requiresAppointment', state.schedule.requiresAppointment),
+    text('Texto personalizado para turnos', 'schedule.appointmentText', state.schedule.appointmentText),
+    select('Modalidad', 'schedule.modality', state.schedule.modality, modalities, true),
+    textarea('Observacion administrativa opcional', 'schedule.administrativeNote', state.schedule.administrativeNote)
   ], handlers);
   renderSchedules(state, handlers);
 
   renderFields('#designFields', [
     select('Formato', 'design.format', state.design.format, formats),
     select('Color principal', 'design.primaryColor', state.design.primaryColor, colorKeys, true, key => colorPresets[key].label),
-    text('Otro color principal', 'design.primaryCustomColor', state.design.primaryCustomColor, false, !isOtherColor(state.design.primaryColor)),
+    text('Otro color principal', 'design.customPrimaryColor', state.design.customPrimaryColor, false, !isOtherColor(state.design.primaryColor)),
     select('Color secundario', 'design.secondaryColor', state.design.secondaryColor, colorKeys, false, key => colorPresets[key].label),
-    text('Otro color secundario', 'design.secondaryCustomColor', state.design.secondaryCustomColor, false, !isOtherColor(state.design.secondaryColor)),
+    text('Otro color secundario', 'design.customSecondaryColor', state.design.customSecondaryColor, false, !isOtherColor(state.design.secondaryColor)),
     select('Estilo visual', 'design.visualStyle', state.design.visualStyle, visualStyles),
     select('Tipografia sugerida', 'design.typography', state.design.typography, typographyOptions),
-    select('Nivel de impacto visual', 'design.impact', state.design.impact, impactLevels),
-    toggle('Incluir iconos medicos', 'design.includeIcons', state.design.includeIcons),
-    toggle('Incluir fondo tematico relacionado con la especialidad', 'design.includeThemeBackground', state.design.includeThemeBackground),
-    toggle('Usar tematica automatica segun especialidad', 'design.autoTheme', state.design.autoTheme),
-    toggle('Usar estetica ya aprendida en la conversacion anclada', 'design.usePinnedStyle', state.design.usePinnedStyle)
+    select('Nivel de impacto visual', 'design.visualImpact', state.design.visualImpact, impactLevels),
+    select('Densidad del contenido', 'design.contentDensity', state.design.contentDensity, contentDensityOptions, false, labelContentDensity),
+    toggle('Incluir iconos medicos', 'design.includeMedicalIcons', state.design.includeMedicalIcons),
+    toggle('Incluir fondo tematico relacionado con la especialidad', 'design.includeThematicBackground', state.design.includeThematicBackground),
+    toggle('Usar tematica automatica segun especialidad', 'design.useAutomaticTheme', state.design.useAutomaticTheme),
+    toggle('Usar estetica ya aprendida en la conversacion anclada', 'design.usePinnedConversationStyle', state.design.usePinnedConversationStyle)
   ], handlers);
-
-  renderFields('#imageFields', [
-    file('Logo de clinica', 'images.logoName'),
-    file('Foto del medico', 'images.doctorPhotoName'),
-    file('Imagen de referencia del flyer', 'images.referenceName'),
-    file('Imagen tematica opcional', 'images.themeName')
-  ], handlers);
+  renderAttachments(state, handlers);
 
   renderFields('#advancedFields', [
-    textarea('Frase sugerida para el flyer', 'advanced.suggestedPhrase', state.advanced.suggestedPhrase),
-    textarea('Frases que NO deben usarse', 'advanced.forbiddenPhrases', state.advanced.forbiddenPhrases),
-    textarea('Datos que deben destacarse', 'advanced.highlightData', state.advanced.highlightData),
-    textarea('Datos que deben ir pequenos', 'advanced.smallData', state.advanced.smallData),
-    textarea('Instrucciones libres del usuario', 'advanced.freeInstructions', state.advanced.freeInstructions),
-    select('Permitir creatividad adicional', 'advanced.creativity', state.advanced.creativity, creativityOptions)
+    select('Tipo de prompt', 'promptOptions.promptType', state.promptOptions.promptType, [PROMPT_TYPES.finalFlyer], false, labelPromptType),
+    number('Cantidad de alternativas finales', 'promptOptions.finalAlternativesCount', state.promptOptions.finalAlternativesCount),
+    toggle('Requerir imagenes separadas', 'promptOptions.requireSeparateImages', state.promptOptions.requireSeparateImages),
+    toggle('Impedir collage, grilla o mockup multiple', 'promptOptions.preventCollage', state.promptOptions.preventCollage),
+    toggle('Usar margenes seguros moviles', 'promptOptions.requireMobileSafeArea', state.promptOptions.requireMobileSafeArea),
+    toggle('Permitir creatividad visual', 'promptOptions.allowVisualCreativity', state.promptOptions.allowVisualCreativity),
+    select('Nivel de creatividad visual', 'promptOptions.visualCreativityLevel', state.promptOptions.visualCreativityLevel, creativityLevels, false, labelCreativityLevel),
+    textarea('Frase sugerida para el flyer', 'promptOptions.suggestedPhrase', state.promptOptions.suggestedPhrase),
+    textarea('Frases que NO deben usarse', 'promptOptions.forbiddenPhrases', state.promptOptions.forbiddenPhrases),
+    textarea('Datos que deben destacarse', 'promptOptions.highlightData', state.promptOptions.highlightData),
+    textarea('Datos que deben ir pequenos', 'promptOptions.smallData', state.promptOptions.smallData),
+    textarea('Instrucciones libres del usuario', 'promptOptions.freeInstructions', state.promptOptions.freeInstructions)
   ], handlers);
 
-  renderServices(state, handlers);
-  renderImages(state);
+  renderVisibleServices(state, handlers);
+  renderAttachmentList(state);
 }
 
 function renderFields(target, fields, handlers) {
@@ -116,6 +114,9 @@ function renderField(field) {
   }
   if (field.type === 'select') {
     return `<label class="field${disabled}"><span>${field.label}${required}</span><select data-path="${field.path}">${field.options.map(option => `<option value="${escapeHtml(option)}" ${option === field.value ? 'selected' : ''}>${escapeHtml(field.labeler ? field.labeler(option) : option)}</option>`).join('')}</select></label>`;
+  }
+  if (field.type === 'number') {
+    return `<label class="field${disabled}"><span>${field.label}${required}</span><input type="number" min="1" data-path="${field.path}" value="${escapeHtml(field.value)}"></label>`;
   }
   if (field.type === 'file') {
     return `<label class="field file-field"><span>${field.label}</span><input type="file" data-path="${field.path}" accept="image/*"></label>`;
@@ -150,19 +151,31 @@ function renderSocialLinks(state, handlers) {
   });
 }
 
-function renderAdditionalSpecialties(state, handlers, specialtyNames) {
+function renderAdditionalSpecialtiesAndContext(state, handlers, specialtyNames) {
   const target = document.querySelector('#additionalSpecialtiesEditor');
   target.innerHTML = `
     <div class="list-title">
-      <label for="additionalSpecialtySelect">Especialidades adicionales</label>
+      <label for="additionalSpecialtySelect">Especialidades u orientaciones adicionales</label>
       <button class="secondary-button" type="button" id="addSpecialtyButton">Agregar especialidad</button>
     </div>
     <div class="inline-entry">
       <select id="additionalSpecialtySelect">${specialtyNames.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}</select>
     </div>
     <ul class="editable-list">
-      ${state.services.additionalSpecialties.map((item, index) => `
+      ${state.specialty.additionalSpecialties.map((item, index) => `
         <li><span>${escapeHtml(item)}</span><button type="button" class="icon-button" data-remove-specialty="${index}">Quitar</button></li>
+      `).join('')}
+    </ul>
+    <div class="list-title">
+      <label for="newContextService">Prestaciones o datos de contexto para orientar el diseno</label>
+      <button class="secondary-button" type="button" id="addContextServiceButton">Agregar contexto</button>
+    </div>
+    <div class="inline-entry">
+      <input id="newContextService" type="text" placeholder="Ej: Campana preventiva, chequeo anual, foco estetico">
+    </div>
+    <ul class="editable-list">
+      ${state.services.contextServices.map((item, index) => `
+        <li><span>${escapeHtml(item)}</span><button type="button" class="icon-button" data-remove-context-service="${index}">Quitar</button></li>
       `).join('')}
     </ul>
   `;
@@ -171,6 +184,18 @@ function renderAdditionalSpecialties(state, handlers, specialtyNames) {
   });
   target.querySelectorAll('[data-remove-specialty]').forEach(button => {
     button.addEventListener('click', () => handlers.onRemoveAdditionalSpecialty(Number(button.dataset.removeSpecialty)));
+  });
+  target.querySelector('#addContextServiceButton').addEventListener('click', () => {
+    handlers.onAddContextService(target.querySelector('#newContextService').value);
+  });
+  target.querySelector('#newContextService').addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handlers.onAddContextService(event.target.value);
+    }
+  });
+  target.querySelectorAll('[data-remove-context-service]').forEach(button => {
+    button.addEventListener('click', () => handlers.onRemoveContextService(Number(button.dataset.removeContextService)));
   });
 }
 
@@ -182,8 +207,8 @@ function renderSchedules(state, handlers) {
       <button class="secondary-button" type="button" id="addScheduleButton">Agregar horario</button>
     </div>
     <div class="repeatable-list">
-      ${state.care.schedules.map((item, index) => `
-        <div class="repeatable-row schedule-row" data-warning-path="care.schedules.${index}">
+      ${state.schedule.items.map((item, index) => `
+        <div class="repeatable-row schedule-row" data-warning-path="schedule.items.${index}">
           <label class="field"><span>Dia o dias</span><input type="text" value="${escapeHtml(item.days)}" data-schedule-index="${index}" data-schedule-key="days"></label>
           <label class="field"><span>Hora desde</span><input type="time" value="${escapeHtml(item.from)}" data-schedule-index="${index}" data-schedule-key="from"></label>
           <label class="field"><span>Hora hasta</span><input type="time" value="${escapeHtml(item.to)}" data-schedule-index="${index}" data-schedule-key="to"></label>
@@ -203,9 +228,9 @@ function renderSchedules(state, handlers) {
   });
 }
 
-function renderServices(state, handlers) {
+function renderVisibleServices(state, handlers) {
   const list = document.querySelector('#servicesList');
-  list.innerHTML = state.services.items.map((item, index) => `
+  list.innerHTML = state.services.visibleServices.map((item, index) => `
     <li>
       <span>${escapeHtml(item)}</span>
       <button type="button" class="icon-button" data-remove-service="${index}" aria-label="Eliminar ${escapeHtml(item)}">Quitar</button>
@@ -216,16 +241,48 @@ function renderServices(state, handlers) {
   });
 }
 
-function renderImages(state) {
-  const imageNames = [
-    ['Logo de clinica', state.images.logoName],
-    ['Foto del medico', state.images.doctorPhotoName],
-    ['Imagen de referencia', state.images.referenceName],
-    ['Imagen tematica', state.images.themeName]
-  ].filter(([, name]) => name);
+function renderAttachments(state, handlers) {
+  const target = document.querySelector('#imageFields');
+  target.innerHTML = `
+    <div class="list-title">
+      <label>Adjuntos locales</label>
+      <button class="secondary-button" type="button" id="addAttachmentButton">Agregar adjunto</button>
+    </div>
+    <div class="repeatable-list">
+      ${state.attachments.items.map((item, index) => `
+        <div class="repeatable-row" data-warning-path="attachments.items.${index}">
+          <label class="field"><span>Rol</span><select data-attachment-index="${index}" data-attachment-key="role">${attachmentRoles.map(role => `<option value="${escapeHtml(role)}" ${role === item.role ? 'selected' : ''}>${escapeHtml(labelAttachmentRole(role))}</option>`).join('')}</select></label>
+          <label class="field file-field"><span>Archivo</span><input type="file" accept="image/*" data-attachment-file="${index}"></label>
+          <label class="field"><span>Nombre de archivo</span><input type="text" value="${escapeHtml(item.fileName)}" data-attachment-index="${index}" data-attachment-key="fileName"></label>
+          <label class="field"><span>Instruccion opcional</span><input type="text" value="${escapeHtml(item.instruction)}" data-attachment-index="${index}" data-attachment-key="instruction"></label>
+          <button type="button" class="icon-button" data-remove-attachment="${index}">Quitar</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  target.querySelector('#addAttachmentButton').addEventListener('click', handlers.onAddAttachment);
+  target.querySelectorAll('[data-remove-attachment]').forEach(button => {
+    button.addEventListener('click', () => handlers.onRemoveAttachment(Number(button.dataset.removeAttachment)));
+  });
+  target.querySelectorAll('[data-attachment-index]').forEach(input => {
+    input.addEventListener('input', () => handlers.onUpdateAttachment(Number(input.dataset.attachmentIndex), input.dataset.attachmentKey, input.value));
+    input.addEventListener('change', () => handlers.onUpdateAttachment(Number(input.dataset.attachmentIndex), input.dataset.attachmentKey, input.value));
+  });
+  target.querySelectorAll('[data-attachment-file]').forEach(input => {
+    input.addEventListener('change', event => {
+      const index = Number(event.target.dataset.attachmentFile);
+      const file = event.target.files[0];
+      handlers.onUpdateAttachment(index, 'file', file ? { fileName: file.name, mimeType: file.type } : { fileName: '', mimeType: '' });
+      event.target.value = '';
+    });
+  });
+}
+
+function renderAttachmentList(state) {
+  const imageNames = state.attachments.items.filter(item => item.fileName);
 
   document.querySelector('#imageList').innerHTML = imageNames.length
-    ? imageNames.map(([label, name]) => `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(name)}</li>`).join('')
+    ? imageNames.map(item => `<li><strong>${escapeHtml(labelAttachmentRole(item.role))}:</strong> ${escapeHtml(item.fileName)}${item.instruction ? ` - ${escapeHtml(item.instruction)}` : ''}</li>`).join('')
     : '<li>No hay imagenes seleccionadas.</li>';
 }
 
@@ -245,6 +302,10 @@ function select(label, path, value, options, recommended = false, labeler = null
   return { type: 'select', label, path, value, options, recommended, labeler };
 }
 
+function number(label, path, value, recommended = false, hidden = false) {
+  return { type: 'number', label, path, value, recommended, hidden };
+}
+
 function toggle(label, path, value) {
   return { type: 'toggle', label, path, value };
 }
@@ -254,7 +315,41 @@ function file(label, path) {
 }
 
 function getValue(input) {
-  return input.type === 'checkbox' ? input.checked : input.value;
+  if (input.type === 'checkbox') return input.checked;
+  if (input.type === 'number') return Number(input.value);
+  return input.value;
+}
+
+function labelContentDensity(value) {
+  return {
+    brief: 'Breve',
+    balanced: 'Equilibrado',
+    detailed: 'Detallado'
+  }[value] || value;
+}
+
+function labelPromptType(value) {
+  return {
+    finalFlyer: 'Flyer final'
+  }[value] || value;
+}
+
+function labelCreativityLevel(value) {
+  return {
+    strict: 'Estricta',
+    moderate: 'Moderada',
+    broad: 'Amplia'
+  }[value] || value;
+}
+
+function labelAttachmentRole(value) {
+  return {
+    clinicLogo: 'Logo de clinica',
+    professionalPhoto: 'Foto profesional',
+    referenceFlyer: 'Flyer de referencia',
+    thematicImage: 'Imagen tematica',
+    other: 'Otro'
+  }[value] || value;
 }
 
 function escapeHtml(value = '') {
