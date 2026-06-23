@@ -1,37 +1,39 @@
-import { defaultClinic } from './data/defaultClinic.js';
 import { colorPresets } from './data/designPresets.js';
 import { specialties } from './data/specialties.js';
 import { buildPrompt } from './prompt/promptBuilder.js';
+import { createDefaultState } from './state/defaultState.js';
+import { getLegacyAttachmentFiles, toLegacyState, updateFromLegacyPath } from './state/legacyAdapter.js';
+import { migrateState } from './state/migrations.js';
 import { clearState, loadState, loadTemplate, saveState, saveTemplate } from './state/storage.js';
 import { renderForm } from './ui/formRenderer.js';
 import { renderPreview, renderResult } from './ui/previewRenderer.js';
 import { validateState } from './ui/validation.js';
 
-let state = mergeState(createDefaultState(), loadState());
+let state = loadState();
 
 const handlers = {
   onFieldChange(path, value) {
-    setByPath(state, path, value);
+    updateFromLegacyPath(state, path, value);
     if (path === 'services.primarySpecialty') applySpecialtyPreset(value);
     if (path === 'design.primaryColor') applyPrimaryColorPreset(value);
     update(shouldRenderForm(path));
   },
   onRemoveService(index) {
-    state.services.items.splice(index, 1);
+    state.services.visibleServices.splice(index, 1);
     update(true);
   },
   onAddAdditionalSpecialty(value) {
-    if (value && value !== state.services.primarySpecialty && !state.services.additionalSpecialties.includes(value)) {
-      state.services.additionalSpecialties.push(value);
+    if (value && value !== state.specialty.primaryProfessionalSpecialty && !state.specialty.additionalSpecialties.includes(value)) {
+      state.specialty.additionalSpecialties.push(value);
       update(true);
     }
   },
   onRemoveAdditionalSpecialty(index) {
-    state.services.additionalSpecialties.splice(index, 1);
+    state.specialty.additionalSpecialties.splice(index, 1);
     update(true);
   },
   onAddSocialLink() {
-    state.clinic.socialLinks.push({ type: 'Instagram', value: '' });
+    state.clinic.socialLinks.push({ id: `social_${Date.now()}`, type: 'Instagram', value: '' });
     update(true);
   },
   onRemoveSocialLink(index) {
@@ -43,15 +45,15 @@ const handlers = {
     update(false);
   },
   onAddSchedule() {
-    state.care.schedules.push({ days: '', from: '', to: '', note: '' });
+    state.schedule.items.push({ id: `schedule_${Date.now()}`, days: '', from: '', to: '', note: '' });
     update(true);
   },
   onRemoveSchedule(index) {
-    state.care.schedules.splice(index, 1);
+    state.schedule.items.splice(index, 1);
     update(true);
   },
   onUpdateSchedule(index, key, value) {
-    state.care.schedules[index][key] = value;
+    state.schedule.items[index][key] = value;
     update(false);
   }
 };
@@ -59,24 +61,13 @@ const handlers = {
 bindStaticActions();
 update(true);
 
-function createDefaultState() {
-  return {
-    clinic: { ...defaultClinic, socialLinks: [] },
-    doctor: { title: 'Dr.', name: '', specialty: '', license: '', showPhoto: true, roleNote: '' },
-    services: { primarySpecialty: 'Cardiologia', additionalSpecialties: [], highlightedArea: '', specialty: 'Cardiologia', featured: '', items: [], allowExpansion: false, expansionNotes: '' },
-    care: { schedules: [], days: '', hours: '', insurance: true, privateCare: true, requiresAppointment: true, appointmentText: 'Solicitar turno por WhatsApp.', modality: 'presencial', adminNote: '' },
-    design: { format: 'Historia Instagram 1080x1920', primaryColor: 'lila', primaryCustomColor: '', secondaryColor: 'lavanda', secondaryCustomColor: '', customColor: '', visualStyle: 'moderno', typography: 'moderna sans serif', impact: 'medio', includeIcons: true, includeThemeBackground: true, autoTheme: true, usePinnedStyle: true },
-    images: { logoName: '', doctorPhotoName: '', referenceName: '', themeName: '' },
-    advanced: { suggestedPhrase: '', forbiddenPhrases: '', highlightData: '', smallData: '', freeInstructions: '', creativity: 'Si, moderada: permitir recursos visuales relacionados con la especialidad.' }
-  };
-}
-
 function update(renderFields = false) {
-  const validation = validateState(state);
-  const prompt = buildPrompt(state);
-  if (renderFields) renderForm(state, handlers);
-  renderPreview(state, validation);
-  renderResult(prompt, validation, state);
+  const legacyState = toLegacyState(state);
+  const validation = validateState(legacyState);
+  const prompt = buildPrompt(legacyState);
+  if (renderFields) renderForm(legacyState, handlers);
+  renderPreview(legacyState, validation);
+  renderResult(prompt, validation, legacyState);
   markRecommendedFields(validation);
   applyTheme();
   saveState(state);
@@ -105,7 +96,7 @@ function bindStaticActions() {
   document.querySelector('#loadTemplateButton').addEventListener('click', () => {
     const template = loadTemplate();
     if (!template) return showStatus('No hay plantilla guardada.');
-    state = mergeState(createDefaultState(), template);
+    state = template;
     update(true);
     showStatus('Plantilla cargada.');
   });
@@ -124,7 +115,7 @@ function addService() {
   const input = document.querySelector('#newService');
   const value = input.value.trim();
   if (!value) return;
-  state.services.items.push(value);
+  state.services.visibleServices.push(value);
   input.value = '';
   update(true);
 }
@@ -132,10 +123,9 @@ function addService() {
 function applySpecialtyPreset(name) {
   const preset = specialties.find(item => item.name === name);
   if (!preset) return;
-  state.doctor.specialty = state.doctor.specialty || name;
-  state.services.specialty = name;
-  if (!state.services.items.length) state.services.items = [...preset.services];
-  if (!state.services.featured && preset.services[0]) state.services.featured = preset.services[0];
+  state.specialty.primaryProfessionalSpecialty = name;
+  if (!state.services.visibleServices.length) state.services.visibleServices = [...preset.services];
+  if (!state.services.mainHighlightedService && preset.services[0]) state.services.mainHighlightedService = preset.services[0];
 }
 
 function applyPrimaryColorPreset(key) {
@@ -202,7 +192,7 @@ function importJson(event) {
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      state = mergeState(createDefaultState(), JSON.parse(reader.result));
+      state = migrateState(JSON.parse(reader.result));
       update(true);
       showStatus('Configuracion importada.');
     } catch {
@@ -243,80 +233,12 @@ function shouldRenderForm(path) {
     || path.startsWith('images.');
 }
 
-function setByPath(target, path, value) {
-  const parts = path.split('.');
-  const key = parts.pop();
-  const owner = parts.reduce((object, part) => object[part], target);
-  owner[key] = value;
-}
-
-function mergeState(base, saved) {
-  if (!saved) return base;
-  const merged = {
-    ...base,
-    ...saved,
-    clinic: { ...base.clinic, ...saved.clinic },
-    doctor: { ...base.doctor, ...saved.doctor },
-    services: { ...base.services, ...saved.services, items: Array.isArray(saved.services?.items) ? saved.services.items : base.services.items },
-    care: { ...base.care, ...saved.care },
-    design: { ...base.design, ...saved.design },
-    images: { ...base.images, ...saved.images },
-    advanced: { ...base.advanced, ...saved.advanced }
-  };
-  return migrateState(merged, saved);
-}
-
-function migrateState(merged, saved) {
-  const legacySocial = saved?.clinic?.social || '';
-  if (!Array.isArray(merged.clinic.socialLinks)) merged.clinic.socialLinks = [];
-  if (legacySocial && !merged.clinic.socialLinks.length) {
-    merged.clinic.socialLinks = [{ type: 'Instagram', value: legacySocial }];
-  }
-
-  if (!merged.services.primarySpecialty) merged.services.primarySpecialty = merged.services.specialty || 'Cardiologia';
-  merged.services.specialty = merged.services.primarySpecialty;
-  if (!Array.isArray(merged.services.additionalSpecialties)) merged.services.additionalSpecialties = [];
-
-  if (!Array.isArray(merged.care.schedules)) merged.care.schedules = [];
-  if (!merged.care.schedules.length && (merged.care.days || merged.care.hours)) {
-    merged.care.schedules = [{ days: merged.care.days || '', from: '', to: '', note: merged.care.hours || '' }];
-  }
-
-  if (isLegacyColorValue(merged.design.primaryColor)) {
-    merged.design.primaryCustomColor = merged.design.primaryColor;
-    merged.design.primaryColor = 'otro';
-  }
-  if (isLegacyColorValue(merged.design.secondaryColor)) {
-    merged.design.secondaryCustomColor = merged.design.secondaryColor;
-    merged.design.secondaryColor = 'otro';
-  }
-  if (merged.design.customColor && !merged.design.primaryCustomColor) merged.design.primaryCustomColor = merged.design.customColor;
-  if (merged.design.primaryColor === 'personalizado') merged.design.primaryColor = 'otro';
-  if (merged.design.secondaryColor === 'personalizado') merged.design.secondaryColor = 'otro';
-  if (merged.design.primaryColor === 'gris') merged.design.primaryColor = 'grisInstitucional';
-  if (merged.design.secondaryColor === 'gris') merged.design.secondaryColor = 'grisInstitucional';
-  if (merged.design.primaryColor === 'naranja') merged.design.primaryColor = 'naranjaSuave';
-  if (merged.design.secondaryColor === 'naranja') merged.design.secondaryColor = 'naranjaSuave';
-  if (!colorPresets[merged.design.primaryColor]) merged.design.primaryColor = 'lila';
-  if (!colorPresets[merged.design.secondaryColor]) merged.design.secondaryColor = 'lavanda';
-  return merged;
-}
-
 function buildAttachmentsChecklistText() {
-  const files = [
-    ['Logo de clinica', state.images.logoName],
-    ['Foto del medico', state.images.doctorPhotoName],
-    ['Imagen de referencia del flyer', state.images.referenceName],
-    ['Imagen tematica opcional', state.images.themeName]
-  ].filter(([, value]) => value);
+  const files = getLegacyAttachmentFiles(state);
   if (!files.length) return 'No hay archivos seleccionados para adjuntar antes de pegar el prompt.';
   return ['Antes de pegar el prompt en ChatGPT, adjunta estos archivos:']
     .concat(files.map(([label, value]) => `- ${label}: ${value}`))
     .join('\n');
-}
-
-function isOtherColor(value) {
-  return value === 'otro' || value === 'personalizado';
 }
 
 function isLegacyColorValue(value) {

@@ -1,20 +1,25 @@
+import { createDefaultState } from './defaultState.js';
+import { migrateState } from './migrations.js';
+
 const STORAGE_KEY = 'flyerClinicoPromptBuilder.state';
 const TEMPLATE_KEY = 'flyerClinicoPromptBuilder.template';
 
 export function loadState() {
-  return readJson(STORAGE_KEY);
+  const stored = readJson(STORAGE_KEY);
+  return stored ? migrateState(stored) : createDefaultState();
 }
 
 export function saveState(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(migrateState(state)));
 }
 
 export function saveTemplate(state) {
-  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(state));
+  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(migrateState(state)));
 }
 
 export function loadTemplate() {
-  return readJson(TEMPLATE_KEY);
+  const stored = readJson(TEMPLATE_KEY);
+  return stored ? migrateState(stored) : null;
 }
 
 export function clearState() {
