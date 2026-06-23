@@ -10,17 +10,27 @@ import { renderPreview, renderResult } from './ui/previewRenderer.js';
 import { validateState } from './ui/validation.js';
 
 let state = loadState();
+let currentStep = '';
+const pieceWorkflows = {
+  [PIECE_TYPES.professionalFlyer]: ['clinica', 'medico', 'prestaciones', 'atencion', 'diseno', 'imagenes', 'observaciones', 'resultado'],
+  [PIECE_TYPES.clinicalInfographic]: ['clinica', 'prestaciones', 'diseno', 'imagenes', 'observaciones', 'resultado'],
+  [PIECE_TYPES.informativeFlyer]: ['clinica', 'prestaciones', 'atencion', 'diseno', 'imagenes', 'observaciones', 'resultado'],
+  [PIECE_TYPES.promotionCampaign]: ['clinica', 'prestaciones', 'atencion', 'diseno', 'imagenes', 'observaciones', 'resultado']
+};
+
 
 const handlers = {
   onFieldChange(path, value) {
     setByPath(state, path, value);
     if (path === 'specialty.primaryProfessionalSpecialty') applySpecialtyPreset(value);
     if (path === 'design.primaryColor') applyPrimaryColorPreset(value);
+    if (path === 'promptOptions.pieceType') currentStep = firstStepForPiece(value);
     update(shouldRenderForm(path));
   },
   onRemoveService(index) {
     state.services.visibleServices.splice(index, 1);
-    update(true);
+    setupThemeSelector();
+  update(true);
   },
   onAddContextService(value) {
     const normalized = value.trim();
@@ -106,10 +116,20 @@ function update(renderFields = false) {
   renderResult(prompt, validation, state);
   markRecommendedFields(validation);
   applyTheme();
+  if (!document.body.classList.contains('is-home')) showStep(currentStep || firstStepForPiece(state.promptOptions.pieceType));
   saveState(state);
 }
 
 function bindStaticActions() {
+  document.querySelectorAll('[data-piece-card]').forEach(card => {
+    card.addEventListener('click', () => startPieceFlow(card.dataset.pieceCard));
+  });
+  document.querySelector('#continueCurrentButton')?.addEventListener('click', () => startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false));
+  document.querySelector('#backHomeButton')?.addEventListener('click', showHome);
+  document.querySelector('#homeStepButton')?.addEventListener('click', showHome);
+  document.querySelector('#prevStepButton')?.addEventListener('click', previousStep);
+  document.querySelector('#nextStepButton')?.addEventListener('click', nextStep);
+
   document.querySelector('#addServiceButton').addEventListener('click', addService);
   document.querySelector('#newService').addEventListener('keydown', event => {
     if (event.key === 'Enter') {
@@ -333,9 +353,120 @@ function applyTheme() {
   document.documentElement.style.setProperty('--accent-soft', colorPresets[state.design.secondaryColor]?.soft || preset.soft);
 }
 
+
+
+function setupThemeSelector() {
+  const colorSelector = document.querySelector('#themeColorSelector');
+  const modeToggle = document.querySelector('#themeModeToggle');
+
+  const savedColor = localStorage.getItem('fcpb-ui-theme-color') || 'violet';
+  const savedMode = localStorage.getItem('fcpb-ui-theme-mode') || 'light';
+
+  applyInterfaceTheme(savedColor, savedMode);
+
+  if (colorSelector) {
+    colorSelector.value = savedColor;
+    colorSelector.addEventListener('change', () => {
+      const color = colorSelector.value || 'violet';
+      const mode = localStorage.getItem('fcpb-ui-theme-mode') || 'light';
+      applyInterfaceTheme(color, mode);
+      localStorage.setItem('fcpb-ui-theme-color', color);
+    });
+  }
+
+  if (modeToggle) {
+    modeToggle.addEventListener('click', () => {
+      const currentMode = localStorage.getItem('fcpb-ui-theme-mode') || 'light';
+      const nextMode = currentMode === 'dark' ? 'light' : 'dark';
+      const color = colorSelector?.value || localStorage.getItem('fcpb-ui-theme-color') || 'violet';
+      applyInterfaceTheme(color, nextMode);
+      localStorage.setItem('fcpb-ui-theme-color', color);
+      localStorage.setItem('fcpb-ui-theme-mode', nextMode);
+    });
+  }
+}
+
+function applyInterfaceTheme(color = 'violet', mode = 'light') {
+  const normalizedColor = ['violet', 'blue', 'green', 'orange', 'red', 'pink'].includes(color) ? color : 'violet';
+  const normalizedMode = mode === 'dark' ? 'dark' : 'light';
+  document.body.dataset.theme = `${normalizedColor}-${normalizedMode}`;
+
+  const modeToggle = document.querySelector('#themeModeToggle');
+  if (modeToggle) {
+    modeToggle.textContent = normalizedMode === 'dark' ? '☀️' : '🌙';
+    modeToggle.setAttribute('aria-label', normalizedMode === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+    modeToggle.title = normalizedMode === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+  }
+}
+
+function startPieceFlow(pieceType, resetCurrentStep = true) {
+  state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
+  document.body.classList.remove('is-home');
+  if (resetCurrentStep || !currentStep) currentStep = firstStepForPiece(state.promptOptions.pieceType);
+  update(true);
+  showStep(currentStep);
+  document.querySelector('.app-shell')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showStatus(`${labelPieceType(state.promptOptions.pieceType)} iniciado.`);
+}
+
+function showHome() {
+  document.body.classList.add('is-home');
+  showStatus('Inicio.');
+}
+
 function showStep(step) {
-  document.querySelectorAll('.form-section').forEach(section => section.classList.toggle('is-current', section.dataset.step === step));
-  document.querySelectorAll('.step-button').forEach(button => button.classList.toggle('is-active', button.dataset.stepTarget === step));
+  const steps = availableSteps();
+  const resolvedStep = steps.includes(step) ? step : steps[0];
+  currentStep = resolvedStep;
+
+  document.querySelectorAll('.form-section').forEach(section => {
+    const isCurrent = section.dataset.step === resolvedStep;
+    section.classList.toggle('is-current', isCurrent);
+  });
+
+  document.querySelectorAll('.step-button').forEach(button => {
+    const isAvailable = steps.includes(button.dataset.stepTarget);
+    button.hidden = !isAvailable;
+    button.classList.toggle('is-active', button.dataset.stepTarget === resolvedStep);
+  });
+
+  updateWorkflowChrome();
+}
+
+function nextStep() {
+  const steps = availableSteps();
+  const index = steps.indexOf(currentStep);
+  const next = steps[Math.min(index + 1, steps.length - 1)] || steps[0];
+  showStep(next);
+}
+
+function previousStep() {
+  const steps = availableSteps();
+  const index = steps.indexOf(currentStep);
+  const previous = steps[Math.max(index - 1, 0)] || steps[0];
+  showStep(previous);
+}
+
+function firstStepForPiece(pieceType) {
+  return (pieceWorkflows[pieceType] || pieceWorkflows[PIECE_TYPES.professionalFlyer])[0];
+}
+
+function availableSteps() {
+  return pieceWorkflows[state.promptOptions.pieceType] || pieceWorkflows[PIECE_TYPES.professionalFlyer];
+}
+
+function updateWorkflowChrome() {
+  const steps = availableSteps();
+  const index = Math.max(steps.indexOf(currentStep), 0);
+  const title = document.querySelector('#workflowTitle');
+  const subtitle = document.querySelector('#workflowSubtitle');
+  const prev = document.querySelector('#prevStepButton');
+  const next = document.querySelector('#nextStepButton');
+
+  if (title) title.textContent = labelPieceType(state.promptOptions.pieceType);
+  if (subtitle) subtitle.textContent = `Paso ${index + 1} de ${steps.length}: ${labelStep(currentStep)}`;
+  if (prev) prev.disabled = index <= 0;
+  if (next) next.textContent = index >= steps.length - 1 ? 'Resultado' : 'Siguiente →';
 }
 
 async function copyPrompt() {
@@ -474,6 +605,29 @@ function isLegacyColorValue(value) {
   return typeof value === 'string' && (value.startsWith('#') || value.includes('rgb('));
 }
 
+
+function labelPieceType(value) {
+  return {
+    professionalFlyer: 'Flyer profesional',
+    clinicalInfographic: 'Infografía clínica',
+    informativeFlyer: 'Flyer informativo',
+    promotionCampaign: 'Promoción / campaña'
+  }[value] || 'Flyer profesional';
+}
+
+function labelStep(value) {
+  return {
+    clinica: 'Clínica',
+    medico: 'Profesional',
+    prestaciones: 'Contenido',
+    atencion: 'Atención',
+    diseno: 'Diseño',
+    imagenes: 'Adjuntos',
+    observaciones: 'Opciones del prompt',
+    resultado: 'Resultado final'
+  }[value] || value;
+}
+
 function showStatus(message) {
   const node = document.querySelector('#statusMessage');
   node.textContent = message;
@@ -481,3 +635,73 @@ function showStatus(message) {
     if (node.textContent === message) node.textContent = '';
   }, 3000);
 }
+
+
+/* Etapa 9A.5: fix robusto de selector color + modo claro/oscuro */
+(function initThemeControlsRobustly() {
+  const COLORS = ['violet', 'blue', 'green', 'orange', 'red', 'pink'];
+
+  function normalizeColor(value) {
+    return COLORS.includes(value) ? value : 'violet';
+  }
+
+  function normalizeMode(value) {
+    return value === 'dark' ? 'dark' : 'light';
+  }
+
+  function getStoredColor() {
+    return normalizeColor(localStorage.getItem('fcpb-ui-theme-color') || 'violet');
+  }
+
+  function getStoredMode() {
+    return normalizeMode(localStorage.getItem('fcpb-ui-theme-mode') || 'light');
+  }
+
+  function setTheme(color, mode) {
+    const safeColor = normalizeColor(color);
+    const safeMode = normalizeMode(mode);
+
+    document.body.dataset.theme = `${safeColor}-${safeMode}`;
+    localStorage.setItem('fcpb-ui-theme-color', safeColor);
+    localStorage.setItem('fcpb-ui-theme-mode', safeMode);
+
+    const colorSelector = document.querySelector('#themeColorSelector');
+    const modeToggle = document.querySelector('#themeModeToggle');
+
+    if (colorSelector) colorSelector.value = safeColor;
+
+    if (modeToggle) {
+      modeToggle.textContent = safeMode === 'dark' ? '☀️' : '🌙';
+      modeToggle.setAttribute('aria-label', safeMode === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+      modeToggle.setAttribute('title', safeMode === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+      modeToggle.dataset.mode = safeMode;
+    }
+  }
+
+  function bindThemeControls() {
+    const colorSelector = document.querySelector('#themeColorSelector');
+    const modeToggle = document.querySelector('#themeModeToggle');
+
+    setTheme(getStoredColor(), getStoredMode());
+
+    if (colorSelector && !colorSelector.dataset.themeBound) {
+      colorSelector.dataset.themeBound = 'true';
+      colorSelector.addEventListener('change', () => {
+        setTheme(colorSelector.value, getStoredMode());
+      });
+    }
+
+    if (modeToggle && !modeToggle.dataset.themeBound) {
+      modeToggle.dataset.themeBound = 'true';
+      modeToggle.addEventListener('click', () => {
+        const nextMode = getStoredMode() === 'dark' ? 'light' : 'dark';
+        setTheme(getStoredColor(), nextMode);
+      });
+    }
+  }
+
+  bindThemeControls();
+  window.addEventListener('DOMContentLoaded', bindThemeControls);
+  window.addEventListener('pageshow', bindThemeControls);
+})();
+

@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%238b5cf6'/%3E%3Cpath d='M31 15h6v14h14v6H37v14h-6V35H17v-6h14z' fill='white'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="assets/css/styles.css">
   </head>
-  <body>
+  <body class="is-home">
     <div class="page-glow page-glow-one" aria-hidden="true"></div>
     <div class="page-glow page-glow-two" aria-hidden="true"></div>
 
@@ -23,34 +23,83 @@
             </svg>
           </span>
           <div>
-            <h1>Flyer Clinico Prompt Builder</h1>
-            <p class="lead">Completa datos clinicos, tipo de pieza, estilo visual y adjuntos para generar un prompt listo para crear flyers, infografias o campañas en la conversacion anclada "Diseno de flyer clinico".</p>
+            <h1 class="app-title">
+              <span>Generador de contenido</span>
+              <span>médico promocional</span>
+              <small>para centros y clínicas</small>
+            </h1>
+            <div class="theme-toolbar" aria-label="Selector de tema de interfaz">
+              <label for="themeColorSelector">Tema</label>
+              <select id="themeColorSelector" aria-label="Elegir color del tema">
+                <option value="violet">Violeta</option>
+                <option value="blue">Celeste</option>
+                <option value="green">Verde</option>
+                <option value="orange">Naranja</option>
+                <option value="red">Rojo</option>
+                <option value="pink">Rosa</option>
+              </select>
+              <button type="button" id="themeModeToggle" class="theme-mode-toggle" aria-label="Cambiar a modo oscuro" title="Cambiar modo claro/oscuro">🌙</button>
+            </div>
           </div>
         </div>
 
-        <div class="hero-tags" aria-label="Funciones principales">
-          <span>Flyers, infografias y campañas</span>
-          <span>2 alternativas separadas</span>
-          <span>Estado / historia sin scroll</span>
-          <span>Sin backend</span>
-          <span>Adjuntos guiados</span>
-        </div>
       </div>
 
-      <aside class="hero-card" aria-label="Privacidad y flujo">
-        <div class="hero-card-icon" aria-hidden="true">✦</div>
-        <h2>Prompt clinico controlado</h2>
-        <p>Todo se procesa en tu navegador. Las imagenes seleccionadas no se suben a internet. El prompt generado debe copiarse manualmente en ChatGPT.</p>
-        <div class="hero-mini-grid">
-          <span><strong>Local</strong>Privado</span>
-          <span><strong>V2</strong>Modelo nuevo</span>
-          <span><strong>Demo</strong>Pruebas rapidas</span>
-        </div>
-      </aside>
     </header>
+
+
+    <section class="piece-home" id="pieceHome" aria-label="Seleccion de tipo de pieza">
+      <div class="piece-home-header">
+        <p class="eyebrow">Inicio</p>
+        <h2>¿Qué querés crear?</h2>
+      </div>
+
+      <div class="piece-card-grid">
+        <button class="piece-card" type="button" data-piece-card="professionalFlyer">
+          <span class="piece-card-icon" aria-hidden="true">👩‍⚕️</span>
+          <span class="piece-card-title">Flyer profesional</span>
+          <span class="piece-card-text">Para médicos, especialidades, horarios, prestaciones, turnos y datos de contacto.</span>
+          <span class="piece-card-action">Crear flyer</span>
+        </button>
+
+        <button class="piece-card" type="button" data-piece-card="clinicalInfographic">
+          <span class="piece-card-icon" aria-hidden="true">📊</span>
+          <span class="piece-card-title">Infografía clínica</span>
+          <span class="piece-card-text">Para educación sanitaria, prevención, pasos, recomendaciones y contenidos explicativos.</span>
+          <span class="piece-card-action">Crear infografía</span>
+        </button>
+
+        <button class="piece-card" type="button" data-piece-card="informativeFlyer">
+          <span class="piece-card-icon" aria-hidden="true">ℹ️</span>
+          <span class="piece-card-title">Flyer informativo</span>
+          <span class="piece-card-text">Para comunicar servicios, estudios, prestaciones, novedades o información institucional.</span>
+          <span class="piece-card-action">Crear informativo</span>
+        </button>
+
+        <button class="piece-card" type="button" data-piece-card="promotionCampaign">
+          <span class="piece-card-icon" aria-hidden="true">📣</span>
+          <span class="piece-card-title">Promoción / campaña</span>
+          <span class="piece-card-text">Para agenda abierta, jornadas, campañas preventivas, vigencias y llamados a la acción.</span>
+          <span class="piece-card-action">Crear campaña</span>
+        </button>
+      </div>
+
+      <div class="home-secondary-actions">
+        <button class="secondary-button compact-action" type="button" id="continueCurrentButton">Continuar formulario guardado</button>
+        <span>Los ejemplos quedan dentro de cada flujo como ayuda discreta.</span>
+      </div>
+    </section>
 
     <main class="app-shell">
       <section class="workspace" aria-label="Formulario de configuracion">
+
+        <div class="workflow-bar">
+          <button class="secondary-button compact-action" type="button" id="backHomeButton">← Inicio</button>
+          <div>
+            <strong id="workflowTitle">Flujo de creación</strong>
+            <span id="workflowSubtitle">Completá los pasos y generá el prompt final.</span>
+          </div>
+        </div>
         <nav class="step-nav" aria-label="Secciones del formulario">
           <button class="step-button is-active" type="button" data-step-target="tipo">Tipo</button>
           <button class="step-button" type="button" data-step-target="clinica">Clinica</button>
@@ -202,6 +251,12 @@
             </div>
           </section>
         </form>
+
+        <div class="wizard-controls" aria-label="Navegacion del asistente">
+          <button class="secondary-button" type="button" id="prevStepButton">← Anterior</button>
+          <button class="secondary-button" type="button" id="homeStepButton">Inicio</button>
+          <button class="primary-button" type="button" id="nextStepButton">Siguiente →</button>
+        </div>
       </section>
 
       <aside class="side-panel" aria-label="Resumen y acciones">
@@ -217,19 +272,32 @@
             <h2>Acciones</h2>
             <span>Produccion</span>
           </div>
-          <div class="action-grid">
-            <button class="primary-button" type="button" id="copyPromptButton">Copiar prompt</button>
-            <button class="secondary-button" type="button" id="copyAttachmentsButton">Copiar checklist de adjuntos</button>
-            <button class="secondary-button demo-button" type="button" id="loadDemoButton">Cargar datos demo</button>
-            <button class="secondary-button" type="button" id="downloadPromptButton">Descargar TXT</button>
-            <button class="secondary-button" type="button" id="saveTemplateButton">Guardar plantilla</button>
-            <button class="secondary-button" type="button" id="loadTemplateButton">Cargar plantilla</button>
-            <button class="secondary-button" type="button" id="exportJsonButton">Exportar JSON</button>
-            <label class="file-action">
-              Importar JSON
-              <input type="file" id="importJsonInput" accept="application/json,.json">
-            </label>
-            <button class="danger-button" type="button" id="clearButton">Limpiar</button>
+          <div class="action-grid action-grid-v2">
+            <div class="action-group primary-actions">
+              <span class="action-group-title">Acción principal</span>
+              <button class="primary-button" type="button" id="copyPromptButton">Copiar prompt</button>
+            </div>
+
+            <div class="action-group secondary-actions">
+              <span class="action-group-title">Enviar a ChatGPT</span>
+              <button class="secondary-button" type="button" id="copyAttachmentsButton">Copiar checklist de adjuntos</button>
+              <button class="secondary-button" type="button" id="downloadPromptButton">Descargar TXT</button>
+            </div>
+
+            <details class="more-actions">
+              <summary>Más opciones</summary>
+              <div class="more-actions-grid">
+                <button class="secondary-button demo-button" type="button" id="loadDemoButton">Cargar datos demo</button>
+                <button class="secondary-button" type="button" id="saveTemplateButton">Guardar plantilla</button>
+                <button class="secondary-button" type="button" id="loadTemplateButton">Cargar plantilla</button>
+                <button class="secondary-button" type="button" id="exportJsonButton">Exportar JSON</button>
+                <label class="file-action">
+                  Importar JSON
+                  <input type="file" id="importJsonInput" accept="application/json,.json">
+                </label>
+                <button class="danger-button" type="button" id="clearButton">Limpiar</button>
+              </div>
+            </details>
           </div>
           <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
         </div>
