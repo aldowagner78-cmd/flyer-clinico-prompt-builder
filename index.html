@@ -24,11 +24,12 @@
           </span>
           <div>
             <h1>Flyer Clinico Prompt Builder</h1>
-            <p class="lead">Completa datos clinicos, estilo visual y adjuntos para generar un prompt listo para crear flyers finales en la conversacion anclada "Diseno de flyer clinico".</p>
+            <p class="lead">Completa datos clinicos, tipo de pieza, estilo visual y adjuntos para generar un prompt listo para crear flyers, infografias o campañas en la conversacion anclada "Diseno de flyer clinico".</p>
           </div>
         </div>
 
         <div class="hero-tags" aria-label="Funciones principales">
+          <span>Flyers, infografias y campañas</span>
           <span>2 alternativas separadas</span>
           <span>Estado / historia sin scroll</span>
           <span>Sin backend</span>
@@ -51,7 +52,8 @@
     <main class="app-shell">
       <section class="workspace" aria-label="Formulario de configuracion">
         <nav class="step-nav" aria-label="Secciones del formulario">
-          <button class="step-button is-active" type="button" data-step-target="clinica">Clinica</button>
+          <button class="step-button is-active" type="button" data-step-target="tipo">Tipo</button>
+          <button class="step-button" type="button" data-step-target="clinica">Clinica</button>
           <button class="step-button" type="button" data-step-target="medico">Profesional</button>
           <button class="step-button" type="button" data-step-target="prestaciones">Prestaciones</button>
           <button class="step-button" type="button" data-step-target="atencion">Atencion</button>
@@ -72,7 +74,19 @@
         </div>
 
         <form id="promptForm" novalidate>
-          <section class="form-section is-current" id="clinica" data-step="clinica">
+          <section class="form-section is-current" id="tipo" data-step="tipo">
+            <div class="section-heading">
+              <span>0</span>
+              <div>
+                <h2>Tipo de pieza</h2>
+                <p>Elegí si querés crear un flyer profesional, una infografía, un flyer informativo o una campaña/promoción.</p>
+              </div>
+            </div>
+            <div id="pieceFields" class="field-grid"></div>
+            <p class="warning-text">Este selector adapta el prompt y las prioridades de contenido. La app sigue generando 2 alternativas finales separadas.</p>
+          </section>
+
+          <section class="form-section" id="clinica" data-step="clinica">
             <div class="section-heading">
               <span>1</span>
               <div>

@@ -462,7 +462,8 @@ h3 {
   gap: 7px;
 }
 
-.field[hidden] {
+.field[hidden],
+.field.hidden {
   display: none;
 }
 
@@ -883,5 +884,35 @@ textarea:focus {
 
   .step-button {
     padding-inline: 14px;
+  }
+}
+
+
+/* Etapa 8A: selector de tipo de pieza */
+#tipo .section-heading > span {
+  background: linear-gradient(135deg, #ccfbf1, #ede9fe);
+  color: #115e59;
+}
+
+#pieceFields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#pieceFields .field:first-child,
+#pieceFields .field:nth-child(2),
+#pieceFields .field:nth-child(5),
+#pieceFields .field:nth-child(6),
+#pieceFields .field:nth-child(9),
+#pieceFields .field:nth-child(11) {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+  #pieceFields {
+    grid-template-columns: 1fr;
+  }
+
+  #pieceFields .field {
+    grid-column: auto;
   }
 }

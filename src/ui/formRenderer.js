@@ -1,17 +1,37 @@
 import { colorPresets, formats, impactLevels, typographyOptions, visualStyles } from '../data/designPresets.js';
 import { specialties } from '../data/specialties.js';
-import { ATTACHMENT_ROLES, CONTENT_DENSITIES, PROMPT_TYPES } from '../state/schema.js';
+import { ATTACHMENT_ROLES, CONTENT_DENSITIES, PIECE_TYPES, PROMPT_TYPES } from '../state/schema.js';
 
 const titles = ['Dr.', 'Dra.', 'Lic.', 'Prof.', 'Otro'];
 const modalities = ['presencial', 'virtual', 'ambas'];
 const socialTypes = ['Instagram', 'Facebook', 'TikTok', 'Sitio web', 'WhatsApp', 'Otra'];
 const contentDensityOptions = Object.values(CONTENT_DENSITIES);
+const pieceTypeOptions = Object.values(PIECE_TYPES);
 const creativityLevels = ['strict', 'moderate', 'broad'];
 const attachmentRoles = Object.values(ATTACHMENT_ROLES);
 
 export function renderForm(state, handlers) {
   const specialtyNames = specialties.map(item => item.name);
   const colorKeys = Object.keys(colorPresets).filter(key => !['naranja', 'gris', 'personalizado'].includes(key));
+  const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
+  const isInfographic = pieceType === PIECE_TYPES.clinicalInfographic;
+  const isInformative = pieceType === PIECE_TYPES.informativeFlyer;
+  const isCampaign = pieceType === PIECE_TYPES.promotionCampaign;
+  const isProfessional = pieceType === PIECE_TYPES.professionalFlyer;
+
+  renderFields('#pieceFields', [
+    select('Que queres crear?', 'promptOptions.pieceType', pieceType, pieceTypeOptions, true, labelPieceType),
+    textarea('Objetivo de la pieza', 'promptOptions.contentGoal', state.promptOptions.contentGoal),
+    text('Publico objetivo', 'promptOptions.targetAudience', state.promptOptions.targetAudience),
+    text('Tema educativo / informativo', 'promptOptions.educationalTopic', state.promptOptions.educationalTopic, false, !(isInfographic || isInformative)),
+    textarea('Mensaje principal', 'promptOptions.mainMessage', state.promptOptions.mainMessage, false, false),
+    textarea('Bloques o puntos informativos', 'promptOptions.infoBlocksText', state.promptOptions.infoBlocksText, false, !(isInfographic || isInformative)),
+    text('Tipo de campaña o promoción', 'promptOptions.campaignType', state.promptOptions.campaignType, false, !isCampaign),
+    text('Vigencia / fecha / periodo', 'promptOptions.campaignValidity', state.promptOptions.campaignValidity, false, !isCampaign),
+    textarea('Condiciones o aclaraciones', 'promptOptions.campaignConditions', state.promptOptions.campaignConditions, false, !isCampaign),
+    text('Llamada a la acción principal', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, false, !isCampaign),
+    textarea('Nota legal, ética o aclaración sanitaria', 'promptOptions.legalEthicalNote', state.promptOptions.legalEthicalNote)
+  ], handlers);
 
   renderFields('#clinicFields', [
     text('Nombre de clinica', 'clinic.name', state.clinic.name, true),
@@ -69,7 +89,7 @@ export function renderForm(state, handlers) {
   renderAttachments(state, handlers);
 
   renderFields('#advancedFields', [
-    select('Tipo de prompt', 'promptOptions.promptType', state.promptOptions.promptType, [PROMPT_TYPES.finalFlyer], false, labelPromptType),
+    select('Tipo técnico de salida', 'promptOptions.promptType', state.promptOptions.promptType, [PROMPT_TYPES.finalFlyer], false, labelPromptType),
     number('Cantidad de alternativas finales', 'promptOptions.finalAlternativesCount', state.promptOptions.finalAlternativesCount),
     toggle('Requerir imagenes separadas', 'promptOptions.requireSeparateImages', state.promptOptions.requireSeparateImages),
     toggle('Impedir collage, grilla o mockup multiple', 'promptOptions.preventCollage', state.promptOptions.preventCollage),
@@ -325,6 +345,15 @@ function labelContentDensity(value) {
     brief: 'Breve',
     balanced: 'Equilibrado',
     detailed: 'Detallado'
+  }[value] || value;
+}
+
+function labelPieceType(value) {
+  return {
+    professionalFlyer: 'Flyer de profesional / especialidad',
+    clinicalInfographic: 'Infografia clinica educativa',
+    informativeFlyer: 'Flyer informativo',
+    promotionCampaign: 'Promocion / campaña / agenda'
   }[value] || value;
 }
 

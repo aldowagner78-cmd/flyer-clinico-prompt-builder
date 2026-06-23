@@ -12,6 +12,13 @@ export const PROMPT_TYPES = {
   finalFlyer: 'finalFlyer'
 };
 
+export const PIECE_TYPES = {
+  professionalFlyer: 'professionalFlyer',
+  clinicalInfographic: 'clinicalInfographic',
+  informativeFlyer: 'informativeFlyer',
+  promotionCampaign: 'promotionCampaign'
+};
+
 export const CONTENT_DENSITIES = {
   brief: 'brief',
   balanced: 'balanced',

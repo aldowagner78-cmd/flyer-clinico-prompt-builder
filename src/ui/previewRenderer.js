@@ -4,6 +4,8 @@ export function renderPreview(state, validation) {
   const summary = document.querySelector('#summaryPanel');
   summary.innerHTML = `
     <dl>
+      <div><dt>Tipo de pieza</dt><dd>${escapeHtml(labelPieceType(state.promptOptions.pieceType))}</dd></div>
+      <div><dt>Objetivo</dt><dd>${escapeHtml(state.promptOptions.contentGoal) || 'Sin completar'}</dd></div>
       <div><dt>Clinica</dt><dd>${escapeHtml(state.clinic.name) || 'Sin completar'}</dd></div>
       <div><dt>Profesional</dt><dd>${escapeHtml([state.professional.title, state.professional.fullName].filter(Boolean).join(' ')) || 'Sin completar'}</dd></div>
       <div><dt>Especialidad principal</dt><dd>${escapeHtml(state.specialty.primaryProfessionalSpecialty) || 'Sin completar'}</dd></div>
@@ -110,6 +112,15 @@ function getColorName(key, custom) {
 
 function listOrFallback(values) {
   return values.length ? values.join(', ') : 'Sin adicionales';
+}
+
+function labelPieceType(value) {
+  return {
+    professionalFlyer: 'Flyer profesional',
+    clinicalInfographic: 'Infografia clinica',
+    informativeFlyer: 'Flyer informativo',
+    promotionCampaign: 'Promocion / campaña'
+  }[value] || 'Flyer profesional';
 }
 
 function labelContentDensity(value) {

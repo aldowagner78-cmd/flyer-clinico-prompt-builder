@@ -1,10 +1,25 @@
-const COMPLETE_REQUIRED_CHECKS = [
+const BASE_REQUIRED_CHECKS = [
   {
     key: 'clinic',
     label: 'Nombre de la clinica',
     path: 'clinic.name',
     test: state => hasText(state?.clinic?.name)
   },
+  {
+    key: 'color',
+    label: 'Color principal',
+    path: 'design.primaryColor',
+    test: state => hasText(state?.design?.primaryColor)
+  },
+  {
+    key: 'contact',
+    label: 'Datos de contacto',
+    path: 'clinic.primaryPhone',
+    test: state => hasContact(state)
+  }
+];
+
+const PROFESSIONAL_REQUIRED_CHECKS = [
   {
     key: 'professionalName',
     label: 'Nombre del profesional',
@@ -36,18 +51,48 @@ const COMPLETE_REQUIRED_CHECKS = [
     label: 'Modalidad de atencion',
     path: 'schedule.modality',
     test: state => hasText(state?.schedule?.modality)
+  }
+];
+
+const EDUCATIONAL_REQUIRED_CHECKS = [
+  {
+    key: 'educationalTopic',
+    label: 'Tema educativo o informativo',
+    path: 'promptOptions.educationalTopic',
+    test: state => hasText(state?.promptOptions?.educationalTopic)
   },
   {
-    key: 'color',
-    label: 'Color principal',
-    path: 'design.primaryColor',
-    test: state => hasText(state?.design?.primaryColor)
+    key: 'mainMessage',
+    label: 'Mensaje principal',
+    path: 'promptOptions.mainMessage',
+    test: state => hasText(state?.promptOptions?.mainMessage)
   },
   {
-    key: 'contact',
-    label: 'Datos de contacto',
-    path: 'clinic.primaryPhone',
-    test: state => hasContact(state)
+    key: 'targetAudience',
+    label: 'Publico objetivo',
+    path: 'promptOptions.targetAudience',
+    test: state => hasText(state?.promptOptions?.targetAudience)
+  }
+];
+
+const CAMPAIGN_REQUIRED_CHECKS = [
+  {
+    key: 'campaignType',
+    label: 'Tipo de campaña o promocion',
+    path: 'promptOptions.campaignType',
+    test: state => hasText(state?.promptOptions?.campaignType)
+  },
+  {
+    key: 'campaignCallToAction',
+    label: 'Llamada a la accion',
+    path: 'promptOptions.campaignCallToAction',
+    test: state => hasText(state?.promptOptions?.campaignCallToAction)
+  },
+  {
+    key: 'campaignValidity',
+    label: 'Fecha, vigencia o periodo',
+    path: 'promptOptions.campaignValidity',
+    test: state => hasText(state?.promptOptions?.campaignValidity)
   }
 ];
 
@@ -93,7 +138,7 @@ export function validateState(state) {
   const issues = [];
   const fieldPaths = new Set();
 
-  const checklist = COMPLETE_REQUIRED_CHECKS.map(item => {
+  const checklist = getRequiredChecks(state).map(item => {
     const ok = safeTest(item.test, state);
 
     if (!ok) {
@@ -134,6 +179,17 @@ export function validateState(state) {
       issues
     }
   };
+}
+
+function getRequiredChecks(state) {
+  const pieceType = state?.promptOptions?.pieceType || 'professionalFlyer';
+  if (pieceType === 'clinicalInfographic' || pieceType === 'informativeFlyer') {
+    return [...BASE_REQUIRED_CHECKS, ...EDUCATIONAL_REQUIRED_CHECKS];
+  }
+  if (pieceType === 'promotionCampaign') {
+    return [...BASE_REQUIRED_CHECKS, ...CAMPAIGN_REQUIRED_CHECKS];
+  }
+  return [...BASE_REQUIRED_CHECKS, ...PROFESSIONAL_REQUIRED_CHECKS];
 }
 
 function validateSpecialtyCoherence(state, issues, fieldPaths) {
@@ -343,6 +399,16 @@ function validateContentDensity(state, issues, fieldPaths) {
 
 function validatePromptOptions(state, issues, fieldPaths) {
   const options = state?.promptOptions || {};
+
+  if (!options.pieceType) {
+    addIssue(issues, {
+      severity: 'warning',
+      code: 'missing_piece_type',
+      message: 'Falta elegir que tipo de pieza queres crear.',
+      path: 'promptOptions.pieceType'
+    });
+    fieldPaths.add('promptOptions.pieceType');
+  }
 
   if (options.promptType && options.promptType !== 'finalFlyer') {
     addIssue(issues, {

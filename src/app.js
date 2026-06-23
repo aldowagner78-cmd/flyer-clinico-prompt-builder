@@ -2,7 +2,7 @@ import { colorPresets } from './data/designPresets.js';
 import { specialties } from './data/specialties.js';
 import { buildPrompt } from './prompt/promptBuilder.js';
 import { createDefaultState } from './state/defaultState.js';
-import { ATTACHMENT_ROLES } from './state/schema.js';
+import { ATTACHMENT_ROLES, PIECE_TYPES } from './state/schema.js';
 import { migrateState } from './state/migrations.js';
 import { clearState, loadState, loadTemplate, saveState, saveTemplate } from './state/storage.js';
 import { renderForm } from './ui/formRenderer.js';
@@ -275,6 +275,17 @@ function createDemoState() {
   demo.promptOptions = {
     ...demo.promptOptions,
     promptType: 'finalFlyer',
+    pieceType: PIECE_TYPES.professionalFlyer,
+    contentGoal: 'Anunciar la atención de una profesional con foco en control metabólico y factores de riesgo.',
+    targetAudience: 'Pacientes adultos que necesitan control clínico, diabetes, hipertensión o seguimiento metabólico.',
+    educationalTopic: '',
+    mainMessage: 'Control clínico y metabólico integral, con turnos disponibles en Centro Médico Rincón.',
+    infoBlocksText: '',
+    campaignType: '',
+    campaignValidity: '',
+    campaignConditions: '',
+    campaignCallToAction: 'Solicitar turno por WhatsApp',
+    legalEthicalNote: 'La información del flyer no reemplaza la consulta médica.',
     finalAlternativesCount: 2,
     requireSeparateImages: true,
     preventCollage: true,
@@ -406,7 +417,8 @@ function markPath(path) {
 }
 
 function shouldRenderForm(path) {
-  return path === 'specialty.primaryProfessionalSpecialty'
+  return path === 'promptOptions.pieceType'
+    || path === 'specialty.primaryProfessionalSpecialty'
     || path === 'services.allowServiceExpansion'
     || path === 'design.primaryColor'
     || path === 'design.secondaryColor'

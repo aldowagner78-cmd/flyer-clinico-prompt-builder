@@ -1,5 +1,5 @@
 import { defaultClinic } from '../data/defaultClinic.js';
-import { CONTENT_DENSITIES, PROMPT_TYPES, SCHEMA_VERSION } from './schema.js';
+import { CONTENT_DENSITIES, PIECE_TYPES, PROMPT_TYPES, SCHEMA_VERSION } from './schema.js';
 
 export function createDefaultState() {
   return {
@@ -64,6 +64,17 @@ export function createDefaultState() {
     },
     promptOptions: {
       promptType: PROMPT_TYPES.finalFlyer,
+      pieceType: PIECE_TYPES.professionalFlyer,
+      contentGoal: '',
+      targetAudience: '',
+      educationalTopic: '',
+      mainMessage: '',
+      infoBlocksText: '',
+      campaignType: '',
+      campaignValidity: '',
+      campaignConditions: '',
+      campaignCallToAction: '',
+      legalEthicalNote: '',
       finalAlternativesCount: 2,
       requireSeparateImages: true,
       preventCollage: true,
