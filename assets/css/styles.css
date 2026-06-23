@@ -2114,3 +2114,356 @@ body[data-theme$="-dark"] .warning-text {
   color: var(--ink) !important;
 }
 
+
+
+/* Etapa 9B: mini-apps, navegación guiada y acciones específicas */
+.step-nav {
+  display: none !important;
+}
+
+.piece-card {
+  cursor: default;
+}
+
+.piece-card:hover {
+  transform: translateY(-2px);
+}
+
+.piece-card-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.piece-card-action,
+.piece-card-demo {
+  display: grid;
+  min-height: 42px;
+  place-items: center;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.piece-card-action {
+  border: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.piece-card-demo {
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  background: color-mix(in srgb, var(--surface-solid) 88%, var(--accent-pale) 12%);
+  color: var(--ink);
+  padding-inline: 14px;
+  font-size: 0.9rem;
+}
+
+.piece-card-demo:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.wizard-controls {
+  position: sticky;
+  bottom: 12px;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: minmax(120px, auto) minmax(90px, auto) minmax(130px, auto) minmax(140px, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 86%, var(--surface-solid) 14%);
+  box-shadow: 0 18px 36px color-mix(in srgb, var(--accent) 12%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+#nextStepButton {
+  justify-self: stretch;
+}
+
+#resultStepButton[hidden] {
+  display: none !important;
+}
+
+.action-grid-v2 .primary-actions .primary-button {
+  min-height: 52px;
+  font-size: 1rem;
+}
+
+.more-actions summary {
+  color: var(--ink);
+}
+
+body[data-theme$="-dark"] .piece-card-demo,
+body[data-theme$="-dark"] .wizard-controls {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--line) 80%, white 4%);
+}
+
+@media (max-width: 760px) {
+  .piece-card-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-controls {
+    position: static;
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Etapa 9D: navegación del wizard en encabezado sticky */
+.workflow-bar {
+  position: sticky;
+  top: 12px;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  backdrop-filter: blur(16px);
+}
+
+.workflow-heading {
+  min-width: 0;
+}
+
+.workflow-heading strong,
+.workflow-heading span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wizard-controls {
+  position: static;
+  bottom: auto;
+  z-index: auto;
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.wizard-controls .secondary-button,
+.wizard-controls .primary-button,
+.wizard-controls .secondary-button:first-child {
+  justify-self: auto;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  min-height: 40px;
+  padding-inline: 14px;
+  white-space: nowrap;
+}
+
+#nextStepButton {
+  justify-self: auto;
+  min-width: 132px;
+  max-width: 180px;
+  padding-inline: 18px;
+}
+
+#resultStepButton[hidden] {
+  display: none !important;
+}
+
+body[data-theme$="-dark"] .wizard-controls {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (max-width: 1080px) {
+  .workflow-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-controls {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .wizard-controls .secondary-button,
+  .wizard-controls .primary-button,
+  .wizard-controls .secondary-button:first-child {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .workflow-bar {
+    top: 8px;
+    padding: 10px;
+  }
+
+  .wizard-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .wizard-controls .secondary-button,
+  .wizard-controls .primary-button,
+  .wizard-controls .secondary-button:first-child,
+  #nextStepButton {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    padding-inline: 10px;
+  }
+}
+
+
+/* Etapa 9F: navegación fija dentro del encabezado interno de cada paso */
+.workflow-bar {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  grid-template-columns: 1fr !important;
+}
+
+.workflow-bar > .wizard-controls {
+  display: none !important;
+}
+
+.form-section.is-current .section-heading {
+  position: sticky !important;
+  top: 12px;
+  z-index: 80;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin: calc(clamp(18px, 2.2vw, 28px) * -1) calc(clamp(18px, 2.2vw, 28px) * -1) 24px;
+  padding: 18px clamp(18px, 2.2vw, 28px);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: color-mix(in srgb, var(--surface) 90%, var(--surface-solid) 10%);
+  box-shadow: 0 16px 30px color-mix(in srgb, var(--accent) 10%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.form-section.is-current .section-heading > div:not(.step-header-controls) {
+  min-width: 0;
+}
+
+.form-section.is-current .section-heading h2,
+.form-section.is-current .section-heading p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-header-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: max-content;
+}
+
+.step-header-controls .secondary-button,
+.step-header-controls .primary-button {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  min-height: 40px;
+  padding-inline: 14px;
+  white-space: nowrap;
+}
+
+.step-header-controls .primary-button {
+  min-width: 132px;
+  max-width: 180px;
+  padding-inline: 18px;
+}
+
+.step-header-controls [hidden] {
+  display: none !important;
+}
+
+body[data-theme$="-dark"] .form-section.is-current .section-heading {
+  background: color-mix(in srgb, var(--surface) 88%, black 8%);
+  border-color: color-mix(in srgb, var(--line) 82%, white 5%);
+}
+
+@media (max-width: 1080px) {
+  .form-section.is-current .section-heading {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .step-header-controls {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .step-header-controls .secondary-button,
+  .step-header-controls .primary-button {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .form-section.is-current .section-heading {
+    top: 8px;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .step-header-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .step-header-controls .secondary-button,
+  .step-header-controls .primary-button {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    padding-inline: 10px;
+  }
+}
+
+/* Etapa 9G: encabezado sticky del paso con fondo opaco para tapar contenido escroleado */
+.form-section.is-current .section-heading {
+  top: 0 !important;
+  z-index: 220 !important;
+  background: var(--surface-solid) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow:
+    0 -18px 0 18px var(--surface-solid),
+    0 16px 28px color-mix(in srgb, var(--accent) 12%, transparent) !important;
+}
+
+body[data-theme$="-dark"] .form-section.is-current .section-heading {
+  background: var(--surface-solid) !important;
+  box-shadow:
+    0 -18px 0 18px var(--surface-solid),
+    0 16px 28px color-mix(in srgb, black 28%, transparent) !important;
+}
+
+@media (max-width: 760px) {
+  .form-section.is-current .section-heading {
+    top: 0 !important;
+  }
+}

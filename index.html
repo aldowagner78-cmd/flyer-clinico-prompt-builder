@@ -55,33 +55,45 @@
       </div>
 
       <div class="piece-card-grid">
-        <button class="piece-card" type="button" data-piece-card="professionalFlyer">
+        <article class="piece-card" data-piece-card="professionalFlyer">
           <span class="piece-card-icon" aria-hidden="true">👩‍⚕️</span>
           <span class="piece-card-title">Flyer profesional</span>
           <span class="piece-card-text">Para médicos, especialidades, horarios, prestaciones, turnos y datos de contacto.</span>
-          <span class="piece-card-action">Crear flyer</span>
-        </button>
+          <div class="piece-card-actions">
+            <button class="piece-card-action" type="button" data-piece-start="professionalFlyer">Crear desde cero</button>
+            <button class="piece-card-demo" type="button" data-demo-piece="professionalFlyer">Usar ejemplo</button>
+          </div>
+        </article>
 
-        <button class="piece-card" type="button" data-piece-card="clinicalInfographic">
+        <article class="piece-card" data-piece-card="clinicalInfographic">
           <span class="piece-card-icon" aria-hidden="true">📊</span>
           <span class="piece-card-title">Infografía clínica</span>
           <span class="piece-card-text">Para educación sanitaria, prevención, pasos, recomendaciones y contenidos explicativos.</span>
-          <span class="piece-card-action">Crear infografía</span>
-        </button>
+          <div class="piece-card-actions">
+            <button class="piece-card-action" type="button" data-piece-start="clinicalInfographic">Crear desde cero</button>
+            <button class="piece-card-demo" type="button" data-demo-piece="clinicalInfographic">Usar ejemplo</button>
+          </div>
+        </article>
 
-        <button class="piece-card" type="button" data-piece-card="informativeFlyer">
+        <article class="piece-card" data-piece-card="informativeFlyer">
           <span class="piece-card-icon" aria-hidden="true">ℹ️</span>
           <span class="piece-card-title">Flyer informativo</span>
           <span class="piece-card-text">Para comunicar servicios, estudios, prestaciones, novedades o información institucional.</span>
-          <span class="piece-card-action">Crear informativo</span>
-        </button>
+          <div class="piece-card-actions">
+            <button class="piece-card-action" type="button" data-piece-start="informativeFlyer">Crear desde cero</button>
+            <button class="piece-card-demo" type="button" data-demo-piece="informativeFlyer">Usar ejemplo</button>
+          </div>
+        </article>
 
-        <button class="piece-card" type="button" data-piece-card="promotionCampaign">
+        <article class="piece-card" data-piece-card="promotionCampaign">
           <span class="piece-card-icon" aria-hidden="true">📣</span>
           <span class="piece-card-title">Promoción / campaña</span>
           <span class="piece-card-text">Para agenda abierta, jornadas, campañas preventivas, vigencias y llamados a la acción.</span>
-          <span class="piece-card-action">Crear campaña</span>
-        </button>
+          <div class="piece-card-actions">
+            <button class="piece-card-action" type="button" data-piece-start="promotionCampaign">Crear desde cero</button>
+            <button class="piece-card-demo" type="button" data-demo-piece="promotionCampaign">Usar ejemplo</button>
+          </div>
+        </article>
       </div>
 
       <div class="home-secondary-actions">
@@ -94,8 +106,7 @@
       <section class="workspace" aria-label="Formulario de configuracion">
 
         <div class="workflow-bar">
-          <button class="secondary-button compact-action" type="button" id="backHomeButton">← Inicio</button>
-          <div>
+          <div class="workflow-heading">
             <strong id="workflowTitle">Flujo de creación</strong>
             <span id="workflowSubtitle">Completá los pasos y generá el prompt final.</span>
           </div>
@@ -130,6 +141,12 @@
                 <h2>Tipo de pieza</h2>
                 <p>Elegí si querés crear un flyer profesional, una infografía, un flyer informativo o una campaña/promoción.</p>
               </div>
+              <div class="step-header-controls" aria-label="Navegacion del paso">
+                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
+                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
+                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              </div>
             </div>
             <div id="pieceFields" class="field-grid"></div>
             <p class="warning-text">Este selector adapta el prompt y las prioridades de contenido. La app sigue generando 2 alternativas finales separadas.</p>
@@ -141,6 +158,12 @@
               <div>
                 <h2>Datos de clinica</h2>
                 <p>Informacion institucional y de contacto para el flyer.</p>
+              </div>
+              <div class="step-header-controls" aria-label="Navegacion del paso">
+                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
+                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
+                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
               </div>
             </div>
             <div id="clinicFields" class="field-grid"></div>
@@ -154,6 +177,12 @@
                 <h2>Datos del profesional</h2>
                 <p>Identidad profesional y datos visibles.</p>
               </div>
+              <div class="step-header-controls" aria-label="Navegacion del paso">
+                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
+                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
+                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              </div>
             </div>
             <div id="doctorFields" class="field-grid"></div>
           </section>
@@ -164,6 +193,12 @@
               <div>
                 <h2>Especialidad y prestaciones</h2>
                 <p>Servicios principales, sugerencias prudentes y alcance autorizado.</p>
+              </div>
+              <div class="step-header-controls" aria-label="Navegacion del paso">
+                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
+                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
+                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
               </div>
             </div>
             <div id="serviceFields" class="field-grid"></div>
@@ -187,6 +222,12 @@
                 <h2>Atencion</h2>
                 <p>Dias, horarios, cobertura y modalidad de atencion.</p>
               </div>
+              <div class="step-header-controls" aria-label="Navegacion del paso">
+                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
+                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
+                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              </div>
             </div>
             <div id="careFields" class="field-grid"></div>
             <div id="schedulesEditor" class="list-editor"></div>
@@ -199,6 +240,12 @@
                 <h2>Diseno visual</h2>
                 <p>Formato, colores, estilo y recursos graficos esperados.</p>
               </div>
+              <div class="step-header-controls" aria-label="Navegacion del paso">
+                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
+                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
+                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              </div>
             </div>
             <div id="designFields" class="field-grid"></div>
           </section>
@@ -209,6 +256,12 @@
               <div>
                 <h2>Adjuntos</h2>
                 <p>Seleccion local para recordar que archivos enviar manualmente a ChatGPT.</p>
+              </div>
+              <div class="step-header-controls" aria-label="Navegacion del paso">
+                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
+                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
+                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
               </div>
             </div>
             <div id="imageFields" class="field-grid"></div>
@@ -223,6 +276,12 @@
                 <h2>Opciones del prompt</h2>
                 <p>Preferencias finas, frases a evitar e instrucciones libres.</p>
               </div>
+              <div class="step-header-controls" aria-label="Navegacion del paso">
+                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
+                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
+                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              </div>
             </div>
             <div id="advancedFields" class="field-grid"></div>
           </section>
@@ -233,6 +292,12 @@
               <div>
                 <h2>Resultado final</h2>
                 <p>Prompt completo, checklist y acciones de exportacion.</p>
+              </div>
+              <div class="step-header-controls" aria-label="Navegacion del paso">
+                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
+                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
+                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
               </div>
             </div>
             <div class="result-grid">
@@ -252,11 +317,6 @@
           </section>
         </form>
 
-        <div class="wizard-controls" aria-label="Navegacion del asistente">
-          <button class="secondary-button" type="button" id="prevStepButton">← Anterior</button>
-          <button class="secondary-button" type="button" id="homeStepButton">Inicio</button>
-          <button class="primary-button" type="button" id="nextStepButton">Siguiente →</button>
-        </div>
       </section>
 
       <aside class="side-panel" aria-label="Resumen y acciones">
@@ -274,12 +334,12 @@
           </div>
           <div class="action-grid action-grid-v2">
             <div class="action-group primary-actions">
-              <span class="action-group-title">Acción principal</span>
+              <span class="action-group-title" id="primaryActionTitle">Acción principal</span>
               <button class="primary-button" type="button" id="copyPromptButton">Copiar prompt</button>
             </div>
 
             <div class="action-group secondary-actions">
-              <span class="action-group-title">Enviar a ChatGPT</span>
+              <span class="action-group-title" id="secondaryActionTitle">Enviar a ChatGPT</span>
               <button class="secondary-button" type="button" id="copyAttachmentsButton">Copiar checklist de adjuntos</button>
               <button class="secondary-button" type="button" id="downloadPromptButton">Descargar TXT</button>
             </div>
@@ -287,7 +347,7 @@
             <details class="more-actions">
               <summary>Más opciones</summary>
               <div class="more-actions-grid">
-                <button class="secondary-button demo-button" type="button" id="loadDemoButton">Cargar datos demo</button>
+                <button class="secondary-button demo-button" type="button" id="loadDemoButton">Cargar ejemplo de este tipo</button>
                 <button class="secondary-button" type="button" id="saveTemplateButton">Guardar plantilla</button>
                 <button class="secondary-button" type="button" id="loadTemplateButton">Cargar plantilla</button>
                 <button class="secondary-button" type="button" id="exportJsonButton">Exportar JSON</button>
