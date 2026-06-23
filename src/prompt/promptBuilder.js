@@ -1,169 +1,242 @@
 import { colorPresets } from '../data/designPresets.js';
 
 export function buildPrompt(state) {
-  const primaryColor = colorName(state.design.primaryColor, state.design.primaryCustomColor);
-  const secondaryColor = colorName(state.design.secondaryColor, state.design.secondaryCustomColor);
-  const services = state.services.items.length ? state.services.items.map(item => `- ${item}`).join('\n') : '- No se cargo lista de prestaciones.';
-  const highlightedArea = getHighlightedArea(state);
-  const socials = buildSocialSection(state);
-  const schedules = buildScheduleSection(state);
-  const images = buildImageSection(state);
-  const storyRule = needsStoryRule(state.design.format)
-    ? '\nREGLA AUTOMATICA PARA HISTORIA / ESTADO:\n- El flyer debe verse completo en una sola pantalla de celular.\n- Debe verse sin necesidad de scroll.\n- Usar margenes seguros para historias de Instagram y estados de WhatsApp.\n- Optimizar jerarquia, tamanos y espacios para lectura inmediata en pantalla vertical.\n'
+  const clinic = state?.clinic || {};
+  const professional = state?.professional || {};
+  const specialty = state?.specialty || {};
+  const services = state?.services || {};
+  const schedule = state?.schedule || {};
+  const coverage = state?.coverage || {};
+  const design = state?.design || {};
+  const attachments = state?.attachments || {};
+  const options = state?.promptOptions || {};
+
+  const alternativesCount = Number(options.finalAlternativesCount) || 2;
+  const primaryColor = colorName(design.primaryColor, design.customPrimaryColor);
+  const secondaryColor = colorName(design.secondaryColor, design.customSecondaryColor);
+  const storyRule = needsStoryRule(design.format)
+    ? `
+FORMATO HISTORIA / ESTADO:
+- Debe verse completo en una sola pantalla de celular, sin necesidad de scroll.
+- Respetar margenes seguros superiores e inferiores para historias de Instagram y estados de WhatsApp.
+- Priorizar lectura inmediata, jerarquia clara y textos dentro de zonas seguras.`
     : '';
 
-  return `Comportate como experto en diseno de flyers para clinicas y centros medicos.
+  return cleanPrompt(`
+Comportate como experto en diseño de flyers para clinicas y centros medicos.
 
-Necesito crear un flyer vertical para Instagram, WhatsApp y redes sociales.
+Necesito crear exactamente ${alternativesCount} flyers verticales finales para Instagram, WhatsApp y redes sociales.
 
-Este pedido pertenece a una serie de flyers clinicos con estetica previamente definida en esta conversacion anclada llamada "Diseno de flyer clinico". ${state.design.usePinnedStyle ? 'Usa como base el estilo ya trabajado: diseno moderno, profesional, limpio, clinico, con color lila como predeterminado salvo que se indique otro color.' : 'Usa una estetica moderna, profesional, limpia y clinica.'}
+SALIDA ESPERADA:
+- Entregar ${alternativesCount} alternativas finales listas para usar.
+- Cada alternativa debe ser una imagen separada e independiente.
+- No colocar las alternativas dentro de una misma imagen.
+- No hacer collage, comparativa, grilla, panel dividido ni mockup con varias opciones juntas.
+- Las alternativas deben tener pequeñas variaciones de composicion, sin cambios arbitrarios de informacion.
+- No quiero una propuesta conceptual: quiero imagenes finales listas para elegir.
 
-Entregame exactamente 2 alternativas finales listas para usar. Cada alternativa debe ser una imagen separada e independiente. No colocar dos flyers dentro de una misma imagen. No hacer collage, comparativa, grilla, panel dividido ni mockup con varias opciones juntas.
-
-No quiero solo una propuesta conceptual. Quiero imagenes finales, comparables entre si, para poder elegir. Las 2 alternativas deben tener pequenas variaciones de composicion, no cambios arbitrarios de informacion.
+ESTILO BASE:
+- Este pedido pertenece a una serie de flyers clinicos con estetica previamente definida en la conversacion anclada "Diseño de flyer clinico".
+- ${design.usePinnedConversationStyle ? 'Usar como base el estilo ya trabajado: moderno, profesional, limpio, clinico y con color lila/lavanda como referencia visual.' : 'Usar una estetica moderna, profesional, limpia y clinica.'}
+- Color principal: ${primaryColor}.
+- Color secundario: ${secondaryColor}.
+- Estilo visual: ${valueOrEmpty(design.visualStyle)}.
+- Tipografia sugerida: ${valueOrEmpty(design.typography)}.
+- Nivel de impacto visual: ${valueOrEmpty(design.visualImpact)}.
+- Incluir iconos medicos: ${yesNo(design.includeMedicalIcons)}.
+- Incluir fondo tematico relacionado: ${yesNo(design.includeThematicBackground)}.
+- Usar tematica automatica segun especialidad/enfoque: ${yesNo(design.useAutomaticTheme)}.
+- Densidad de contenido: ${contentDensityLabel(design.contentDensity)}.
+${densityInstruction(design.contentDensity)}
+${storyRule}
 
 DATOS DE LA CLINICA:
-- Nombre: ${valueOrEmpty(state.clinic.name)}
-- Direccion: ${valueOrEmpty(state.clinic.address)}
-- Telefono / WhatsApp principal: ${valueOrEmpty(state.clinic.phone)}
+- Nombre: ${valueOrEmpty(clinic.name)}
+- Direccion: ${valueOrEmpty(clinic.address)}
+- Telefono / WhatsApp principal: ${valueOrEmpty(clinic.primaryPhone)}
 - Redes sociales y enlaces:
-${socials}
-- Frase institucional: ${valueOrEmpty(state.clinic.tagline)}
-- Mostrar datos de contacto: ${yesNo(state.clinic.showContact)}
+${buildSocialSection(clinic.socialLinks)}
+- Frase institucional: ${valueOrEmpty(clinic.institutionalPhrase)}
+- Mostrar datos de contacto: ${yesNo(clinic.showContactData)}
 
 DATOS DEL PROFESIONAL:
-- Titulo: ${valueOrEmpty(state.doctor.title)}
-- Nombre completo: ${valueOrEmpty(state.doctor.name)}
-- Especialidad declarada del profesional: ${valueOrEmpty(state.doctor.specialty || state.services.primarySpecialty)}
-- Matricula: ${valueOrEmpty(state.doctor.license)}
-- Aclaracion o cargo: ${valueOrEmpty(state.doctor.roleNote)}
-- Mostrar foto del profesional: ${yesNo(state.doctor.showPhoto)}
+- Titulo: ${valueOrEmpty(professional.title)}
+- Nombre completo: ${valueOrEmpty(professional.fullName)}
+- Matricula: ${valueOrEmpty(professional.license)}
+- Aclaracion o cargo: ${valueOrEmpty(professional.roleNote)}
+- Mostrar foto del profesional: ${yesNo(professional.showPhoto)}
 
-ESPECIALIDADES DEL FLYER:
-- Especialidad principal: ${valueOrEmpty(state.services.primarySpecialty)}
-- Especialidades adicionales: ${state.services.additionalSpecialties.length ? state.services.additionalSpecialties.join(', ') : 'No informado'}
-- Area destacada del flyer: ${highlightedArea}
-- Prestacion principal destacada: ${valueOrEmpty(state.services.featured)}
+ESPECIALIDAD Y ENFOQUE:
+- Especialidad profesional principal: ${valueOrEmpty(specialty.primaryProfessionalSpecialty)}
+- Especialidades u orientaciones adicionales: ${listOrFallback(specialty.additionalSpecialties, 'No informado')}
+- Enfoque comunicacional del flyer: ${valueOrEmpty(specialty.communicationFocus)}
+- Texto visible recomendado para especialidad/titulo: ${valueOrEmpty(specialty.visibleSpecialtyText)}
 
-Coherencia: usa el area destacada como foco comunicacional del flyer, pero no contradigas la especialidad principal ni las especialidades adicionales cargadas. Si el area destacada es mas especifica que la especialidad, tratala como enfoque del flyer, no como nueva especialidad inventada.
+Usar el texto visible recomendado como referencia preferente para el titulo o subtitulo principal del flyer. El enfoque comunicacional puede orientar la composicion, pero no debe presentarse como una nueva especialidad si no corresponde.
 
-PRESTACIONES:
-${services}
+PRESTACION PRINCIPAL:
+- ${valueOrEmpty(services.mainHighlightedService)}
+
+PRESTACIONES VISIBLES EN EL FLYER:
+${buildList(services.visibleServices, '- No se cargaron prestaciones visibles.')}
+
+PRESTACIONES O DATOS DE CONTEXTO:
+Estas no necesariamente deben mostrarse todas en el flyer. Sirven para orientar la tematica, el enfoque profesional y la seleccion visual del contenido.
+${buildList(services.contextServices, '- No se cargaron prestaciones de contexto.')}
 
 AMPLIACION DE PRESTACIONES:
-- Autorizo a ChatGPT a agregar prestaciones generales razonables de la especialidad: ${yesNo(state.services.allowExpansion)}
-- Instrucciones sobre ampliacion: ${state.services.allowExpansion ? valueOrEmpty(state.services.expansionNotes) : 'No ampliar prestaciones.'}
+- Autorizo a ChatGPT a agregar prestaciones generales razonables de la especialidad: ${yesNo(services.allowServiceExpansion)}
+- Instrucciones sobre ampliacion: ${services.allowServiceExpansion ? valueOrEmpty(services.expansionInstructions) : 'No ampliar prestaciones.'}
 
 HORARIOS DE ATENCION:
-${schedules}
+${buildScheduleSection(schedule.items)}
 
 TURNOS Y MODALIDAD:
-- Requiere turno previo: ${yesNo(state.care.requiresAppointment)}
-- Texto personalizado para turnos: ${valueOrEmpty(state.care.appointmentText)}
-- Modalidad: ${valueOrEmpty(state.care.modality)}
-- Observacion administrativa: ${valueOrEmpty(state.care.adminNote)}
+- Requiere turno previo: ${yesNo(schedule.requiresAppointment)}
+- Texto personalizado para turnos: ${valueOrEmpty(schedule.appointmentText)}
+- Modalidad: ${valueOrEmpty(schedule.modality)}
+- Observacion administrativa: ${valueOrEmpty(schedule.administrativeNote)}
 
 COBERTURA:
-- Atiende por obra social: ${yesNo(state.care.insurance)}
-- Atiende particulares: ${yesNo(state.care.privateCare)}
+- Atiende por obra social: ${yesNo(coverage.insurance)}
+- Atiende particulares: ${yesNo(coverage.privatePatients)}
 
-DISENO:
-- Formato: ${valueOrEmpty(state.design.format)}
-- Color principal: ${primaryColor}
-- Color secundario: ${secondaryColor}
-- Estilo visual: ${valueOrEmpty(state.design.visualStyle)}
-- Tipografia sugerida: ${valueOrEmpty(state.design.typography)}
-- Nivel de impacto visual: ${valueOrEmpty(state.design.impact)}
-- Incluir iconos medicos: ${yesNo(state.design.includeIcons)}
-- Incluir fondo tematico relacionado con la especialidad: ${yesNo(state.design.includeThemeBackground)}
-- Usar tematica automatica segun especialidad: ${yesNo(state.design.autoTheme)}
-- Usar estetica ya aprendida en la conversacion anclada: ${yesNo(state.design.usePinnedStyle)}
-${storyRule}
-IMAGENES Y ARCHIVOS ADJUNTOS:
-El usuario adjuntara manualmente estos archivos en el chat antes de enviar este prompt. Tomar cada archivo adjunto como referencia visual correspondiente.
-${images}
-Si adjunto logo, foto del profesional o referencias, integrarlos respetando proporcion, identidad y legibilidad. Si falta una imagen, resolver el diseno con recursos graficos tematicos sobrios.
+USO DE ARCHIVOS ADJUNTOS:
+El usuario adjuntara manualmente los archivos al chat antes de enviar este prompt. Usar cada archivo segun su rol y no confundir funciones entre ellos.
+${buildAttachmentSection(attachments.items)}
+Si falta una imagen, resolver el diseño con recursos graficos tematicos sobrios.
 
 OBSERVACIONES:
-- Frase sugerida para el flyer: ${valueOrEmpty(state.advanced.suggestedPhrase)}
-- Frases que NO deben usarse: ${valueOrEmpty(state.advanced.forbiddenPhrases)}
-- Datos que deben destacarse: ${valueOrEmpty(state.advanced.highlightData)}
-- Datos que deben ir pequenos: ${valueOrEmpty(state.advanced.smallData)}
-- Instrucciones libres: ${valueOrEmpty(state.advanced.freeInstructions)}
-- Permitir creatividad adicional: ${valueOrEmpty(state.advanced.creativity)}
+- Frase sugerida para el flyer: ${valueOrEmpty(options.suggestedPhrase)}
+- Frases que NO deben usarse: ${valueOrEmpty(options.forbiddenPhrases)}
+- Datos que deben destacarse: ${valueOrEmpty(options.highlightData)}
+- Datos que deben ir pequeños: ${valueOrEmpty(options.smallData)}
+- Instrucciones libres: ${valueOrEmpty(options.freeInstructions)}
+- Creatividad visual permitida: ${creativityLabel(options)}
 
-RESTRICCIONES IMPORTANTES:
-- Entrega exactamente 2 alternativas finales listas para usar, como 2 imagenes separadas e independientes.
-- No pongas las 2 alternativas dentro de una misma imagen.
-- No hagas collage, comparativa, grilla, panel dividido ni mockup con varias opciones juntas.
-- No inventes datos medicos.
-- No agregues informacion no informada.
-- No exageres prestaciones.
-- No atribuyas practicas que no correspondan.
-- Solo amplia prestaciones si fue autorizado expresamente y limitate a tareas generales razonables de consultorio.
-- Si se autoriza creatividad visual, podes proponer recursos graficos relacionados con la especialidad, pero sin inventar datos clinicos ni administrativos.
-- No cambies nombres, horarios, telefonos, redes sociales ni datos administrativos.
-- Usa color lila por defecto salvo que se haya elegido otro color.
-- Usa una tematica visual compatible con la especialidad principal, las adicionales y el area destacada.
-- Prioriza lectura rapida y legibilidad en celular.
-- Usa composicion vertical clara, moderna, profesional y compatible con redes sociales.
-- Si hay foto del medico, integrala sin deformar rostro ni alterar identidad.
-- Si hay logo, respeta su proporcion.
-- El resultado debe ser apto para publicar en redes o enviar por WhatsApp.`;
+RESTRICCIONES CRITICAS:
+- No inventes datos medicos, administrativos, horarios, telefonos, redes sociales ni matriculas.
+- No agregues informacion no informada salvo la ampliacion expresamente autorizada.
+- No exageres prestaciones ni atribuyas practicas que no correspondan.
+- Si amplias prestaciones, limitate a actividades generales y razonables de consultorio.
+- Si usas creatividad visual, que sea solo grafica/estetica y compatible con la especialidad y el enfoque.
+- Respetar nombres, logo, foto profesional, proporciones y legibilidad.
+- Priorizar lectura rapida en celular.
+- El resultado debe ser apto para publicar en redes o enviar por WhatsApp.
+`);
 }
 
-function buildSocialSection(state) {
-  const socials = state.clinic.socialLinks.filter(item => item.type || item.value);
-  if (!socials.length) return '- No se cargaron redes sociales.';
-  return socials.map(item => `- ${valueOrEmpty(item.type)}: ${valueOrEmpty(item.value)}`).join('\n');
+function buildSocialSection(socialLinks = []) {
+  const filled = socialLinks.filter(item => hasText(item?.type) || hasText(item?.value));
+  if (!filled.length) return '- No se cargaron redes sociales.';
+  return filled
+    .map(item => `- ${valueOrEmpty(item.type)}: ${valueOrEmpty(item.value)}`)
+    .join('\n');
 }
 
-function buildScheduleSection(state) {
-  if (!state.care.schedules.length) return '- No se cargaron horarios de atencion.';
-  return state.care.schedules.map(item => {
+function buildScheduleSection(items = []) {
+  const filled = items.filter(item => hasText(item?.days) || hasText(item?.from) || hasText(item?.to) || hasText(item?.note));
+  if (!filled.length) return '- No se cargaron horarios de atencion.';
+  return filled.map(item => {
     const time = item.from && item.to ? `${item.from} a ${item.to}` : valueOrEmpty([item.from, item.to].filter(Boolean).join(' a '));
     return `- ${valueOrEmpty(item.days)}: ${time}${item.note ? ` (${item.note})` : ''}`;
   }).join('\n');
 }
 
-function buildImageSection(state) {
-  const rows = [
-    ['Logo de clinica', state.images.logoName],
-    ['Foto del medico', state.images.doctorPhotoName],
-    ['Imagen de referencia del flyer', state.images.referenceName],
-    ['Imagen tematica opcional', state.images.themeName]
-  ];
-  const filled = rows.filter(([, value]) => value);
+function buildAttachmentSection(items = []) {
+  const filled = items.filter(item => hasText(item?.fileName));
   if (!filled.length) return '- No se seleccionaron archivos locales para adjuntar.';
-  return filled.map(([label, value]) => `- ${label}: ${value} (adjuntar manualmente en ChatGPT antes de enviar el prompt)`).join('\n');
+
+  return filled.map(item => {
+    const instruction = hasText(item.instruction) ? ` Instruccion: ${item.instruction}` : '';
+    return `- ${labelAttachmentRole(item.role)}: ${item.fileName}.${instruction}`;
+  }).join('\n');
 }
 
-function getHighlightedArea(state) {
-  if (state.services.highlightedArea.trim()) return state.services.highlightedArea.trim();
-  const specialties = [state.services.primarySpecialty, ...state.services.additionalSpecialties].filter(Boolean);
-  if (!specialties.length) return 'No informado';
-  return specialties.length === 1 ? specialties[0] : joinReadable(specialties);
+function buildList(values = [], fallback) {
+  const filled = values.filter(hasText);
+  if (!filled.length) return fallback;
+  return filled.map(item => `- ${item}`).join('\n');
 }
 
 function colorName(key, custom) {
-  if ((key === 'otro' || key === 'personalizado') && custom?.trim()) return custom.trim();
-  return colorPresets[key]?.label || 'Lila';
+  if ((key === 'otro' || key === 'personalizado' || key === 'other' || key === 'custom') && hasText(custom)) {
+    return custom.trim();
+  }
+  return colorPresets[key]?.label || key || 'Lila';
 }
 
 function needsStoryRule(format = '') {
-  const normalized = format.toLowerCase();
-  return normalized.includes('historia') || normalized.includes('estado') || normalized.includes('whatsapp');
+  const normalized = normalize(format);
+  return normalized.includes('historia') || normalized.includes('story') || normalized.includes('estado') || normalized.includes('whatsapp');
 }
 
-function joinReadable(values) {
-  if (values.length <= 2) return values.join(' y ');
-  return `${values.slice(0, -1).join(', ')} y ${values.at(-1)}`;
+function contentDensityLabel(value) {
+  return {
+    brief: 'Breve',
+    balanced: 'Equilibrado',
+    detailed: 'Detallado'
+  }[value] || 'Equilibrado';
+}
+
+function densityInstruction(value) {
+  const instructions = {
+    brief: '- Densidad breve: usar pocos textos, mucho aire visual y priorizar nombre, especialidad, horario y contacto.',
+    balanced: '- Densidad equilibrada: balancear informacion y limpieza visual; no sobrecargar el flyer.',
+    detailed: '- Densidad detallada: permitir mas informacion visible, pero mantener lectura clara y jerarquia en celular.'
+  };
+  return instructions[value] || instructions.balanced;
+}
+
+function creativityLabel(options = {}) {
+  if (!options.allowVisualCreativity || options.visualCreativityLevel === 'strict') {
+    return 'No: respetar estrictamente los datos cargados.';
+  }
+  if (options.visualCreativityLevel === 'broad' || options.visualCreativityLevel === 'amplia') {
+    return 'Si, amplia: permitir recursos graficos relacionados con la especialidad, sin inventar datos clinicos ni administrativos.';
+  }
+  return 'Si, moderada: permitir recursos visuales relacionados con la especialidad, sin inventar datos clinicos ni administrativos.';
+}
+
+function listOrFallback(values = [], fallback = 'No informado') {
+  const filled = values.filter(hasText);
+  if (!filled.length) return fallback;
+  return filled.length <= 2 ? filled.join(' y ') : `${filled.slice(0, -1).join(', ')} y ${filled.at(-1)}`;
+}
+
+function labelAttachmentRole(value) {
+  return {
+    clinicLogo: 'Logo de clinica',
+    professionalPhoto: 'Foto del profesional',
+    referenceFlyer: 'Referencia visual del flyer',
+    thematicImage: 'Imagen tematica',
+    other: 'Otro archivo'
+  }[value] || valueOrEmpty(value);
 }
 
 function valueOrEmpty(value) {
-  return value && String(value).trim() ? String(value).trim() : 'No informado';
+  return hasText(value) ? String(value).trim() : 'No informado';
 }
 
 function yesNo(value) {
   return value ? 'si' : 'no';
+}
+
+function hasText(value = '') {
+  return String(value ?? '').trim().length > 0;
+}
+
+function normalize(value = '') {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function cleanPrompt(value) {
+  return String(value)
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

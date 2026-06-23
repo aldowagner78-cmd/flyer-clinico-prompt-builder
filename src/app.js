@@ -3,7 +3,6 @@ import { specialties } from './data/specialties.js';
 import { buildPrompt } from './prompt/promptBuilder.js';
 import { createDefaultState } from './state/defaultState.js';
 import { ATTACHMENT_ROLES } from './state/schema.js';
-import { toLegacyState } from './state/legacyAdapter.js';
 import { migrateState } from './state/migrations.js';
 import { clearState, loadState, loadTemplate, saveState, saveTemplate } from './state/storage.js';
 import { renderForm } from './ui/formRenderer.js';
@@ -100,9 +99,8 @@ bindStaticActions();
 update(true);
 
 function update(renderFields = false) {
-  const legacyState = toLegacyState(state);
   const validation = validateState(state);
-  const prompt = buildPrompt(legacyState);
+  const prompt = buildPrompt(state);
   if (renderFields) renderForm(state, handlers);
   renderPreview(state, validation);
   renderResult(prompt, validation, state);
