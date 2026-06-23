@@ -30,9 +30,49 @@ export function renderResult(prompt, validation, state) {
     <li class="${item.ok ? 'ok' : 'missing'}"><span>${item.ok ? 'OK' : 'Revisar'}</span>${escapeHtml(item.label)}</li>
   `).join('');
   document.querySelector('#attachmentsChecklist').innerHTML = renderAttachmentsChecklist(state);
-  document.querySelector('#warnings').innerHTML = validation.warnings.length
-    ? validation.warnings.map(item => `<li>${escapeHtml(item)}</li>`).join('')
-    : '<li>No hay advertencias importantes.</li>';
+  document.querySelector('#warnings').innerHTML = renderIssues(validation);
+}
+
+function renderIssues(validation) {
+  const issues = Array.isArray(validation?.issues)
+    ? validation.issues
+    : (validation?.warnings || []).map(message => ({
+        severity: 'warning',
+        message
+      }));
+
+  if (!issues.length) {
+    return '<li class="ok"><span>OK</span>No hay advertencias importantes.</li>';
+  }
+
+  const grouped = {
+    blocking: issues.filter(item => item.severity === 'blocking'),
+    warning: issues.filter(item => item.severity === 'warning'),
+    suggestion: issues.filter(item => item.severity === 'suggestion'),
+    other: issues.filter(item => !['blocking', 'warning', 'suggestion'].includes(item.severity))
+  };
+
+  return [
+    renderIssueGroup('Bloqueantes', 'Bloqueante', grouped.blocking, 'missing'),
+    renderIssueGroup('Advertencias', 'Advertencia', grouped.warning, 'missing'),
+    renderIssueGroup('Sugerencias', 'Sugerencia', grouped.suggestion, 'ok'),
+    renderIssueGroup('Otros avisos', 'Aviso', grouped.other, 'missing')
+  ].filter(Boolean).join('');
+}
+
+function renderIssueGroup(title, badge, issues, className) {
+  if (!issues.length) return '';
+
+  return [
+    `<li class="${className}"><span>${escapeHtml(title)}</span>${issues.length} ${issues.length === 1 ? 'punto detectado' : 'puntos detectados'}</li>`,
+    ...issues.map(issue => `
+      <li class="${className}">
+        <span>${escapeHtml(badge)}</span>
+        ${escapeHtml(issue.message || issue)}
+        ${issue.path ? `<small>Campo: ${escapeHtml(issue.path)}</small>` : ''}
+      </li>
+    `)
+  ].join('');
 }
 
 function renderAttachmentsChecklist(state) {
