@@ -23,12 +23,21 @@ function migrateLegacyState(rawState) {
 
   next.clinic = sanitizeClinic({
     name: stringFrom(clinic.name),
+    institutionType: firstString(clinic.institutionType, clinic.type, 'Centro médico'),
+    otherInstitutionType: stringFrom(clinic.otherInstitutionType),
     address: stringFrom(clinic.address),
     primaryPhone: firstString(clinic.primaryPhone, clinic.phone),
+    secondaryPhone: stringFrom(clinic.secondaryPhone),
+    email: stringFrom(clinic.email),
+    website: stringFrom(clinic.website),
     socialLinks: migrateSocialLinks(clinic),
     institutionalPhrase: firstString(clinic.institutionalPhrase, clinic.tagline),
     showContactData: booleanFrom(clinic.showContactData, booleanFrom(clinic.showContact, true)),
-    saveAsDefault: booleanFrom(clinic.saveAsDefault, true)
+    saveAsDefault: booleanFrom(clinic.saveAsDefault, true),
+    defaultPrimaryColor: stringFrom(clinic.defaultPrimaryColor) || 'lila',
+    defaultSecondaryColor: stringFrom(clinic.defaultSecondaryColor) || 'lavanda',
+    logoFileName: firstString(clinic.logoFileName, images.logoName),
+    logoInstruction: stringFrom(clinic.logoInstruction) || 'Usar como logo institucional, respetando proporciones.'
   });
 
   next.professional = sanitizeProfessional({
@@ -134,12 +143,21 @@ function normalizeV2State(rawState) {
 function sanitizeClinic(clinic) {
   return {
     name: stringFrom(clinic.name),
+    institutionType: stringFrom(clinic.institutionType) || 'Centro médico',
+    otherInstitutionType: stringFrom(clinic.otherInstitutionType),
     address: stringFrom(clinic.address),
     primaryPhone: stringFrom(clinic.primaryPhone),
+    secondaryPhone: stringFrom(clinic.secondaryPhone),
+    email: stringFrom(clinic.email),
+    website: stringFrom(clinic.website),
     socialLinks: sanitizeSocialLinks(clinic.socialLinks),
     institutionalPhrase: stringFrom(clinic.institutionalPhrase),
     showContactData: booleanFrom(clinic.showContactData, true),
-    saveAsDefault: booleanFrom(clinic.saveAsDefault, true)
+    saveAsDefault: booleanFrom(clinic.saveAsDefault, true),
+    defaultPrimaryColor: stringFrom(clinic.defaultPrimaryColor) || 'lila',
+    defaultSecondaryColor: stringFrom(clinic.defaultSecondaryColor) || 'lavanda',
+    logoFileName: stringFrom(clinic.logoFileName),
+    logoInstruction: stringFrom(clinic.logoInstruction) || 'Usar como logo institucional, respetando proporciones.'
   };
 }
 
@@ -192,6 +210,7 @@ function sanitizeCoverage(coverage) {
 function sanitizeDesign(design) {
   return {
     format: stringFrom(design.format) || 'Historia Instagram 1080x1920',
+    useInstitutionalColors: booleanFrom(design.useInstitutionalColors, true),
     primaryColor: stringFrom(design.primaryColor) || 'lila',
     secondaryColor: stringFrom(design.secondaryColor) || 'lavanda',
     customPrimaryColor: stringFrom(design.customPrimaryColor),
@@ -216,7 +235,7 @@ function sanitizeAttachments(attachments) {
 function sanitizePromptOptions(promptOptions) {
   return {
     promptType: stringFrom(promptOptions.promptType) || PROMPT_TYPES.finalFlyer,
-    finalAlternativesCount: numberFrom(promptOptions.finalAlternativesCount, 2),
+    finalAlternativesCount: numberFrom(promptOptions.finalAlternativesCount, 1),
     requireSeparateImages: booleanFrom(promptOptions.requireSeparateImages, true),
     preventCollage: booleanFrom(promptOptions.preventCollage, true),
     requireMobileSafeArea: booleanFrom(promptOptions.requireMobileSafeArea, true),

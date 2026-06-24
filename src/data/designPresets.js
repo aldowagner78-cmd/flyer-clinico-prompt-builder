@@ -10,6 +10,8 @@ export const colorPresets = {
   verdeAgua: { label: 'Verde agua', css: '#14b8a6', soft: '#ccfbf1' },
   verde: { label: 'Verde', css: '#16a34a', soft: '#f0fdf4' },
   naranjaSuave: { label: 'Naranja suave', css: '#fb923c', soft: '#fff7ed' },
+  rojo: { label: 'Rojo suave', css: '#dc2626', soft: '#fef2f2' },
+  coral: { label: 'Coral', css: '#f97316', soft: '#fff7ed' },
   rosaSuave: { label: 'Rosa suave', css: '#f9a8d4', soft: '#fdf2f8' },
   beige: { label: 'Beige', css: '#d6c7a1', soft: '#faf7ef' },
   negro: { label: 'Negro', css: '#111827', soft: '#f3f4f6' },
@@ -26,6 +28,6 @@ export const formats = [
   'Libre'
 ];
 
-export const visualStyles = ['moderno', 'institucional', 'elegante', 'minimalista', 'calido', 'colorido', 'sobrio'];
+export const visualStyles = ['moderno', 'clinico limpio', 'institucional', 'educativo', 'minimalista', 'calido', 'premium', 'infografico', 'promocional sobrio', 'infantil', 'colorido', 'sobrio', 'tecnologico'];
 export const typographyOptions = ['moderna sans serif', 'elegante serif', 'redondeada amigable', 'institucional'];
 export const impactLevels = ['bajo', 'medio', 'alto'];

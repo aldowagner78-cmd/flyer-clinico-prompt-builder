@@ -2467,3 +2467,351 @@ body[data-theme$="-dark"] .form-section.is-current .section-heading {
     top: 0 !important;
   }
 }
+
+
+/* Etapa 10A-10B: asistente modal híbrido e instituciones guardadas */
+.home-start-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+body.is-wizard-open {
+  overflow: hidden;
+}
+
+body.is-wizard-open .piece-home {
+  display: none;
+}
+
+body.is-wizard-open .app-shell {
+  position: fixed;
+  inset: clamp(14px, 3vh, 28px) clamp(14px, 3vw, 34px);
+  z-index: 50;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 18px;
+  max-width: 1480px;
+  margin: auto;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 30px;
+  background: color-mix(in srgb, var(--page) 88%, var(--surface-solid) 12%);
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.26);
+  overflow: hidden;
+}
+
+body.is-wizard-open::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(7px);
+  pointer-events: none;
+}
+
+body.is-wizard-open .workspace,
+body.is-wizard-open .side-panel {
+  max-height: calc(100vh - 78px);
+  overflow: auto;
+}
+
+.workflow-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.wizard-close-button {
+  white-space: nowrap;
+}
+
+.step-nav {
+  display: none;
+}
+
+.piece-step-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.piece-option-card {
+  display: grid;
+  gap: 10px;
+  min-height: 170px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface-solid) 88%, var(--accent-pale) 12%);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.piece-option-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+}
+
+.helper-field-grid {
+  display: none;
+}
+
+.institution-manager {
+  margin-bottom: 18px;
+}
+
+.institution-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface-solid) 88%, var(--accent-pale) 12%);
+}
+
+.institution-panel-head strong {
+  display: block;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.institution-panel-head span,
+.institution-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.institution-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(4, auto);
+  gap: 10px;
+  align-items: end;
+}
+
+.institution-controls.secondary-row {
+  grid-template-columns: auto auto minmax(220px, 1fr) auto;
+}
+
+.compact-field {
+  margin: 0;
+}
+
+.compact-file-action {
+  min-height: 44px;
+}
+
+#clinicFields .field:nth-child(1),
+#clinicFields .field:nth-child(9),
+#clinicFields .field:nth-child(13) {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1120px) {
+  body.is-wizard-open .app-shell {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  body.is-wizard-open .workspace,
+  body.is-wizard-open .side-panel {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .piece-step-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .institution-controls,
+  .institution-controls.secondary-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  body.is-wizard-open .app-shell {
+    inset: 0;
+    border-radius: 0;
+    padding: 12px;
+  }
+
+  .workflow-bar {
+    align-items: flex-start;
+  }
+
+  .piece-step-grid,
+  .institution-controls,
+  .institution-controls.secondary-row {
+    grid-template-columns: 1fr;
+  }
+
+  .step-header-controls {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .step-header-controls .primary-button {
+    max-width: none;
+  }
+}
+
+
+/* Etapa 10B.1 - flujo simplificado y formularios inteligentes */
+.institution-panel-compact {
+  padding: 18px;
+}
+
+.institution-quick-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.institution-details {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.institution-details > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-solid) 90%, var(--accent-pale) 10%);
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.institution-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+  align-items: end;
+}
+
+.phrase-field {
+  min-width: min(100%, 280px);
+}
+
+.smart-panel {
+  grid-column: 1 / -1;
+  border: 1px solid color-mix(in srgb, var(--accent) 17%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-solid) 88%, var(--accent-pale) 12%);
+  padding: 16px;
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.smart-panel p,
+.helper-text {
+  color: var(--muted);
+  margin: 8px 0 0;
+  line-height: 1.45;
+}
+
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.chip-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-solid) 90%, var(--accent-pale) 10%);
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.chip-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.full-width {
+  grid-column: 1 / -1;
+  margin-top: 14px;
+}
+
+.care-inline-panel {
+  margin-top: 16px;
+}
+
+.step-header-controls .primary-button {
+  width: auto;
+  min-width: 150px;
+  max-width: 220px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 780px) {
+  .institution-quick-row {
+    grid-template-columns: 1fr;
+  }
+
+  .institution-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .step-header-controls .primary-button {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+
+.institution-empty-state {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface-solid) 86%, var(--accent-pale) 14%);
+  font-weight: 700;
+}
+
+
+/* Etapa 10T.1 - gestión de instituciones robusta */
+.institution-manage-toggle {
+  justify-self: start;
+}
+
+.institution-actions-panel {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.institution-actions-panel[hidden] {
+  display: none !important;
+}
+
+.institution-empty-state {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.institution-actions .secondary-button[disabled],
+.institution-actions .danger-button[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

@@ -51,7 +51,12 @@
     <section class="piece-home" id="pieceHome" aria-label="Seleccion de tipo de pieza">
       <div class="piece-home-header">
         <p class="eyebrow">Inicio</p>
-        <h2>¿Qué querés crear?</h2>
+        <h2>Primero cargá la institución</h2>
+        <p>El asistente abre en datos institucionales. Después elegís el tipo de pieza y completás solo lo necesario.</p>
+        <div class="home-start-actions">
+          <button class="primary-button" type="button" id="startAssistantButton">Comenzar asistente</button>
+          <button class="secondary-button compact-action" type="button" id="continueCurrentButton">Continuar formulario guardado</button>
+        </div>
       </div>
 
       <div class="piece-card-grid">
@@ -97,8 +102,7 @@
       </div>
 
       <div class="home-secondary-actions">
-        <button class="secondary-button compact-action" type="button" id="continueCurrentButton">Continuar formulario guardado</button>
-        <span>Los ejemplos quedan dentro de cada flujo como ayuda discreta.</span>
+        <span>También podés tocar una tarjeta para iniciar el asistente con ese tipo de pieza preseleccionado.</span>
       </div>
     </section>
 
@@ -110,17 +114,18 @@
             <strong id="workflowTitle">Flujo de creación</strong>
             <span id="workflowSubtitle">Completá los pasos y generá el prompt final.</span>
           </div>
+          <button class="secondary-button compact-action wizard-close-button" type="button" id="closeAssistantButton">Cerrar asistente</button>
         </div>
         <nav class="step-nav" aria-label="Secciones del formulario">
-          <button class="step-button is-active" type="button" data-step-target="tipo">Tipo</button>
-          <button class="step-button" type="button" data-step-target="clinica">Clinica</button>
+          <button class="step-button is-active" type="button" data-step-target="clinica">Institución</button>
+          <button class="step-button" type="button" data-step-target="tipo">Tipo</button>
+          <button class="step-button" type="button" data-step-target="prestaciones">Contenido</button>
+          <button class="step-button" type="button" data-step-target="diseno">Diseño</button>
+          <button class="step-button" type="button" data-step-target="resultado">Resultado</button>
           <button class="step-button" type="button" data-step-target="medico">Profesional</button>
-          <button class="step-button" type="button" data-step-target="prestaciones">Prestaciones</button>
-          <button class="step-button" type="button" data-step-target="atencion">Atencion</button>
-          <button class="step-button" type="button" data-step-target="diseno">Diseno</button>
+          <button class="step-button" type="button" data-step-target="atencion">Atención</button>
           <button class="step-button" type="button" data-step-target="imagenes">Adjuntos</button>
           <button class="step-button" type="button" data-step-target="observaciones">Prompt</button>
-          <button class="step-button" type="button" data-step-target="resultado">Resultado</button>
         </nav>
 
         <div class="progress-wrap" aria-label="Progreso de campos recomendados">
@@ -148,8 +153,30 @@
                 <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
               </div>
             </div>
-            <div id="pieceFields" class="field-grid"></div>
-            <p class="warning-text">Este selector adapta el prompt y las prioridades de contenido. La app sigue generando 2 alternativas finales separadas.</p>
+            <div class="piece-step-grid" aria-label="Elegir tipo de pieza">
+              <button class="piece-option-card" type="button" data-piece-select="professionalFlyer">
+                <span class="piece-card-icon" aria-hidden="true">👩‍⚕️</span>
+                <strong>Flyer profesional</strong>
+                <small>Médicos, especialistas, horarios, turnos y prestaciones.</small>
+              </button>
+              <button class="piece-option-card" type="button" data-piece-select="clinicalInfographic">
+                <span class="piece-card-icon" aria-hidden="true">📊</span>
+                <strong>Infografía clínica</strong>
+                <small>Educación sanitaria, prevención y contenidos explicativos.</small>
+              </button>
+              <button class="piece-option-card" type="button" data-piece-select="informativeFlyer">
+                <span class="piece-card-icon" aria-hidden="true">ℹ️</span>
+                <strong>Flyer informativo</strong>
+                <small>Servicios, estudios, comunicados o novedades institucionales.</small>
+              </button>
+              <button class="piece-option-card" type="button" data-piece-select="promotionCampaign">
+                <span class="piece-card-icon" aria-hidden="true">📣</span>
+                <strong>Promoción / campaña</strong>
+                <small>Agenda abierta, jornadas, campañas preventivas y llamados a la acción.</small>
+              </button>
+            </div>
+            <div id="pieceFields" class="field-grid helper-field-grid"></div>
+            <p class="warning-text">Este selector adapta el prompt y las prioridades de contenido. El resultado final pedirá una sola imagen lista para publicar.</p>
           </section>
 
           <section class="form-section" id="clinica" data-step="clinica">
@@ -166,6 +193,7 @@
                 <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
               </div>
             </div>
+            <div id="institutionManager" class="institution-manager"></div>
             <div id="clinicFields" class="field-grid"></div>
             <div id="socialLinksEditor" class="list-editor"></div>
           </section>

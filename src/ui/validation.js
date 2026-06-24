@@ -33,12 +33,6 @@ const PROFESSIONAL_REQUIRED_CHECKS = [
     test: state => hasText(state?.specialty?.primaryProfessionalSpecialty)
   },
   {
-    key: 'schedule',
-    label: 'Horarios de atencion',
-    path: 'schedule.items.0',
-    test: state => getArray(state?.schedule?.items).some(isCompleteSchedule)
-  },
-  {
     key: 'services',
     label: 'Prestaciones visibles o prestacion destacada',
     path: 'services.visibleServices',
@@ -118,7 +112,13 @@ const KNOWN_SPECIALTIES = [
   'reumatologia',
   'otorrinolaringologia',
   'diagnostico por imagenes',
-  'laboratorio'
+  'laboratorio',
+  'medicina general',
+  'psicopedagogia',
+  'terapia ocupacional',
+  'oncologia',
+  'infectologia',
+  'fonoaudiologia'
 ];
 
 const GENERIC_FOCUS_WORDS = [
@@ -444,6 +444,9 @@ function validatePromptOptions(state, issues, fieldPaths) {
 function hasContact(state) {
   return Boolean(
     hasText(state?.clinic?.primaryPhone) ||
+    hasText(state?.clinic?.secondaryPhone) ||
+    hasText(state?.clinic?.email) ||
+    hasText(state?.clinic?.website) ||
     getArray(state?.clinic?.socialLinks).some(item => hasText(item?.value))
   );
 }

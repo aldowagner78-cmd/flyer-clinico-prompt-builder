@@ -6,12 +6,21 @@ export function createDefaultState() {
     schemaVersion: SCHEMA_VERSION,
     clinic: {
       name: defaultClinic.name || '',
+      institutionType: defaultClinic.institutionType || 'Centro médico',
+      otherInstitutionType: '',
       address: defaultClinic.address || '',
       primaryPhone: defaultClinic.phone || '',
+      secondaryPhone: '',
+      email: '',
+      website: '',
       socialLinks: [],
       institutionalPhrase: defaultClinic.tagline || '',
       showContactData: true,
-      saveAsDefault: true
+      saveAsDefault: true,
+      defaultPrimaryColor: 'lila',
+      defaultSecondaryColor: 'lavanda',
+      logoFileName: defaultClinic.logoName || '',
+      logoInstruction: 'Usar como logo institucional, respetando proporciones.'
     },
     professional: {
       title: 'Dr.',
@@ -21,10 +30,10 @@ export function createDefaultState() {
       showPhoto: true
     },
     specialty: {
-      primaryProfessionalSpecialty: 'Cardiologia',
+      primaryProfessionalSpecialty: 'Clinica medica',
       additionalSpecialties: [],
-      communicationFocus: '',
-      visibleSpecialtyText: ''
+      communicationFocus: 'Control clinico y prevencion',
+      visibleSpecialtyText: 'Clinica medica'
     },
     services: {
       mainHighlightedService: '',
@@ -46,6 +55,7 @@ export function createDefaultState() {
     },
     design: {
       format: 'Historia Instagram 1080x1920',
+      useInstitutionalColors: true,
       primaryColor: 'lila',
       secondaryColor: 'lavanda',
       customPrimaryColor: '',
@@ -75,7 +85,7 @@ export function createDefaultState() {
       campaignConditions: '',
       campaignCallToAction: '',
       legalEthicalNote: '',
-      finalAlternativesCount: 2,
+      finalAlternativesCount: 1,
       requireSeparateImages: true,
       preventCollage: true,
       requireMobileSafeArea: true,

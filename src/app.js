@@ -12,25 +12,45 @@ import { validateState } from './ui/validation.js';
 let state = loadState();
 let currentStep = '';
 const pieceWorkflows = {
-  [PIECE_TYPES.professionalFlyer]: ['clinica', 'medico', 'prestaciones', 'atencion', 'diseno', 'imagenes', 'observaciones', 'resultado'],
-  [PIECE_TYPES.clinicalInfographic]: ['clinica', 'prestaciones', 'diseno', 'imagenes', 'observaciones', 'resultado'],
-  [PIECE_TYPES.informativeFlyer]: ['clinica', 'prestaciones', 'atencion', 'diseno', 'imagenes', 'observaciones', 'resultado'],
-  [PIECE_TYPES.promotionCampaign]: ['clinica', 'prestaciones', 'atencion', 'diseno', 'imagenes', 'observaciones', 'resultado']
+  [PIECE_TYPES.professionalFlyer]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
+  [PIECE_TYPES.clinicalInfographic]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
+  [PIECE_TYPES.informativeFlyer]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
+  [PIECE_TYPES.promotionCampaign]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado']
 };
 
 const resultStep = 'resultado';
+const INSTITUTIONS_KEY = 'flyerClinicoPromptBuilder.institutions';
+const INSTITUTION_PHRASES_KEY = 'flyerClinicoPromptBuilder.institutionPhrases';
+const MAX_INSTITUTIONS = 10;
+const MAX_PHRASES = 10;
+let institutionActionsPanelOpen = false;
+let institutionManagePointerHandled = false;
+let institutionActionPointerHandled = false;
+let statusClearTimer = null;
 
 
 const handlers = {
   onFieldChange(path, value) {
     setByPath(state, path, value);
-    if (path === 'specialty.primaryProfessionalSpecialty') applySpecialtyPreset(value);
+    if (path === 'specialty.primaryProfessionalSpecialty') applySpecialtyPreset(value, true);
     if (path === 'design.primaryColor') applyPrimaryColorPreset(value);
-    if (path === 'promptOptions.pieceType') currentStep = firstStepForPiece(value);
+    if (path === 'design.useInstitutionalColors' && value) applyInstitutionalColors();
+    if (path === 'promptOptions.pieceType') {
+      currentStep = 'tipo';
+      applySpecialtyPreset(state.specialty.primaryProfessionalSpecialty, true);
+    }
     update(shouldRenderForm(path));
   },
   onRemoveService(index) {
     state.services.visibleServices.splice(index, 1);
+    update(true);
+  },
+  onToggleServiceOption(value, checked) {
+    const item = String(value || '').trim();
+    if (!item) return;
+    const exists = state.services.visibleServices.includes(item);
+    if (checked && !exists) state.services.visibleServices.push(item);
+    if (!checked && exists) state.services.visibleServices = state.services.visibleServices.filter(service => service !== item);
     update(true);
   },
   onAddContextService(value) {
@@ -113,6 +133,7 @@ function update(renderFields = false) {
   const validation = validateState(state);
   const prompt = buildPrompt(state);
   if (renderFields) renderForm(state, handlers);
+  renderInstitutionManager();
   renderPreview(state, validation);
   renderResult(prompt, validation, state);
   markRecommendedFields(validation);
@@ -129,6 +150,13 @@ function bindStaticActions() {
     });
   });
 
+  document.querySelectorAll('[data-piece-select]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      selectPieceType(button.dataset.pieceSelect);
+    });
+  });
+
   document.querySelectorAll('[data-demo-piece]').forEach(button => {
     button.addEventListener('click', event => {
       event.stopPropagation();
@@ -136,9 +164,62 @@ function bindStaticActions() {
     });
   });
 
+  document.querySelector('#startAssistantButton')?.addEventListener('click', () => {
+    currentStep = 'clinica';
+    startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false);
+  });
   document.querySelector('#continueCurrentButton')?.addEventListener('click', () => startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false));
   document.querySelector('#backHomeButton')?.addEventListener('click', showHome);
+  document.querySelector('#closeAssistantButton')?.addEventListener('click', showHome);
+  document.addEventListener('pointerdown', event => {
+    const manageButton = event.target.closest?.('#manageInstitutionButton');
+    if (!manageButton) return;
+    event.preventDefault();
+    event.stopPropagation();
+    institutionManagePointerHandled = true;
+    toggleInstitutionActionsPanel();
+    window.setTimeout(() => {
+      institutionManagePointerHandled = false;
+    }, 500);
+  }, true);
+
+  document.addEventListener('pointerdown', event => {
+    const institutionAction = event.target.closest?.('#saveInstitutionButton, #loadInstitutionButton, #updateInstitutionButton, #deleteInstitutionButton, #exportInstitutionButton, #savePhraseButton');
+    if (!institutionAction) return;
+    event.preventDefault();
+    event.stopPropagation();
+    institutionActionPointerHandled = true;
+    runInstitutionPanelAction(institutionAction.id);
+    window.setTimeout(() => {
+      institutionActionPointerHandled = false;
+    }, 500);
+  }, true);
+
   document.addEventListener('click', event => {
+    const manageButton = event.target.closest?.('#manageInstitutionButton');
+    if (manageButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (institutionManagePointerHandled) {
+        institutionManagePointerHandled = false;
+        return;
+      }
+      toggleInstitutionActionsPanel();
+      return;
+    }
+
+    const institutionAction = event.target.closest?.('#saveInstitutionButton, #loadInstitutionButton, #updateInstitutionButton, #deleteInstitutionButton, #exportInstitutionButton, #savePhraseButton');
+    if (institutionAction) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (institutionActionPointerHandled) {
+        institutionActionPointerHandled = false;
+        return;
+      }
+      runInstitutionPanelAction(institutionAction.id);
+      return;
+    }
+
     const button = event.target.closest('[data-wizard-action]');
     if (!button) return;
     event.preventDefault();
@@ -147,7 +228,7 @@ function bindStaticActions() {
     if (action === 'home') showHome();
     if (action === 'result') showStep(resultStep);
     if (action === 'next') nextStep();
-  });
+  }, true);
 
   document.querySelector('#addServiceButton').addEventListener('click', addService);
   document.querySelector('#newService').addEventListener('keydown', event => {
@@ -536,12 +617,76 @@ function addService() {
   update(true);
 }
 
-function applySpecialtyPreset(name) {
+function applySpecialtyPreset(name, force = false) {
   const preset = specialties.find(item => item.name === name);
   if (!preset) return;
+
+  const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
   state.specialty.primaryProfessionalSpecialty = name;
-  if (!state.services.visibleServices.length) state.services.visibleServices = [...preset.services];
-  if (!state.services.mainHighlightedService && preset.services[0]) state.services.mainHighlightedService = preset.services[0];
+  state.specialty.communicationFocus = preset.focus || name;
+  state.specialty.visibleSpecialtyText = state.specialty.visibleSpecialtyText && !force
+    ? state.specialty.visibleSpecialtyText
+    : buildVisibleSpecialtyText([name, ...state.specialty.additionalSpecialties]);
+
+  const suggestedServices = Array.isArray(preset.services) ? preset.services.slice(0, 5) : [];
+  if (force || !state.services.visibleServices.length) {
+    state.services.visibleServices = [...suggestedServices];
+  }
+  if (force || !state.services.mainHighlightedService) {
+    state.services.mainHighlightedService = suggestedServices[0] || name;
+  }
+
+  if (pieceType === PIECE_TYPES.clinicalInfographic) {
+    const topics = preset.infographicTopics || preset.topics || [];
+    const audiences = preset.audiences || [];
+    const messages = preset.messages || [];
+    const blocks = preset.blocks || suggestedServices;
+    state.promptOptions.educationalTopic = topics[0] || name;
+    state.promptOptions.targetAudience = audiences[0] || 'Comunidad general';
+    state.promptOptions.mainMessage = messages[0] || `${name}: información clara para cuidar la salud.`;
+    state.promptOptions.infoBlocksText = blocks.slice(0, 5).join('\n');
+    state.promptOptions.legalEthicalNote = state.promptOptions.legalEthicalNote || 'Contenido informativo. No reemplaza la consulta médica.';
+  }
+
+  if (pieceType === PIECE_TYPES.informativeFlyer) {
+    const infoTypes = preset.informativeTypes || ['Nuevo servicio', 'Información para pacientes', 'Turnos disponibles'];
+    const titles = preset.informativeTitles || preset.topics || [name];
+    const messages = preset.informativeMessages || preset.messages || [];
+    state.promptOptions.contentGoal = infoTypes[0] || 'Información para pacientes';
+    state.promptOptions.educationalTopic = titles[0] || name;
+    state.promptOptions.targetAudience = (preset.audiences || ['Comunidad general'])[0];
+    state.promptOptions.mainMessage = messages[0] || `Información sobre ${name} para pacientes.`;
+    state.promptOptions.campaignCallToAction = state.promptOptions.campaignCallToAction || 'Consultar por WhatsApp';
+    state.promptOptions.infoBlocksText = suggestedServices.slice(0, 5).join('\n');
+  }
+
+  if (pieceType === PIECE_TYPES.promotionCampaign) {
+    const campaigns = preset.campaignTypes || ['Agenda abierta', 'Campaña preventiva', 'Turnos disponibles'];
+    const messages = preset.campaignMessages || preset.messages || [];
+    state.promptOptions.campaignType = campaigns[0] || 'Campaña preventiva';
+    state.promptOptions.targetAudience = (preset.audiences || ['Comunidad general'])[0];
+    state.promptOptions.mainMessage = messages[0] || `Agenda disponible para ${name}.`;
+    state.promptOptions.campaignCallToAction = state.promptOptions.campaignCallToAction || 'Solicitar turno por WhatsApp';
+    state.promptOptions.legalEthicalNote = state.promptOptions.legalEthicalNote || 'Actividad sujeta a disponibilidad de turnos.';
+  }
+
+  if (preset.design && state.design.useAutomaticTheme) {
+    state.design.primaryColor = preset.design.primaryColor || state.design.primaryColor;
+    state.design.secondaryColor = preset.design.secondaryColor || state.design.secondaryColor;
+    state.design.visualStyle = preset.design.visualStyle || state.design.visualStyle;
+    state.design.typography = preset.design.typography || state.design.typography;
+  }
+}
+
+function buildVisibleSpecialtyText(values = []) {
+  const filled = values.map(value => String(value || '').trim()).filter(Boolean);
+  if (!filled.length) return '';
+  return filled.length <= 2 ? filled.join(' y ') : `${filled.slice(0, -1).join(', ')} y ${filled.at(-1)}`;
+}
+
+function applyInstitutionalColors() {
+  if (state.clinic.defaultPrimaryColor) state.design.primaryColor = state.clinic.defaultPrimaryColor;
+  if (state.clinic.defaultSecondaryColor) state.design.secondaryColor = state.clinic.defaultSecondaryColor;
 }
 
 function applyPrimaryColorPreset(key) {
@@ -602,26 +747,288 @@ function applyInterfaceTheme(color = 'violet', mode = 'light') {
 }
 
 
-function startNewPiece(pieceType = PIECE_TYPES.professionalFlyer) {
-  state = createDefaultState();
+
+function selectPieceType(pieceType) {
   state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
-  currentStep = firstStepForPiece(state.promptOptions.pieceType);
+  applySpecialtyPreset(state.specialty.primaryProfessionalSpecialty, true);
+  currentStep = 'tipo';
+  update(true);
+  nextStep();
+  showStatus(`${labelPieceType(state.promptOptions.pieceType)} seleccionado.`);
+}
+
+
+
+function runInstitutionPanelAction(actionId) {
+  const selectedInstitutionId = document.querySelector('#savedInstitutionSelect')?.value || '';
+
+  if (actionId === 'saveInstitutionButton') saveCurrentInstitutionAsNew();
+  if (actionId === 'loadInstitutionButton') loadSelectedInstitution(selectedInstitutionId);
+  if (actionId === 'updateInstitutionButton') updateSelectedInstitution(selectedInstitutionId);
+  if (actionId === 'deleteInstitutionButton') deleteSelectedInstitution(selectedInstitutionId);
+  if (actionId === 'exportInstitutionButton') exportInstitution(selectedInstitutionId);
+  if (actionId === 'savePhraseButton') saveCurrentPhrase();
+}
+
+function syncCurrentClinicFieldsFromDom() {
+  document.querySelectorAll('[data-path^="clinic."]').forEach(field => {
+    const path = field.dataset.path;
+    if (!path || field.type === 'file') return;
+    if (field.type === 'checkbox') {
+      setByPath(state, path, field.checked);
+      return;
+    }
+    setByPath(state, path, field.value ?? '');
+  });
+}
+function syncInstitutionActionsPanel() {
+  const actionsPanel = document.querySelector('#institutionActionsPanel');
+  const manageButton = document.querySelector('#manageInstitutionButton');
+  if (!actionsPanel || !manageButton) return;
+
+  actionsPanel.hidden = !institutionActionsPanelOpen;
+  manageButton.setAttribute('aria-expanded', String(institutionActionsPanelOpen));
+  manageButton.textContent = institutionActionsPanelOpen ? 'Ocultar gestión' : 'Gestionar instituciones';
+}
+
+function toggleInstitutionActionsPanel() {
+  institutionActionsPanelOpen = !institutionActionsPanelOpen;
+  syncInstitutionActionsPanel();
+}
+
+function renderInstitutionManager() {
+  const target = document.querySelector('#institutionManager');
+  if (!target) return;
+
+  const institutions = loadInstitutions();
+  const phrases = loadInstitutionPhrases();
+  const currentName = state?.clinic?.name || '';
+
+  target.innerHTML = `
+    <div class="institution-panel institution-panel-compact">
+      <div class="institution-quick-row">
+        ${institutions.length ? `
+        <label class="field compact-field">
+          <span>Institución guardada</span>
+          <select id="savedInstitutionSelect">
+            <option value="">Seleccionar institución...</option>
+            ${institutions.map(item => `<option value="${escapeHtmlAttr(item.id)}">${escapeHtml(item.clinic?.name || 'Sin nombre')}</option>`).join('')}
+          </select>
+        </label>
+        <button class="secondary-button" type="button" id="loadInstitutionButton">Cargar</button>
+        ` : `<p class="institution-empty-state">Todavía no hay instituciones guardadas. Completá los datos y guardalos para reutilizarlos.</p>`}
+
+        <button class="secondary-button institution-manage-toggle" type="button" id="manageInstitutionButton" aria-expanded="${institutionActionsPanelOpen ? 'true' : 'false'}" aria-controls="institutionActionsPanel">
+          ${institutionActionsPanelOpen ? 'Ocultar gestión' : 'Gestionar instituciones'}
+        </button>
+
+        <div class="institution-actions-panel" id="institutionActionsPanel"${institutionActionsPanelOpen ? '' : ' hidden'}>
+          <div class="institution-actions">
+            <button class="secondary-button" type="button" id="saveInstitutionButton">Guardar como nueva</button>
+            <button class="secondary-button" type="button" id="updateInstitutionButton" ${institutions.length ? '' : 'disabled'}>Actualizar</button>
+            <button class="danger-button" type="button" id="deleteInstitutionButton" ${institutions.length ? '' : 'disabled'}>Eliminar</button>
+            <button class="secondary-button" type="button" id="exportInstitutionButton">Exportar institución</button>
+            <label class="file-action compact-file-action">
+              Importar institución
+              <input type="file" id="importInstitutionInput" accept="application/json,.json">
+            </label>
+            <label class="field compact-field phrase-field">
+              <span>Frase guardada</span>
+              <select id="savedPhraseSelect">
+                <option value="">Cargar frase...</option>
+                ${phrases.map(phrase => `<option value="${escapeHtmlAttr(phrase)}">${escapeHtml(phrase)}</option>`).join('')}
+              </select>
+            </label>
+            <button class="secondary-button" type="button" id="savePhraseButton">Guardar frase</button>
+          </div>
+        </div>
+      </div>
+      <p class="institution-note">${institutions.length ? `${institutions.length}/${MAX_INSTITUTIONS} instituciones guardadas.` : 'Podés guardar hasta 10 instituciones.'} ${currentName ? `Institución actual: ${escapeHtml(currentName)}.` : ''}</p>
+    </div>
+  `;
+
+  const select = target.querySelector('#savedInstitutionSelect');
+  const manageButton = target.querySelector('#manageInstitutionButton');
+  const actionsPanel = target.querySelector('#institutionActionsPanel');
+
+  syncInstitutionActionsPanel();
+
+  target.querySelector('#loadInstitutionButton')?.addEventListener('click', () => loadSelectedInstitution(select?.value || ''));
+  target.querySelector('#saveInstitutionButton')?.addEventListener('click', saveCurrentInstitutionAsNew);
+  target.querySelector('#updateInstitutionButton')?.addEventListener('click', () => updateSelectedInstitution(select?.value || ''));
+  target.querySelector('#deleteInstitutionButton')?.addEventListener('click', () => deleteSelectedInstitution(select?.value || ''));
+  target.querySelector('#exportInstitutionButton')?.addEventListener('click', () => exportInstitution(select?.value || ''));
+  target.querySelector('#importInstitutionInput')?.addEventListener('change', importInstitution);
+  target.querySelector('#savedPhraseSelect')?.addEventListener('change', event => {
+    if (!event.target.value) return;
+    state.clinic.institutionalPhrase = event.target.value;
+    update(true);
+    showStatus('Frase institucional cargada.');
+  });
+  target.querySelector('#savePhraseButton')?.addEventListener('click', saveCurrentPhrase);
+}
+
+function clinicSnapshot() {
+  return structuredCloneSafe(state.clinic || {});
+}
+
+function loadInstitutions() {
+  return readLocalJson(INSTITUTIONS_KEY, []);
+}
+
+function saveInstitutions(items) {
+  localStorage.setItem(INSTITUTIONS_KEY, JSON.stringify(items.slice(0, MAX_INSTITUTIONS)));
+}
+
+function loadInstitutionPhrases() {
+  return readLocalJson(INSTITUTION_PHRASES_KEY, []);
+}
+
+function saveInstitutionPhrases(items) {
+  localStorage.setItem(INSTITUTION_PHRASES_KEY, JSON.stringify(items.slice(0, MAX_PHRASES)));
+}
+
+function saveCurrentInstitutionAsNew() {
+  syncCurrentClinicFieldsFromDom();
+  const name = state?.clinic?.name?.trim();
+  if (!name) return showStatus('Primero completá el nombre de la institución.');
+  const institutions = loadInstitutions();
+  const id = `institution_${Date.now()}`;
+  const next = [{ id, clinic: clinicSnapshot(), updatedAt: new Date().toISOString() }, ...institutions.filter(item => item.clinic?.name !== name)].slice(0, MAX_INSTITUTIONS);
+  saveInstitutions(next);
+  renderInstitutionManager();
+  showStatus('Institución guardada.');
+}
+
+function loadSelectedInstitution(id) {
+  const institution = loadInstitutions().find(item => item.id === id);
+  if (!institution) return showStatus('Seleccioná una institución guardada.');
+  state.clinic = migrateState({ clinic: institution.clinic }).clinic;
+  update(true);
+  showStatus('Institución cargada.');
+}
+
+function updateSelectedInstitution(id) {
+  const name = state?.clinic?.name?.trim();
+  if (!name) return showStatus('Primero completá el nombre de la institución.');
+  const institutions = loadInstitutions();
+  const index = institutions.findIndex(item => item.id === id);
+  if (index === -1) return saveCurrentInstitutionAsNew();
+  institutions[index] = { id, clinic: clinicSnapshot(), updatedAt: new Date().toISOString() };
+  saveInstitutions(institutions);
+  renderInstitutionManager();
+  showStatus('Institución actualizada.');
+}
+
+function deleteSelectedInstitution(id) {
+  if (!id) return showStatus('Seleccioná una institución para eliminar.');
+  const institutions = loadInstitutions();
+  const institution = institutions.find(item => item.id === id);
+  if (!institution) return showStatus('No se encontró la institución.');
+  if (!confirm(`Eliminar institución guardada "${institution.clinic?.name || 'sin nombre'}"?`)) return;
+  saveInstitutions(institutions.filter(item => item.id !== id));
+  renderInstitutionManager();
+  showStatus('Institución eliminada.');
+}
+
+function exportInstitution(id) {
+  const selected = loadInstitutions().find(item => item.id === id);
+  const payload = selected || { id: `institution_${Date.now()}`, clinic: clinicSnapshot(), updatedAt: new Date().toISOString() };
+  const safeName = (payload.clinic?.name || 'institucion').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+  downloadFile(`institucion-${safeName || 'datos'}.json`, JSON.stringify({ type: 'institution', version: 1, ...payload }, null, 2), 'application/json');
+  showStatus('Institución exportada.');
+}
+
+function importInstitution(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const clinic = parsed.clinic || parsed;
+      if (!clinic?.name) throw new Error('missing-name');
+      const institutions = loadInstitutions();
+      const id = parsed.id || `institution_${Date.now()}`;
+      const next = [{ id, clinic: migrateState({ clinic }).clinic, updatedAt: new Date().toISOString() }, ...institutions.filter(item => item.id !== id && item.clinic?.name !== clinic.name)].slice(0, MAX_INSTITUTIONS);
+      saveInstitutions(next);
+      state.clinic = next[0].clinic;
+      update(true);
+      showStatus('Institución importada y cargada.');
+    } catch {
+      showStatus('No se pudo importar la institución.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function saveCurrentPhrase() {
+  const phrase = state?.clinic?.institutionalPhrase?.trim();
+  if (!phrase) return showStatus('Primero escribí una frase institucional.');
+  const phrases = loadInstitutionPhrases();
+  saveInstitutionPhrases([phrase, ...phrases.filter(item => item !== phrase)].slice(0, MAX_PHRASES));
+  renderInstitutionManager();
+  showStatus('Frase guardada.');
+}
+
+function readLocalJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function structuredCloneSafe(value) {
+  try {
+    return structuredClone(value);
+  } catch {
+    return JSON.parse(JSON.stringify(value));
+  }
+}
+
+function escapeHtml(value = '') {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function escapeHtmlAttr(value = '') {
+  return escapeHtml(value);
+}
+
+
+function startNewPiece(pieceType = PIECE_TYPES.professionalFlyer) {
+  const preservedClinic = state?.clinic ? structuredCloneSafe(state.clinic) : null;
+  state = createDefaultState();
+  if (preservedClinic?.name) state.clinic = preservedClinic;
+  state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
+  currentStep = 'clinica';
   startPieceFlow(state.promptOptions.pieceType, false);
 }
 
 function startPieceFlow(pieceType, resetCurrentStep = true) {
   state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
   document.body.classList.remove('is-home');
+  document.body.classList.add('is-wizard-open');
   document.body.dataset.pieceType = state.promptOptions.pieceType;
   if (resetCurrentStep || !currentStep) currentStep = firstStepForPiece(state.promptOptions.pieceType);
+  if (state.design.useInstitutionalColors) applyInstitutionalColors();
+  applySpecialtyPreset(state.specialty.primaryProfessionalSpecialty, !state.services.visibleServices.length);
   update(true);
   showStep(currentStep);
-  document.querySelector('.app-shell')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   showStatus(`${labelPieceType(state.promptOptions.pieceType)} iniciado.`);
 }
 
 function showHome() {
   document.body.classList.add('is-home');
+  document.body.classList.remove('is-wizard-open');
   document.querySelector('#pieceHome')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   showStatus('Inicio.');
 }
@@ -779,6 +1186,8 @@ function markPath(path) {
 function shouldRenderForm(path) {
   return path === 'promptOptions.pieceType'
     || path === 'specialty.primaryProfessionalSpecialty'
+    || path === 'promptOptions.contentGoal'
+    || path === 'promptOptions.educationalTopic'
     || path === 'services.allowServiceExpansion'
     || path === 'design.primaryColor'
     || path === 'design.secondaryColor'
@@ -839,40 +1248,22 @@ function isLegacyColorValue(value) {
 function updateSectionHeadings(pieceType) {
   const contentTitle = document.querySelector('#prestaciones .section-heading h2');
   const contentDescription = document.querySelector('#prestaciones .section-heading p');
-  const careTitle = document.querySelector('#atencion .section-heading h2');
-  const careDescription = document.querySelector('#atencion .section-heading p');
-  const promptTitle = document.querySelector('#observaciones .section-heading h2');
-  const promptDescription = document.querySelector('#observaciones .section-heading p');
   const resultTitle = document.querySelector('#resultado .section-heading h2');
   const resultDescription = document.querySelector('#resultado .section-heading p');
-  const visibleServicesLabel = document.querySelector('label[for="newService"]');
 
   const contentLabels = {
-    [PIECE_TYPES.professionalFlyer]: ['Especialidad y prestaciones', 'Servicios principales, orientación profesional y alcance autorizado.', 'Prestaciones visibles en el flyer'],
-    [PIECE_TYPES.clinicalInfographic]: ['Tema y contenido educativo', 'Tema, mensaje principal, bloques informativos y aclaración sanitaria.', 'Puntos o ideas educativas visibles'],
-    [PIECE_TYPES.informativeFlyer]: ['Servicio o información a comunicar', 'Servicio, prestación, mensaje principal y datos visibles.', 'Datos o beneficios visibles'],
-    [PIECE_TYPES.promotionCampaign]: ['Campaña y mensaje principal', 'Tipo de campaña, mensaje, servicios incluidos y condiciones.', 'Puntos visibles de la campaña']
+    [PIECE_TYPES.professionalFlyer]: ['Contenido del flyer profesional', 'Profesional, especialidades, prestaciones sugeridas, atención y cobertura.'],
+    [PIECE_TYPES.clinicalInfographic]: ['Contenido de la infografía', 'Área sanitaria, tema, público, mensaje y bloques sugeridos.'],
+    [PIECE_TYPES.informativeFlyer]: ['Contenido del flyer informativo', 'Área, tipo de información, título, mensaje, datos visibles y CTA.'],
+    [PIECE_TYPES.promotionCampaign]: ['Contenido de la campaña', 'Área, tipo de campaña, público, vigencia, condiciones y llamada a la acción.']
   };
 
-  const careLabels = {
-    [PIECE_TYPES.professionalFlyer]: ['Atención', 'Días, horarios, cobertura y modalidad de atención.'],
-    [PIECE_TYPES.clinicalInfographic]: ['Datos opcionales de contacto', 'Podés omitir horarios si la pieza es solo educativa.'],
-    [PIECE_TYPES.informativeFlyer]: ['Disponibilidad y contacto', 'Horarios, modalidad o requisitos si aplican al servicio informado.'],
-    [PIECE_TYPES.promotionCampaign]: ['Vigencia, cupos y contacto', 'Fechas, condiciones, turnos y llamado a la acción.']
-  };
-
-  const [mainTitle, mainDescription, serviceLabel] = contentLabels[pieceType] || contentLabels[PIECE_TYPES.professionalFlyer];
-  const [attentionTitle, attentionDescription] = careLabels[pieceType] || careLabels[PIECE_TYPES.professionalFlyer];
+  const [mainTitle, mainDescription] = contentLabels[pieceType] || contentLabels[PIECE_TYPES.professionalFlyer];
 
   if (contentTitle) contentTitle.textContent = mainTitle;
   if (contentDescription) contentDescription.textContent = mainDescription;
-  if (visibleServicesLabel) visibleServicesLabel.textContent = serviceLabel;
-  if (careTitle) careTitle.textContent = attentionTitle;
-  if (careDescription) careDescription.textContent = attentionDescription;
-  if (promptTitle) promptTitle.textContent = 'Ajustes finales del prompt';
-  if (promptDescription) promptDescription.textContent = 'Frases, restricciones, creatividad visual y datos a destacar.';
   if (resultTitle) resultTitle.textContent = `Resultado: ${labelPieceType(pieceType)}`;
-  if (resultDescription) resultDescription.textContent = 'Prompt completo, checklist, advertencias y acciones finales.';
+  if (resultDescription) resultDescription.textContent = 'Prompt final, checklist de adjuntos, advertencias y acciones.';
 }
 
 function updateActionLabels(pieceType) {
@@ -900,45 +1291,13 @@ function updateActionLabels(pieceType) {
 
 function labelStepForPiece(step, pieceType) {
   const labels = {
-    [PIECE_TYPES.professionalFlyer]: {
-      clinica: 'Clínica',
-      medico: 'Profesional',
-      prestaciones: 'Especialidad y prestaciones',
-      atencion: 'Atención',
-      diseno: 'Diseño',
-      imagenes: 'Adjuntos',
-      observaciones: 'Ajustes finales',
-      resultado: 'Resultado'
-    },
-    [PIECE_TYPES.clinicalInfographic]: {
-      clinica: 'Clínica',
-      prestaciones: 'Contenido educativo',
-      diseno: 'Diseño',
-      imagenes: 'Adjuntos',
-      observaciones: 'Ajustes finales',
-      resultado: 'Resultado'
-    },
-    [PIECE_TYPES.informativeFlyer]: {
-      clinica: 'Clínica',
-      prestaciones: 'Información',
-      atencion: 'Disponibilidad',
-      diseno: 'Diseño',
-      imagenes: 'Adjuntos',
-      observaciones: 'Ajustes finales',
-      resultado: 'Resultado'
-    },
-    [PIECE_TYPES.promotionCampaign]: {
-      clinica: 'Clínica',
-      prestaciones: 'Campaña',
-      atencion: 'Vigencia y contacto',
-      diseno: 'Diseño',
-      imagenes: 'Adjuntos',
-      observaciones: 'Ajustes finales',
-      resultado: 'Resultado'
-    }
+    clinica: 'Institución',
+    tipo: 'Tipo de pieza',
+    prestaciones: 'Contenido',
+    diseno: 'Diseño',
+    resultado: 'Resultado'
   };
-
-  return labels[pieceType]?.[step] || labelStep(step);
+  return labels[step] || labelStep(step);
 }
 
 function labelPieceType(value) {
@@ -952,21 +1311,20 @@ function labelPieceType(value) {
 
 function labelStep(value) {
   return {
-    clinica: 'Clínica',
-    medico: 'Profesional',
+    clinica: 'Institución',
+    tipo: 'Tipo de pieza',
     prestaciones: 'Contenido',
-    atencion: 'Atención',
     diseno: 'Diseño',
-    imagenes: 'Adjuntos',
-    observaciones: 'Opciones del prompt',
     resultado: 'Resultado final'
   }[value] || value;
 }
 
 function showStatus(message) {
   const node = document.querySelector('#statusMessage');
+  if (!node) return;
+  if (statusClearTimer) window.clearTimeout(statusClearTimer);
   node.textContent = message;
-  window.setTimeout(() => {
+  statusClearTimer = window.setTimeout(() => {
     if (node.textContent === message) node.textContent = '';
   }, 3000);
 }

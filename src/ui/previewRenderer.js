@@ -6,7 +6,8 @@ export function renderPreview(state, validation) {
     <dl>
       <div><dt>Tipo de pieza</dt><dd>${escapeHtml(labelPieceType(state.promptOptions.pieceType))}</dd></div>
       <div><dt>Objetivo</dt><dd>${escapeHtml(state.promptOptions.contentGoal) || 'Sin completar'}</dd></div>
-      <div><dt>Clinica</dt><dd>${escapeHtml(state.clinic.name) || 'Sin completar'}</dd></div>
+      <div><dt>Institución</dt><dd>${escapeHtml(state.clinic.name) || 'Sin completar'}</dd></div>
+      <div><dt>Tipo institución</dt><dd>${escapeHtml(state.clinic.institutionType) || 'Sin completar'}</dd></div>
       <div><dt>Profesional</dt><dd>${escapeHtml([state.professional.title, state.professional.fullName].filter(Boolean).join(' ')) || 'Sin completar'}</dd></div>
       <div><dt>Especialidad principal</dt><dd>${escapeHtml(state.specialty.primaryProfessionalSpecialty) || 'Sin completar'}</dd></div>
       <div><dt>Adicionales</dt><dd>${escapeHtml(listOrFallback(state.specialty.additionalSpecialties))}</dd></div>
