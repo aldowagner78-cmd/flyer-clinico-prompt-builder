@@ -48,61 +48,21 @@
     </header>
 
 
-    <section class="piece-home" id="pieceHome" aria-label="Seleccion de tipo de pieza">
-      <div class="piece-home-header">
+    <section class="piece-home piece-home-clean" id="pieceHome" aria-label="Inicio del generador">
+      <div class="home-welcome-card">
         <p class="eyebrow">Inicio</p>
-        <h2>Primero cargá la institución</h2>
-        <p>El asistente abre en datos institucionales. Después elegís el tipo de pieza y completás solo lo necesario.</p>
-        <div class="home-start-actions">
-          <button class="primary-button" type="button" id="startAssistantButton">Comenzar asistente</button>
-          <button class="secondary-button compact-action" type="button" id="continueCurrentButton">Continuar formulario guardado</button>
+        <h2>Creá tu contenido médico paso a paso</h2>
+        <p>El asistente empieza por la institución. Después elegís el tipo de pieza, completás el contenido, definís el diseño y copiás el prompt final.</p>
+
+        <div class="home-start-actions home-start-actions-clean">
+          <button class="primary-button home-wizard-button" type="button" id="startAssistantButton">
+            <span aria-hidden="true">🧙‍♂️</span>
+            Comenzar asistente
+          </button>
+          <button class="secondary-button compact-action" type="button" id="continueCurrentButton">Continuar trabajo guardado</button>
         </div>
-      </div>
 
-      <div class="piece-card-grid">
-        <article class="piece-card" data-piece-card="professionalFlyer">
-          <span class="piece-card-icon" aria-hidden="true">👩‍⚕️</span>
-          <span class="piece-card-title">Flyer profesional</span>
-          <span class="piece-card-text">Para médicos, especialidades, horarios, prestaciones, turnos y datos de contacto.</span>
-          <div class="piece-card-actions">
-            <button class="piece-card-action" type="button" data-piece-start="professionalFlyer">Crear desde cero</button>
-            <button class="piece-card-demo" type="button" data-demo-piece="professionalFlyer">Usar ejemplo</button>
-          </div>
-        </article>
-
-        <article class="piece-card" data-piece-card="clinicalInfographic">
-          <span class="piece-card-icon" aria-hidden="true">📊</span>
-          <span class="piece-card-title">Infografía clínica</span>
-          <span class="piece-card-text">Para educación sanitaria, prevención, pasos, recomendaciones y contenidos explicativos.</span>
-          <div class="piece-card-actions">
-            <button class="piece-card-action" type="button" data-piece-start="clinicalInfographic">Crear desde cero</button>
-            <button class="piece-card-demo" type="button" data-demo-piece="clinicalInfographic">Usar ejemplo</button>
-          </div>
-        </article>
-
-        <article class="piece-card" data-piece-card="informativeFlyer">
-          <span class="piece-card-icon" aria-hidden="true">ℹ️</span>
-          <span class="piece-card-title">Flyer informativo</span>
-          <span class="piece-card-text">Para comunicar servicios, estudios, prestaciones, novedades o información institucional.</span>
-          <div class="piece-card-actions">
-            <button class="piece-card-action" type="button" data-piece-start="informativeFlyer">Crear desde cero</button>
-            <button class="piece-card-demo" type="button" data-demo-piece="informativeFlyer">Usar ejemplo</button>
-          </div>
-        </article>
-
-        <article class="piece-card" data-piece-card="promotionCampaign">
-          <span class="piece-card-icon" aria-hidden="true">📣</span>
-          <span class="piece-card-title">Promoción / campaña</span>
-          <span class="piece-card-text">Para agenda abierta, jornadas, campañas preventivas, vigencias y llamados a la acción.</span>
-          <div class="piece-card-actions">
-            <button class="piece-card-action" type="button" data-piece-start="promotionCampaign">Crear desde cero</button>
-            <button class="piece-card-demo" type="button" data-demo-piece="promotionCampaign">Usar ejemplo</button>
-          </div>
-        </article>
-      </div>
-
-      <div class="home-secondary-actions">
-        <span>También podés tocar una tarjeta para iniciar el asistente con ese tipo de pieza preseleccionado.</span>
+        <p class="home-note">Los tipos de pieza se eligen dentro del asistente, en el paso 2.</p>
       </div>
     </section>
 
@@ -141,16 +101,13 @@
         <form id="promptForm" novalidate>
           <section class="form-section is-current" id="tipo" data-step="tipo">
             <div class="section-heading">
-              <span>0</span>
+              <span>2</span>
               <div>
                 <h2>Tipo de pieza</h2>
                 <p>Elegí si querés crear un flyer profesional, una infografía, un flyer informativo o una campaña/promoción.</p>
               </div>
-              <div class="step-header-controls" aria-label="Navegacion del paso">
-                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
-                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
-                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
             <div class="piece-step-grid" aria-label="Elegir tipo de pieza">
@@ -183,14 +140,11 @@
             <div class="section-heading">
               <span>1</span>
               <div>
-                <h2>Datos de clinica</h2>
-                <p>Informacion institucional y de contacto para el flyer.</p>
+                <h2>Institución</h2>
+                <p>Datos del centro, contacto, logo e identidad institucional.</p>
               </div>
-              <div class="step-header-controls" aria-label="Navegacion del paso">
-                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
-                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
-                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
             <div id="institutionManager" class="institution-manager"></div>
@@ -205,11 +159,8 @@
                 <h2>Datos del profesional</h2>
                 <p>Identidad profesional y datos visibles.</p>
               </div>
-              <div class="step-header-controls" aria-label="Navegacion del paso">
-                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
-                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
-                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
             <div id="doctorFields" class="field-grid"></div>
@@ -219,14 +170,11 @@
             <div class="section-heading">
               <span>3</span>
               <div>
-                <h2>Especialidad y prestaciones</h2>
+                <h2>Contenido</h2>
                 <p>Servicios principales, sugerencias prudentes y alcance autorizado.</p>
               </div>
-              <div class="step-header-controls" aria-label="Navegacion del paso">
-                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
-                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
-                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
             <div id="serviceFields" class="field-grid"></div>
@@ -250,11 +198,8 @@
                 <h2>Atencion</h2>
                 <p>Dias, horarios, cobertura y modalidad de atencion.</p>
               </div>
-              <div class="step-header-controls" aria-label="Navegacion del paso">
-                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
-                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
-                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
             <div id="careFields" class="field-grid"></div>
@@ -268,11 +213,8 @@
                 <h2>Diseno visual</h2>
                 <p>Formato, colores, estilo y recursos graficos esperados.</p>
               </div>
-              <div class="step-header-controls" aria-label="Navegacion del paso">
-                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
-                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
-                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
             <div id="designFields" class="field-grid"></div>
@@ -285,11 +227,8 @@
                 <h2>Adjuntos</h2>
                 <p>Seleccion local para recordar que archivos enviar manualmente a ChatGPT.</p>
               </div>
-              <div class="step-header-controls" aria-label="Navegacion del paso">
-                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
-                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
-                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
             <div id="imageFields" class="field-grid"></div>
@@ -304,11 +243,8 @@
                 <h2>Opciones del prompt</h2>
                 <p>Preferencias finas, frases a evitar e instrucciones libres.</p>
               </div>
-              <div class="step-header-controls" aria-label="Navegacion del paso">
-                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
-                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
-                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
             <div id="advancedFields" class="field-grid"></div>
@@ -321,11 +257,8 @@
                 <h2>Resultado final</h2>
                 <p>Prompt completo, checklist y acciones de exportacion.</p>
               </div>
-              <div class="step-header-controls" aria-label="Navegacion del paso">
-                <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-                <button class="secondary-button" type="button" data-wizard-action="home">Inicio</button>
-                <button class="secondary-button" type="button" data-wizard-action="result">Ir al resultado</button>
-                <button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>
+              <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
             <div class="result-grid">

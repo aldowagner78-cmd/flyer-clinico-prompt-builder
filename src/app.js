@@ -27,6 +27,8 @@ let institutionActionsPanelOpen = false;
 let institutionManagePointerHandled = false;
 let institutionActionPointerHandled = false;
 let statusClearTimer = null;
+let institutionEditorOpen = false;
+let institutionEditorMode = 'create';
 const GENERIC_SPECIALTY_WORDS = new Set(['consulta', 'control', 'controles', 'seguimiento', 'evaluacion', 'estudios', 'profesional', 'profesionales', 'prevencion', 'pacientes', 'salud', 'turnos', 'cuidar', 'orientar', 'periodico', 'periodicos', 'informacion', 'cuando', 'habitos']);
 
 
@@ -177,9 +179,12 @@ function bindStaticActions() {
 
   document.querySelector('#startAssistantButton')?.addEventListener('click', () => {
     currentStep = 'clinica';
-    startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false);
+    startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false, 'Asistente iniciado. Primero cargá la institución.');
   });
-  document.querySelector('#continueCurrentButton')?.addEventListener('click', () => startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false));
+  document.querySelector('#continueCurrentButton')?.addEventListener('click', () => {
+    currentStep = currentStep || 'clinica';
+    startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false, 'Trabajo guardado cargado.');
+  });
   document.querySelector('#backHomeButton')?.addEventListener('click', showHome);
   document.querySelector('#closeAssistantButton')?.addEventListener('click', showHome);
   document.addEventListener('pointerdown', event => {
@@ -195,7 +200,7 @@ function bindStaticActions() {
   }, true);
 
   document.addEventListener('pointerdown', event => {
-    const institutionAction = event.target.closest?.('#saveInstitutionButton, #loadInstitutionButton, #updateInstitutionButton, #deleteInstitutionButton, #exportInstitutionButton, #savePhraseButton');
+    const institutionAction = event.target.closest?.('#saveInstitutionButton, #loadInstitutionButton, #useSavedInstitutionButton, #createInstitutionButton, #editCurrentInstitutionButton, #cancelInstitutionEditButton, #saveInstitutionAndContinueButton, #continueInstitutionWithoutSavingButton, #updateInstitutionButton, #deleteInstitutionButton, #exportInstitutionButton, #savePhraseButton');
     if (!institutionAction) return;
     event.preventDefault();
     event.stopPropagation();
@@ -219,7 +224,7 @@ function bindStaticActions() {
       return;
     }
 
-    const institutionAction = event.target.closest?.('#saveInstitutionButton, #loadInstitutionButton, #updateInstitutionButton, #deleteInstitutionButton, #exportInstitutionButton, #savePhraseButton');
+    const institutionAction = event.target.closest?.('#saveInstitutionButton, #loadInstitutionButton, #useSavedInstitutionButton, #createInstitutionButton, #editCurrentInstitutionButton, #cancelInstitutionEditButton, #saveInstitutionAndContinueButton, #continueInstitutionWithoutSavingButton, #updateInstitutionButton, #deleteInstitutionButton, #exportInstitutionButton, #savePhraseButton');
     if (institutionAction) {
       event.preventDefault();
       event.stopPropagation();
@@ -235,10 +240,23 @@ function bindStaticActions() {
     if (!button) return;
     event.preventDefault();
     const action = button.dataset.wizardAction;
-    if (action === 'previous') previousStep();
+    if (action === 'previous') {
+      if (currentStep === 'clinica' && institutionEditorOpen) {
+        const handled = window.__handleInstitutionPrevious?.();
+        if (!handled) cancelInstitutionEditor();
+      } else {
+        previousStep();
+      }
+    }
     if (action === 'home') showHome();
     if (action === 'result') showStep(resultStep);
-    if (action === 'next') nextStep();
+    if (action === 'next') {
+      if (currentStep === 'clinica' && institutionEditorOpen) {
+        window.__handleInstitutionNext?.();
+      } else {
+        nextStep();
+      }
+    }
   }, true);
 
   document.querySelector('#addServiceButton').addEventListener('click', addService);
@@ -889,12 +907,18 @@ function runInstitutionPanelAction(actionId) {
   const selectedInstitutionId = document.querySelector('#savedInstitutionSelect')?.value || '';
 
   if (actionId === 'saveInstitutionButton') saveCurrentInstitutionAsNew();
-  if (actionId === 'loadInstitutionButton') loadSelectedInstitution(selectedInstitutionId);
+  if (actionId === 'loadInstitutionButton' || actionId === 'useSavedInstitutionButton') useSelectedInstitutionAndContinue(selectedInstitutionId);
+  if (actionId === 'createInstitutionButton') startCreateInstitution();
+  if (actionId === 'editCurrentInstitutionButton') startEditCurrentInstitution();
+  if (actionId === 'cancelInstitutionEditButton') cancelInstitutionEditor();
+  if (actionId === 'saveInstitutionAndContinueButton') saveInstitutionAndContinue();
+  if (actionId === 'continueInstitutionWithoutSavingButton') continueInstitutionWithoutSaving();
   if (actionId === 'updateInstitutionButton') updateSelectedInstitution(selectedInstitutionId);
   if (actionId === 'deleteInstitutionButton') deleteSelectedInstitution(selectedInstitutionId);
   if (actionId === 'exportInstitutionButton') exportInstitution(selectedInstitutionId);
   if (actionId === 'savePhraseButton') saveCurrentPhrase();
 }
+
 
 function syncCurrentClinicFieldsFromDom() {
   document.querySelectorAll('[data-path^="clinic."]').forEach(field => {
@@ -930,56 +954,93 @@ function renderInstitutionManager() {
   const phrases = loadInstitutionPhrases();
   const currentName = state?.clinic?.name || '';
 
+  document.body.classList.toggle('is-institution-editor-open', institutionEditorOpen);
+
+  if (institutionEditorOpen) {
+    target.innerHTML = '';
+    return;
+  }
+
   target.innerHTML = `
-    <div class="institution-panel institution-panel-compact">
-      <div class="institution-quick-row">
-        ${institutions.length ? `
-        <label class="field compact-field">
-          <span>Institución guardada</span>
-          <select id="savedInstitutionSelect">
-            <option value="">Seleccionar institución...</option>
-            ${institutions.map(item => `<option value="${escapeHtmlAttr(item.id)}">${escapeHtml(item.clinic?.name || 'Sin nombre')}</option>`).join('')}
-          </select>
-        </label>
-        <button class="secondary-button" type="button" id="loadInstitutionButton">Cargar</button>
-        ` : `<p class="institution-empty-state">Todavía no hay instituciones guardadas. Completá los datos y guardalos para reutilizarlos.</p>`}
-
-        <button class="secondary-button institution-manage-toggle" type="button" id="manageInstitutionButton" aria-expanded="${institutionActionsPanelOpen ? 'true' : 'false'}" aria-controls="institutionActionsPanel">
-          ${institutionActionsPanelOpen ? 'Ocultar gestión' : 'Gestionar instituciones'}
-        </button>
-
-        <div class="institution-actions-panel" id="institutionActionsPanel"${institutionActionsPanelOpen ? '' : ' hidden'}>
-          <div class="institution-actions">
-            <button class="secondary-button" type="button" id="saveInstitutionButton">Guardar como nueva</button>
-            <button class="secondary-button" type="button" id="updateInstitutionButton" ${institutions.length ? '' : 'disabled'}>Actualizar</button>
-            <button class="danger-button" type="button" id="deleteInstitutionButton" ${institutions.length ? '' : 'disabled'}>Eliminar</button>
-            <button class="secondary-button" type="button" id="exportInstitutionButton">Exportar institución</button>
-            <label class="file-action compact-file-action">
-              Importar institución
-              <input type="file" id="importInstitutionInput" accept="application/json,.json">
-            </label>
-            <label class="field compact-field phrase-field">
-              <span>Frase guardada</span>
-              <select id="savedPhraseSelect">
-                <option value="">Cargar frase...</option>
-                ${phrases.map(phrase => `<option value="${escapeHtmlAttr(phrase)}">${escapeHtml(phrase)}</option>`).join('')}
-              </select>
-            </label>
-            <button class="secondary-button" type="button" id="savePhraseButton">Guardar frase</button>
-          </div>
+    <div class="institution-panel institution-panel-compact institution-choice-panel">
+      <div class="institution-choice-head">
+        <div>
+          <strong>Elegí la institución</strong>
+          <p>Usá una institución guardada o creá una nueva antes de elegir el tipo de pieza.</p>
         </div>
       </div>
-      <p class="institution-note">${institutions.length ? `${institutions.length}/${MAX_INSTITUTIONS} instituciones guardadas.` : 'Podés guardar hasta 10 instituciones.'} ${currentName ? `Institución actual: ${escapeHtml(currentName)}.` : ''}</p>
+
+      ${institutions.length ? `
+        <div class="saved-institution-box">
+          <label class="field compact-field">
+            <span>Institución guardada</span>
+            <select id="savedInstitutionSelect">
+              <option value="">Seleccionar institución...</option>
+              ${institutions.map(item => `<option value="${escapeHtmlAttr(item.id)}">${escapeHtml(item.clinic?.name || 'Sin nombre')}</option>`).join('')}
+            </select>
+          </label>
+
+          <div class="saved-institution-summary" id="savedInstitutionSummary" hidden>
+            <strong>Resumen</strong>
+            <dl id="savedInstitutionSummaryList"></dl>
+          </div>
+
+          <button class="primary-button saved-institution-use-button" type="button" id="loadInstitutionButton" disabled hidden>
+            Usar esta institución →
+          </button>
+        </div>
+      ` : `
+        <div class="institution-empty-choice">
+          <strong>No hay instituciones guardadas.</strong>
+          <p>Creá una institución para reutilizar sus datos en futuros prompts.</p>
+        </div>
+      `}
+
+      <div class="institution-primary-actions">
+        <button class="secondary-button institution-create-button" type="button" id="createInstitutionButton">Crear nueva institución</button>
+        ${currentName ? `<button class="secondary-button" type="button" id="editCurrentInstitutionButton">Editar datos actuales</button>` : ''}
+        <button class="secondary-button institution-manage-toggle" type="button" id="manageInstitutionButton" aria-expanded="${institutionActionsPanelOpen ? 'true' : 'false'}" aria-controls="institutionActionsPanel">
+          ${institutionActionsPanelOpen ? 'Ocultar administración' : 'Administrar instituciones'}
+        </button>
+      </div>
+
+      <div class="institution-actions-panel" id="institutionActionsPanel"${institutionActionsPanelOpen ? '' : ' hidden'}>
+        <div class="institution-actions">
+          <button class="secondary-button" type="button" id="saveInstitutionButton">Guardar actual como nueva</button>
+          <button class="secondary-button" type="button" id="updateInstitutionButton" ${institutions.length ? '' : 'disabled'}>Actualizar guardada</button>
+          <button class="danger-button" type="button" id="deleteInstitutionButton" ${institutions.length ? '' : 'disabled'}>Eliminar guardada</button>
+          <button class="secondary-button" type="button" id="exportInstitutionButton">Exportar institución</button>
+          <label class="file-action compact-file-action">
+            Importar institución
+            <input type="file" id="importInstitutionInput" accept="application/json,.json">
+          </label>
+          <label class="field compact-field phrase-field">
+            <span>Frase guardada</span>
+            <select id="savedPhraseSelect">
+              <option value="">Cargar frase...</option>
+              ${phrases.map(phrase => `<option value="${escapeHtmlAttr(phrase)}">${escapeHtml(phrase)}</option>`).join('')}
+            </select>
+          </label>
+          <button class="secondary-button" type="button" id="savePhraseButton">Guardar frase</button>
+        </div>
+      </div>
+
+      <p class="institution-note">${institutions.length ? `${institutions.length}/${MAX_INSTITUTIONS} instituciones guardadas.` : 'Podés guardar hasta 10 instituciones.'}</p>
     </div>
   `;
 
   const select = target.querySelector('#savedInstitutionSelect');
-  const manageButton = target.querySelector('#manageInstitutionButton');
-  const actionsPanel = target.querySelector('#institutionActionsPanel');
 
   syncInstitutionActionsPanel();
+  updateSavedInstitutionSummary(select?.value || '', institutions);
 
-  target.querySelector('#loadInstitutionButton')?.addEventListener('click', () => loadSelectedInstitution(select?.value || ''));
+  select?.addEventListener('change', event => {
+    updateSavedInstitutionSummary(event.target.value || '', institutions);
+  });
+
+  target.querySelector('#loadInstitutionButton')?.addEventListener('click', () => useSelectedInstitutionAndContinue(select?.value || ''));
+  target.querySelector('#createInstitutionButton')?.addEventListener('click', startCreateInstitution);
+  target.querySelector('#editCurrentInstitutionButton')?.addEventListener('click', startEditCurrentInstitution);
   target.querySelector('#saveInstitutionButton')?.addEventListener('click', saveCurrentInstitutionAsNew);
   target.querySelector('#updateInstitutionButton')?.addEventListener('click', () => updateSelectedInstitution(select?.value || ''));
   target.querySelector('#deleteInstitutionButton')?.addEventListener('click', () => deleteSelectedInstitution(select?.value || ''));
@@ -994,9 +1055,103 @@ function renderInstitutionManager() {
   target.querySelector('#savePhraseButton')?.addEventListener('click', saveCurrentPhrase);
 }
 
+function updateSavedInstitutionSummary(id, institutions = loadInstitutions()) {
+  const button = document.querySelector('#loadInstitutionButton');
+  const summary = document.querySelector('#savedInstitutionSummary');
+  const list = document.querySelector('#savedInstitutionSummaryList');
+  const institution = institutions.find(item => item.id === id);
+
+  if (button) {
+    button.disabled = !institution;
+    button.hidden = !institution;
+  }
+  if (!summary || !list) return;
+
+  if (!institution) {
+    summary.hidden = true;
+    list.innerHTML = '';
+    return;
+  }
+
+  const clinic = institution.clinic || {};
+  const instagram = findSocialValue(clinic.socialLinks, 'Instagram');
+  const whatsappSocial = findSocialValue(clinic.socialLinks, 'WhatsApp');
+  summary.hidden = false;
+  list.innerHTML = `
+    <div><dt>Nombre</dt><dd>${escapeHtml(clinic.name || 'Sin nombre')}</dd></div>
+    <div><dt>Tipo</dt><dd>${escapeHtml(clinic.institutionType || 'Sin tipo')}</dd></div>
+    <div><dt>Dirección</dt><dd>${escapeHtml(clinic.address || 'Sin dirección')}</dd></div>
+    <div><dt>WhatsApp</dt><dd>${escapeHtml(clinic.primaryPhone || whatsappSocial || 'Sin WhatsApp')}</dd></div>
+    <div><dt>Instagram</dt><dd>${escapeHtml(instagram || 'Sin Instagram')}</dd></div>
+    <div><dt>Logo</dt><dd>${escapeHtml(clinic.logoFileName || 'Sin logo seleccionado')}</dd></div>
+    <div><dt>Frase</dt><dd>${escapeHtml(clinic.institutionalPhrase || 'Sin frase institucional')}</dd></div>
+  `;
+}
+
+function findSocialValue(socialLinks = [], type = '') {
+  const normalizedType = normalizeText(type);
+  const item = Array.isArray(socialLinks)
+    ? socialLinks.find(link => normalizeText(link?.type) === normalizedType && String(link?.value || '').trim())
+    : null;
+  return item?.value || '';
+}
+
+
+
 function clinicSnapshot() {
   return structuredCloneSafe(state.clinic || {});
 }
+
+function startCreateInstitution() {
+  const defaults = createDefaultState();
+  state.clinic = structuredCloneSafe(defaults.clinic);
+  syncSingleAttachment(ATTACHMENT_ROLES.clinicLogo, '', '');
+  institutionActionsPanelOpen = false;
+  institutionEditorOpen = true;
+  institutionEditorMode = 'create';
+  window.__setInstitutionViewMode?.('choice');
+  update(true);
+  showStatus('Nueva institución. Completá los datos y continuá.');
+}
+
+function startEditCurrentInstitution() {
+  institutionActionsPanelOpen = false;
+  institutionEditorOpen = true;
+  institutionEditorMode = 'edit';
+  window.__setInstitutionViewMode?.('choice');
+  update(true);
+  showStatus('Editando institución actual.');
+}
+
+function cancelInstitutionEditor() {
+  institutionEditorOpen = false;
+  window.__setInstitutionViewMode?.('choice');
+  update(true);
+  showStatus('Edición de institución cerrada.');
+}
+
+function continueInstitutionWithoutSaving() {
+  syncCurrentClinicFieldsFromDom();
+  institutionEditorOpen = false;
+  update(true);
+  showStep('tipo');
+  showStatus('Institución cargada sin guardar. Ahora elegí el tipo de pieza.');
+}
+
+function saveInstitutionAndContinue() {
+  syncCurrentClinicFieldsFromDom();
+  const name = state?.clinic?.name?.trim();
+  if (!name) return showStatus('Primero completá el nombre de la institución.');
+  const institutions = loadInstitutions();
+  const id = `institution_${Date.now()}`;
+  const next = [{ id, clinic: clinicSnapshot(), updatedAt: new Date().toISOString() }, ...institutions.filter(item => item.clinic?.name !== name)].slice(0, MAX_INSTITUTIONS);
+  saveInstitutions(next);
+  institutionEditorOpen = false;
+  update(true);
+  showStep('tipo');
+  showStatus('Institución guardada. Ahora elegí el tipo de pieza.');
+}
+
 
 function loadInstitutions() {
   return readLocalJson(INSTITUTIONS_KEY, []);
@@ -1032,6 +1187,16 @@ function loadSelectedInstitution(id) {
   state.clinic = migrateState({ clinic: institution.clinic }).clinic;
   update(true);
   showStatus('Institución cargada.');
+}
+
+function useSelectedInstitutionAndContinue(id) {
+  const institution = loadInstitutions().find(item => item.id === id);
+  if (!institution) return showStatus('Seleccioná una institución guardada.');
+  state.clinic = migrateState({ clinic: institution.clinic }).clinic;
+  institutionEditorOpen = false;
+  update(true);
+  showStep('tipo');
+  showStatus('Institución cargada. Ahora elegí el tipo de pieza.');
 }
 
 function updateSelectedInstitution(id) {
@@ -1139,7 +1304,7 @@ function startNewPiece(pieceType = PIECE_TYPES.professionalFlyer) {
   startPieceFlow(state.promptOptions.pieceType, false);
 }
 
-function startPieceFlow(pieceType, resetCurrentStep = true) {
+function startPieceFlow(pieceType, resetCurrentStep = true, statusMessage = '') {
   state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
   document.body.classList.remove('is-home');
   document.body.classList.add('is-wizard-open');
@@ -1149,12 +1314,14 @@ function startPieceFlow(pieceType, resetCurrentStep = true) {
   applySpecialtyPreset(state.specialty.primaryProfessionalSpecialty, !state.services.visibleServices.length);
   update(true);
   showStep(currentStep);
-  showStatus(`${labelPieceType(state.promptOptions.pieceType)} iniciado.`);
+  showStatus(statusMessage || `${labelStepForPiece(currentStep, state.promptOptions.pieceType)} abierto.`);
 }
 
 function showHome() {
+  institutionEditorOpen = false;
   document.body.classList.add('is-home');
   document.body.classList.remove('is-wizard-open');
+  document.body.classList.remove('is-institution-editor-open');
   document.querySelector('#pieceHome')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   showStatus('Inicio.');
 }
@@ -1201,20 +1368,53 @@ function availableSteps() {
   return pieceWorkflows[state.promptOptions.pieceType] || pieceWorkflows[PIECE_TYPES.professionalFlyer];
 }
 
+
+function syncStepFooterControls(steps = availableSteps()) {
+  document.querySelectorAll('.form-section').forEach(section => {
+    const step = section.dataset.step;
+    let footer = section.querySelector(':scope > .step-footer-controls');
+
+    if (step === 'clinica') {
+      footer?.remove();
+      return;
+    }
+
+    const isAvailable = steps.includes(step);
+    if (!isAvailable) {
+      footer?.remove();
+      return;
+    }
+
+    if (!footer) {
+      footer = document.createElement('div');
+      footer.className = 'step-footer-controls';
+      footer.setAttribute('aria-label', 'Navegación del paso');
+      section.appendChild(footer);
+    }
+
+    const isResult = step === resultStep;
+    footer.innerHTML = `
+      <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
+      ${isResult ? '' : `<button class="primary-button" type="button" data-wizard-action="next">${step === 'diseno' ? 'Ver resultado →' : 'Siguiente →'}</button>`}
+    `;
+  });
+}
+
 function updateWorkflowChrome() {
   const steps = availableSteps();
   const index = Math.max(steps.indexOf(currentStep), 0);
   const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
+  document.body.dataset.pieceType = pieceType;
+  syncStepFooterControls(steps);
+
   const title = document.querySelector('#workflowTitle');
   const subtitle = document.querySelector('#workflowSubtitle');
   const previousButtons = document.querySelectorAll('[data-wizard-action="previous"], #prevStepButton');
   const nextButtons = document.querySelectorAll('[data-wizard-action="next"], #nextStepButton');
   const resultButtons = document.querySelectorAll('[data-wizard-action="result"], #resultStepButton');
 
-  document.body.dataset.pieceType = pieceType;
-
-  if (title) title.textContent = labelPieceType(pieceType);
-  if (subtitle) subtitle.textContent = `Paso ${index + 1} de ${steps.length}: ${labelStepForPiece(currentStep, pieceType)}`;
+  if (title) title.textContent = `Paso ${index + 1} de ${steps.length} — ${labelStepForPiece(currentStep, pieceType)}`;
+  if (subtitle) subtitle.textContent = workflowSubtitleForStep(currentStep);
   previousButtons.forEach(button => {
     button.disabled = index <= 0;
   });
@@ -1311,16 +1511,19 @@ function markPath(path) {
 
 function shouldRenderForm(path) {
   return path === 'promptOptions.pieceType'
+    || path === 'clinic.institutionType'
     || path === 'specialty.primaryProfessionalSpecialty'
     || path === 'promptOptions.contentGoal'
     || path === 'promptOptions.educationalTopic'
     || path === 'professional.showPhoto'
     || path === 'services.allowServiceExpansion'
+    || path === 'design.useInstitutionalColors'
     || path === 'design.primaryColor'
     || path === 'design.secondaryColor'
     || path === 'promptOptions.allowVisualCreativity'
     || path.startsWith('attachments.');
 }
+
 
 function mapLegacyWarningPath(path) {
   const exactPaths = {
@@ -1374,6 +1577,17 @@ function isLegacyColorValue(value) {
 }
 
 
+
+
+function workflowSubtitleForStep(step) {
+  return {
+    clinica: 'Primero cargá los datos institucionales. Después elegís qué pieza querés crear.',
+    tipo: 'Elegí flyer, infografía, campaña o flyer informativo.',
+    prestaciones: 'Completá el contenido visible y las sugerencias según la especialidad.',
+    diseno: 'Definí formato, colores, estilo, adjuntos y modo animado si corresponde.',
+    resultado: 'Revisá el prompt final y el checklist de archivos para adjuntar manualmente.'
+  }[step] || 'Completá los pasos y generá el prompt final.';
+}
 
 function updateSectionHeadings(pieceType) {
   const contentTitle = document.querySelector('#prestaciones .section-heading h2');

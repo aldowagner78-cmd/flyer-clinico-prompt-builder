@@ -2873,3 +2873,834 @@ body.is-wizard-open .side-panel {
     width: 100%;
   }
 }
+
+/* Etapa 11C piloto: institución guiada */
+.institution-mode-panel,
+.guided-card {
+  grid-column: 1 / -1;
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 245, 255, 0.88));
+  box-shadow: 0 16px 40px rgba(76, 29, 149, 0.08);
+}
+
+.institution-mode-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.institution-mode-panel strong,
+.guided-card h3 {
+  color: var(--text-strong, #1f2937);
+}
+
+.institution-mode-panel p,
+.guided-card p,
+.guided-social-note p {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted, #64748b);
+}
+
+.institution-mode-actions,
+.guided-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.institution-guided-panel,
+.institution-full-fields {
+  grid-column: 1 / -1;
+}
+
+.guided-card {
+  padding: 1.25rem;
+}
+
+.guided-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.guided-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent, #7c3aed);
+}
+
+.guided-card h3 {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+}
+
+.guided-progress {
+  min-width: 140px;
+  text-align: right;
+  font-weight: 800;
+  color: var(--accent, #7c3aed);
+}
+
+.guided-progress div {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.14);
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.guided-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+}
+
+.guided-card-body {
+  margin-top: 1rem;
+}
+
+.guided-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.guided-field-grid .field,
+.guided-summary,
+.guided-social-note {
+  grid-column: 1 / -1;
+}
+
+.guided-summary dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.guided-summary div {
+  padding: 0.75rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.guided-summary dt {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-muted, #64748b);
+}
+
+.guided-summary dd {
+  margin: 0.2rem 0 0;
+  color: var(--text-strong, #1f2937);
+  font-weight: 700;
+}
+
+.guided-social-note {
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.18);
+}
+
+.guided-card-actions {
+  justify-content: space-between;
+  margin-top: 1.25rem;
+}
+
+body[data-theme$="-dark"] .institution-mode-panel,
+body[data-theme$="-dark"] .guided-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.88));
+  border-color: rgba(148, 163, 184, 0.24);
+}
+
+body[data-theme$="-dark"] .guided-summary div {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+@media (max-width: 720px) {
+  .institution-mode-panel,
+  .guided-card-head,
+  .guided-card-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .institution-mode-actions,
+  .guided-card-actions {
+    width: 100%;
+  }
+
+  .institution-mode-actions button,
+  .guided-card-actions button {
+    flex: 1 1 100%;
+  }
+
+  .guided-progress {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .guided-field-grid,
+  .guided-summary dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Etapa 11C piloto: inicio limpio y asistente sin elección prematura */
+.piece-home-clean {
+  display: grid;
+  place-items: center;
+  min-height: min(54vh, 560px);
+  padding-block: clamp(28px, 7vw, 80px);
+}
+
+.home-welcome-card {
+  width: min(760px, 100%);
+  padding: clamp(24px, 5vw, 44px);
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 32px;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.94), rgba(245, 255, 252, 0.88)),
+    radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--teal) 18%, transparent), transparent 34%);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.home-welcome-card h2 {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.home-welcome-card p {
+  max-width: 620px;
+  margin-inline: auto;
+  color: #475569;
+  font-size: 1.04rem;
+  line-height: 1.65;
+}
+
+.home-start-actions-clean {
+  justify-content: center;
+  margin-top: 26px;
+}
+
+.home-wizard-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 58px;
+  padding-inline: 24px;
+  font-size: 1.04rem;
+}
+
+.home-wizard-button span {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+  font-size: 1.25rem;
+}
+
+.home-note {
+  margin-top: 18px;
+  font-weight: 800;
+}
+
+.workflow-heading strong {
+  display: block;
+}
+
+.workflow-heading span {
+  display: block;
+  margin-top: 4px;
+}
+
+@media (max-width: 760px) {
+  .piece-home-clean {
+    min-height: auto;
+    padding-block: 22px 42px;
+  }
+
+  .home-welcome-card {
+    text-align: left;
+  }
+
+  .home-welcome-card p {
+    margin-inline: 0;
+  }
+
+  .home-start-actions-clean {
+    justify-content: stretch;
+  }
+
+  .home-start-actions-clean button {
+    width: 100%;
+  }
+}
+
+
+/* Etapa 11C: home compacto y selección clara de institución guardada */
+body.is-home .app-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+  padding: clamp(14px, 2.2vw, 24px) clamp(16px, 4vw, 42px) clamp(10px, 1.5vw, 18px);
+}
+
+body.is-home .app-header::after {
+  display: none;
+}
+
+body.is-home .brand-row {
+  gap: 12px;
+}
+
+body.is-home .brand-mark {
+  width: clamp(40px, 5vw, 54px);
+  height: clamp(40px, 5vw, 54px);
+  border-radius: 16px;
+}
+
+body.is-home .eyebrow {
+  margin-bottom: 8px;
+  padding: 5px 10px;
+  font-size: 0.68rem;
+}
+
+body.is-home .app-title {
+  gap: 2px;
+  margin-bottom: 0;
+}
+
+body.is-home .app-title span {
+  font-size: clamp(1.45rem, 2.6vw, 2.35rem);
+  line-height: 0.98;
+}
+
+body.is-home .app-title small {
+  margin-left: 0;
+  font-size: clamp(0.86rem, 1.1vw, 1rem);
+}
+
+body.is-home .theme-toolbar {
+  position: absolute;
+  top: 16px;
+  right: clamp(16px, 4vw, 42px);
+  margin-top: 0;
+  padding: 6px 8px 6px 10px;
+}
+
+body.is-home .theme-toolbar label {
+  font-size: 0.7rem;
+}
+
+body.is-home .theme-toolbar select {
+  min-height: 30px;
+  min-width: 112px;
+  font-size: 0.76rem;
+}
+
+body.is-home .theme-mode-toggle {
+  min-height: 30px;
+  width: 30px;
+}
+
+.piece-home-clean {
+  min-height: auto;
+  padding-top: clamp(10px, 2.2vw, 20px);
+  padding-bottom: clamp(18px, 4vw, 34px);
+}
+
+.home-welcome-card {
+  width: min(680px, 100%);
+  padding: clamp(18px, 3.5vw, 30px);
+}
+
+.home-welcome-card h2 {
+  font-size: clamp(1.65rem, 3.2vw, 2.75rem);
+}
+
+.home-welcome-card p {
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.home-start-actions-clean {
+  margin-top: 18px;
+}
+
+.home-wizard-button {
+  min-height: 52px;
+}
+
+.home-note {
+  margin: 14px 0 0;
+  font-size: 0.92rem;
+}
+
+.saved-institution-box {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 680px);
+}
+
+.saved-institution-summary {
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.saved-institution-summary strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--accent-strong);
+}
+
+.saved-institution-summary dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.saved-institution-summary dl div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.saved-institution-summary dt {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.saved-institution-summary dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.saved-institution-use-button {
+  justify-self: start;
+}
+
+@media (max-width: 760px) {
+  body.is-home .app-header {
+    display: block;
+    padding-top: 12px;
+  }
+
+  body.is-home .brand-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding-right: 0;
+  }
+
+  body.is-home .theme-toolbar {
+    position: static;
+    margin-top: 12px;
+  }
+
+  body.is-home .app-title span {
+    font-size: clamp(1.35rem, 7vw, 2.1rem);
+  }
+
+  .home-welcome-card {
+    padding: 18px;
+  }
+
+  .home-welcome-card h2 {
+    font-size: clamp(1.55rem, 8vw, 2.25rem);
+  }
+
+  .saved-institution-summary dl div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .saved-institution-use-button {
+    width: 100%;
+  }
+}
+
+
+/* Etapa 11C: inicio compacto e institución intuitiva */
+body.is-home .app-header {
+  padding-top: 10px;
+  padding-bottom: 8px;
+}
+
+body.is-home .header-copy {
+  max-width: 920px;
+}
+
+body.is-home .piece-home-clean {
+  padding-top: 8px;
+}
+
+body.is-home .home-welcome-card {
+  padding: clamp(16px, 2.8vw, 26px);
+}
+
+body.is-home .home-welcome-card h2 {
+  margin-bottom: 8px;
+}
+
+body.is-home .home-welcome-card p {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+body.is-home .home-start-actions-clean {
+  margin-top: 16px;
+}
+
+body.is-home .home-note {
+  margin-top: 10px;
+}
+
+/* En institución, ocultar la carga de campos hasta que el usuario elija crear o editar. */
+body:not(.is-institution-editor-open) #clinicFields,
+body:not(.is-institution-editor-open) #socialLinksEditor {
+  display: none;
+}
+
+.institution-choice-panel,
+.institution-panel-focused {
+  display: grid;
+  gap: 16px;
+}
+
+.institution-choice-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.institution-choice-head strong {
+  display: block;
+  color: var(--accent-strong);
+  font-size: 1.08rem;
+}
+
+.institution-choice-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.institution-choice-actions,
+.institution-primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.institution-empty-choice {
+  padding: 16px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 24%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent-pale) 68%, white 32%);
+}
+
+.institution-empty-choice strong {
+  display: block;
+  color: var(--ink);
+}
+
+.institution-empty-choice p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.institution-panel-focused {
+  border-color: color-mix(in srgb, var(--teal) 28%, transparent);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(236, 253, 245, 0.86));
+}
+
+@media (max-width: 760px) {
+  body.is-home .app-header {
+    padding-bottom: 6px;
+  }
+
+  body.is-home .piece-home-clean {
+    padding-top: 4px;
+  }
+
+  .institution-choice-head {
+    display: grid;
+  }
+
+  .institution-choice-actions,
+  .institution-primary-actions {
+    display: grid;
+  }
+
+  .institution-choice-actions button,
+  .institution-primary-actions button {
+    width: 100%;
+  }
+}
+
+
+/* Ajuste UX institución: evitar bloques redundantes y apagar colores manuales institucionales */
+.institution-method-card {
+  grid-column: 1 / -1;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 245, 255, 0.88));
+  box-shadow: 0 16px 40px rgba(76, 29, 149, 0.08);
+}
+
+.institution-method-card h3 {
+  margin: 0.25rem 0 0;
+  color: var(--ink);
+  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+}
+
+.institution-method-card p {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.institution-method-actions,
+.institution-final-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.institution-final-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+body.is-institution-editor-open .institution-panel-focused {
+  display: none !important;
+}
+
+.field:has([data-path="design.primaryColor"]),
+.field:has([data-path="design.secondaryColor"]),
+.field:has([data-path="design.customPrimaryColor"]),
+.field:has([data-path="design.customSecondaryColor"]) {
+  transition: opacity 160ms ease, filter 160ms ease;
+}
+
+.field:has([data-path="design.useInstitutionalColors"] input:checked) ~ .field:has([data-path="design.primaryColor"]),
+.field:has([data-path="design.useInstitutionalColors"] input:checked) ~ .field:has([data-path="design.secondaryColor"]),
+.field:has([data-path="design.useInstitutionalColors"] input:checked) ~ .field:has([data-path="design.customPrimaryColor"]),
+.field:has([data-path="design.useInstitutionalColors"] input:checked) ~ .field:has([data-path="design.customSecondaryColor"]) {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .institution-method-actions,
+  .institution-final-actions {
+    display: grid;
+  }
+
+  .institution-method-actions button,
+  .institution-final-actions button {
+    width: 100%;
+  }
+}
+
+/* Etapa 11C: limpieza final de wizard de institución y diseño */
+.institution-create-button {
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, white 86%), color-mix(in srgb, var(--teal) 16%, white 84%));
+  color: var(--accent-strong);
+  box-shadow: 0 12px 26px rgba(20, 184, 166, 0.12);
+}
+
+.institution-create-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  box-shadow: 0 16px 34px rgba(20, 184, 166, 0.18);
+}
+
+.guided-social-editor {
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.guided-social-editor .list-title {
+  margin-bottom: 12px;
+}
+
+.guided-social-editor .repeatable-list:empty::before {
+  content: "No hay redes cargadas todavía.";
+  display: block;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.saved-institution-use-button[hidden] {
+  display: none;
+}
+
+#designFields .field.hidden,
+#designFields .field[hidden] {
+  display: none !important;
+}
+
+
+/* Etapa 11C: navegación limpia sin botones duplicados en encabezado */
+.step-header-home {
+  margin-left: auto;
+}
+
+.icon-home-button {
+  display: inline-grid;
+  width: 44px;
+  min-height: 44px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-solid) 88%, var(--accent-pale) 12%);
+  color: var(--accent-strong);
+  font-size: 1.2rem;
+  font-weight: 950;
+  box-shadow: 0 12px 24px rgba(30, 41, 59, 0.08);
+}
+
+.icon-home-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+  box-shadow: 0 14px 28px rgba(30, 41, 59, 0.12);
+}
+
+.step-footer-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.step-footer-controls .primary-button,
+.step-footer-controls .secondary-button {
+  min-width: 150px;
+}
+
+.step-footer-controls .primary-button {
+  margin-left: auto;
+}
+
+.institution-create-button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 48px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent) !important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--teal) 24%, white 76%),
+      color-mix(in srgb, var(--accent) 18%, white 82%)) !important;
+  color: color-mix(in srgb, var(--accent-strong) 78%, #064e3b 22%) !important;
+  box-shadow: 0 14px 30px rgba(20, 184, 166, 0.18) !important;
+}
+
+.institution-create-button::before {
+  content: "+";
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--teal) 78%, var(--accent) 22%);
+  color: #fff;
+  font-weight: 950;
+}
+
+.institution-create-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+  box-shadow: 0 18px 36px rgba(20, 184, 166, 0.24) !important;
+}
+
+@media (max-width: 760px) {
+  .step-header-home {
+    margin-left: 0;
+  }
+
+  .icon-home-button {
+    width: 40px;
+    min-height: 40px;
+  }
+
+  .step-footer-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .step-footer-controls .primary-button,
+  .step-footer-controls .secondary-button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Etapa 11C: pruebas UX y corrección de redes en formulario completo */
+.institution-inline-social-editor {
+  grid-column: 1 / -1;
+  order: 2;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.institution-full-fields {
+  order: 1;
+}
+
+.institution-final-actions {
+  order: 3;
+}
+
+.institution-create-button {
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--teal) 18%, white 82%), color-mix(in srgb, var(--accent) 18%, white 82%));
+  color: var(--accent-strong);
+  box-shadow: 0 14px 30px rgba(20, 184, 166, 0.18);
+}
+
+.institution-create-button::before {
+  content: "+";
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  margin-right: 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--teal) 86%, var(--accent) 14%);
+  color: #fff;
+  font-weight: 950;
+}

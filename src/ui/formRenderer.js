@@ -21,8 +21,69 @@ const noteOptions = [
 const ctaOptions = ['Solicitar turno por WhatsApp', 'Consultar disponibilidad', 'Escribinos para más información', 'Reservá tu turno', 'Consultá requisitos', 'Personalizar CTA'];
 const informationTypes = ['Nuevo servicio', 'Nuevo estudio', 'Nueva prestación', 'Cambio de horario', 'Agenda abierta', 'Incorporación profesional', 'Información para pacientes', 'Comunicado institucional', 'Recordatorio', 'Otro'];
 const campaignTypes = ['Agenda abierta', 'Turnos disponibles', 'Campaña preventiva', 'Jornada especial', 'Semana de controles', 'Chequeo general', 'Vacunación', 'Nuevo servicio', 'Promoción institucional', 'Otro'];
+const institutionalPhraseOptions = [
+  'Cuidamos tu salud, acompañamos tu vida',
+  'Tu salud, cerca de vos',
+  'Atención médica cercana y profesional',
+  'Cuidarte es nuestro compromiso',
+  'Salud integral para toda la familia',
+  'Acompañamos cada etapa de tu salud',
+  'Comprometidos con tu bienestar',
+  'Atención humana, profesional y cercana',
+  'Más cerca de tu salud',
+  'Cuidamos lo más importante: tu bienestar',
+  'Otro / Personalizar'
+];
+
+let institutionViewMode = 'choice';
+let institutionGuidedIndex = 0;
+
+if (typeof window !== 'undefined') {
+  window.__setInstitutionViewMode = mode => {
+    institutionViewMode = ['choice', 'guided', 'full'].includes(mode) ? mode : 'choice';
+    if (institutionViewMode === 'choice') institutionGuidedIndex = 0;
+  };
+  window.__handleInstitutionPrevious = () => {
+    if (institutionViewMode === 'guided') {
+      if (institutionGuidedIndex > 0) {
+        institutionGuidedIndex -= 1;
+      } else {
+        institutionViewMode = 'choice';
+      }
+      const state = window.__currentFormState;
+      const handlers = window.__currentFormHandlers;
+      if (state && handlers) renderForm(state, handlers);
+      return true;
+    }
+    if (institutionViewMode === 'full') {
+      institutionViewMode = 'choice';
+      const state = window.__currentFormState;
+      const handlers = window.__currentFormHandlers;
+      if (state && handlers) renderForm(state, handlers);
+      return true;
+    }
+    return false;
+  };
+  window.__handleInstitutionNext = () => {
+    if (institutionViewMode === 'guided') {
+      const state = window.__currentFormState;
+      const steps = institutionGuidedSteps(institutionFields(state || {}, Object.keys(colorPresets).filter(key => !['naranja', 'gris', 'personalizado'].includes(key))));
+      if (institutionGuidedIndex < steps.length - 1) {
+        institutionGuidedIndex += 1;
+        const handlers = window.__currentFormHandlers;
+        if (state && handlers) renderForm(state, handlers);
+      }
+      return true;
+    }
+    if (institutionViewMode === 'choice' || institutionViewMode === 'full') return true;
+    return false;
+  };
+}
+
 
 export function renderForm(state, handlers) {
+  window.__currentFormState = state;
+  window.__currentFormHandlers = handlers;
   const specialtyNames = specialties.map(item => item.name);
   const colorKeys = Object.keys(colorPresets).filter(key => !['naranja', 'gris', 'personalizado'].includes(key));
   const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
@@ -41,14 +102,76 @@ function renderPieceStep(pieceType, handlers) {
   if (!target) return;
   target.innerHTML = `
     <div class="smart-panel">
-      <strong>Tipo seleccionado</strong>
-      <p>${escapeHtml(labelPieceType(pieceType))}. Las tarjetas adaptan el formulario y el prompt final.</p>
+      <strong>Elegí el tipo de pieza</strong>
+      <p>Seleccioná una tarjeta para adaptar el contenido, el diseño y el prompt final. Podés cambiar esta elección más adelante.</p>
     </div>
   `;
 }
 
 function renderInstitutionStep(state, handlers, colorKeys) {
-  renderFields('#clinicFields', [
+  const fields = institutionFields(state, colorKeys);
+  const totalSteps = institutionGuidedSteps(fields).length;
+  institutionGuidedIndex = Math.max(0, Math.min(institutionGuidedIndex, totalSteps - 1));
+
+  const target = document.querySelector('#clinicFields');
+  if (!target) return;
+
+  if (institutionViewMode === 'choice') {
+    target.innerHTML = renderInstitutionLoadModeChoice();
+    bindInstitutionModeControls(target, state, handlers, colorKeys);
+    socialEditorShow(false);
+    return;
+  }
+
+  if (institutionViewMode === 'full') {
+    target.innerHTML = `
+      <div class="institution-full-fields field-grid" id="clinicFullFields"></div>
+      <div id="clinicSocialLinksEditor" class="list-editor institution-inline-social-editor"></div>
+      <div class="institution-final-actions">
+        <button class="primary-button" type="button" id="saveInstitutionAndContinueButton">Guardar y continuar →</button>
+        <button class="secondary-button" type="button" id="continueInstitutionWithoutSavingButton">Continuar sin guardar</button>
+        <button class="secondary-button" type="button" data-institution-mode="choice">Volver</button>
+      </div>
+    `;
+    renderFields('#clinicFullFields', fields, handlers);
+    bindInstitutionModeControls(target, state, handlers, colorKeys);
+    renderSocialLinks(state, handlers, '#clinicSocialLinksEditor');
+    socialEditorShow(false);
+    return;
+  }
+
+  target.innerHTML = `
+    <div id="institutionGuidedPanel" class="institution-guided-panel">
+      ${renderInstitutionGuidedPanel(state, fields, colorKeys)}
+    </div>
+  `;
+
+  bindInstitutionGuidedControls(target, state, handlers, fields, colorKeys);
+  bindInstitutionModeControls(target, state, handlers, colorKeys);
+
+  if (institutionGuidedSteps(fields)[institutionGuidedIndex]?.key === 'social') {
+    renderSocialLinks(state, handlers, '#clinicSocialLinksEditor');
+  }
+  updateSocialEditorVisibility();
+}
+
+function renderInstitutionLoadModeChoice() {
+  return `
+    <div class="institution-method-card">
+      <span class="guided-kicker">Crear nueva institución</span>
+      <h3>¿Cómo querés cargar los datos?</h3>
+      <p>Elegí una forma de carga. Los botones para guardar aparecen al final, cuando revises la institución.</p>
+      <div class="institution-method-actions">
+        <button class="primary-button" type="button" data-institution-mode="guided">Guiado paso a paso</button>
+        <button class="secondary-button" type="button" data-institution-mode="full">Formulario completo</button>
+        <button class="secondary-button" type="button" id="cancelInstitutionEditButton">Cancelar</button>
+      </div>
+    </div>
+  `;
+}
+
+function institutionFields(state, colorKeys) {
+  return [
     text('Nombre de la institución', 'clinic.name', state.clinic.name, true),
     select('Tipo de institución', 'clinic.institutionType', state.clinic.institutionType, institutionTypes, true),
     text('Especificar tipo', 'clinic.otherInstitutionType', state.clinic.otherInstitutionType, false, state.clinic.institutionType !== 'Otro'),
@@ -57,16 +180,203 @@ function renderInstitutionStep(state, handlers, colorKeys) {
     text('Teléfono secundario', 'clinic.secondaryPhone', state.clinic.secondaryPhone),
     text('Email', 'clinic.email', state.clinic.email),
     text('Sitio web', 'clinic.website', state.clinic.website),
-    textarea('Frase institucional', 'clinic.institutionalPhrase', state.clinic.institutionalPhrase),
+    selectWithCustom('Frase institucional', 'clinic.institutionalPhrase', state.clinic.institutionalPhrase, institutionalPhraseOptions),
     select('Color principal institucional', 'clinic.defaultPrimaryColor', state.clinic.defaultPrimaryColor, colorKeys, false, key => colorPresets[key].label),
     select('Color secundario institucional', 'clinic.defaultSecondaryColor', state.clinic.defaultSecondaryColor, colorKeys, false, key => colorPresets[key].label),
     fileText('Logo institucional esperado', 'clinic.logoFileName', state.clinic.logoFileName, 'image/*', false, false, 'Elegí el archivo del logo para completar el nombre. Luego adjuntalo manualmente en ChatGPT.'),
-    text('Instrucción para logo', 'clinic.logoInstruction', state.clinic.logoInstruction),
     toggle('Mostrar datos de contacto', 'clinic.showContactData', state.clinic.showContactData)
-  ], handlers);
-
-  renderSocialLinks(state, handlers);
+  ];
 }
+
+function institutionGuidedSteps(fields) {
+  const byPath = new Map(fields.map(field => [field.path, field]));
+  const visible = (...paths) => paths.map(path => byPath.get(path)).filter(field => field && !field.hidden);
+
+  return [
+    {
+      key: 'name',
+      title: 'Nombre de la institución',
+      help: 'Ingresá cómo debe aparecer el centro o clínica en el flyer.',
+      fields: visible('clinic.name')
+    },
+    {
+      key: 'type',
+      title: 'Tipo de institución',
+      help: 'Seleccioná la categoría más cercana. Si elegís Otro, especificá el tipo.',
+      fields: visible('clinic.institutionType', 'clinic.otherInstitutionType')
+    },
+    {
+      key: 'address',
+      title: 'Dirección',
+      help: 'Completá la dirección visible para el paciente. Podés dejarla vacía si no querés mostrarla.',
+      fields: visible('clinic.address')
+    },
+    {
+      key: 'phones',
+      title: 'Teléfonos y contacto directo',
+      help: 'Cargá el WhatsApp principal y, si corresponde, un teléfono secundario.',
+      fields: visible('clinic.primaryPhone', 'clinic.secondaryPhone')
+    },
+    {
+      key: 'digital',
+      title: 'Contacto digital',
+      help: 'Email y sitio web son opcionales. Solo se incluirán si están completos.',
+      fields: visible('clinic.email', 'clinic.website')
+    },
+    {
+      key: 'social',
+      title: 'Redes sociales',
+      help: 'Agregá Instagram, WhatsApp u otras redes. Podés sumar, editar o quitar redes en esta tarjeta.',
+      fields: []
+    },
+    {
+      key: 'phrase',
+      title: 'Frase institucional',
+      help: 'Una frase breve ayuda a reforzar la identidad del centro.',
+      fields: visible('clinic.institutionalPhrase')
+    },
+    {
+      key: 'colors',
+      title: 'Colores institucionales',
+      help: 'Estos colores pueden reutilizarse en Diseño si activás colores institucionales.',
+      fields: visible('clinic.defaultPrimaryColor', 'clinic.defaultSecondaryColor')
+    },
+    {
+      key: 'logo',
+      title: 'Logo institucional',
+      help: 'Elegí el archivo para completar el nombre. Luego deberás adjuntarlo manualmente en ChatGPT.',
+      fields: visible('clinic.logoFileName')
+    },
+    {
+      key: 'contact-data',
+      title: 'Datos visibles de contacto',
+      help: 'Definí si el flyer debe mostrar datos de contacto institucionales.',
+      fields: visible('clinic.showContactData')
+    },
+    {
+      key: 'summary',
+      title: 'Revisión de institución',
+      help: 'Confirmá que los datos principales estén bien antes de pasar al tipo de pieza.',
+      fields: []
+    }
+  ];
+}
+
+function renderInstitutionGuidedPanel(state, fields) {
+  const steps = institutionGuidedSteps(fields);
+  const step = steps[institutionGuidedIndex] || steps[0];
+  const current = institutionGuidedIndex + 1;
+  const progress = Math.round((current / steps.length) * 100);
+  const isSummary = step.key === 'summary';
+
+  return `
+    <div class="guided-card" data-guided-key="${escapeHtml(step.key)}">
+      <div class="guided-card-head">
+        <div>
+          <span class="guided-kicker">Institución · Campo ${current} de ${steps.length}</span>
+          <h3>${escapeHtml(step.title)}</h3>
+          <p>${escapeHtml(step.help)}</p>
+        </div>
+        <div class="guided-progress" aria-label="Progreso dentro de institución">
+          <span>${progress}%</span>
+          <div><i style="width:${progress}%"></i></div>
+        </div>
+      </div>
+      <div class="guided-card-body">
+        ${renderInstitutionGuidedBody(state, step)}
+      </div>
+      <div class="guided-card-actions">
+        <button class="secondary-button" type="button" data-institution-guided="previous">← Anterior</button>
+        ${isSummary ? `
+          <button class="primary-button" type="button" id="saveInstitutionAndContinueButton">Guardar y continuar →</button>
+          <button class="secondary-button" type="button" id="continueInstitutionWithoutSavingButton">Continuar sin guardar</button>
+          <button class="secondary-button" type="button" data-institution-mode="full">Editar en formulario completo</button>
+        ` : `
+          <button class="secondary-button" type="button" data-institution-mode="full">Formulario completo</button>
+          <button class="primary-button" type="button" data-institution-guided="next">Siguiente →</button>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function renderInstitutionGuidedBody(state, step) {
+  if (step.key === 'social') {
+    return `<div id="clinicSocialLinksEditor" class="list-editor guided-social-editor"></div>`;
+  }
+
+  if (step.key === 'summary') {
+    return `<div class="guided-summary">
+      <dl>
+        <div><dt>Nombre</dt><dd>${escapeHtml(state.clinic.name || 'Sin completar')}</dd></div>
+        <div><dt>Tipo</dt><dd>${escapeHtml(state.clinic.institutionType || 'Sin completar')}</dd></div>
+        <div><dt>Dirección</dt><dd>${escapeHtml(state.clinic.address || 'Sin completar')}</dd></div>
+        <div><dt>WhatsApp</dt><dd>${escapeHtml(state.clinic.primaryPhone || 'Sin completar')}</dd></div>
+        <div><dt>Logo</dt><dd>${escapeHtml(state.clinic.logoFileName || 'Sin logo seleccionado')}</dd></div>
+      </dl>
+      <p class="helper-text">Si necesitás corregir algo, usá Anterior o cambiá a formulario completo.</p>
+    </div>`;
+  }
+
+  return step.fields.length
+    ? `<div class="guided-field-grid">${step.fields.map(field => renderField(field)).join('')}</div>`
+    : '<p class="institution-empty-state">No hay campos para completar en esta tarjeta.</p>';
+}
+
+function bindInstitutionGuidedControls(target, state, handlers, fields, colorKeys) {
+  const panel = target.querySelector('#institutionGuidedPanel');
+  if (!panel) return;
+  bindFieldControls(panel, handlers);
+
+  panel.querySelectorAll('[data-institution-guided]').forEach(button => {
+    button.addEventListener('click', () => {
+      const steps = institutionGuidedSteps(fields);
+      if (button.dataset.institutionGuided === 'previous') {
+        if (institutionGuidedIndex === 0) {
+          institutionViewMode = 'choice';
+        } else {
+          institutionGuidedIndex = Math.max(0, institutionGuidedIndex - 1);
+        }
+      }
+      if (button.dataset.institutionGuided === 'next') institutionGuidedIndex = Math.min(steps.length - 1, institutionGuidedIndex + 1);
+      renderInstitutionStep(state, handlers, colorKeys);
+    });
+  });
+
+  panel.querySelectorAll('input[data-path], select[data-path]').forEach(input => {
+    input.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+      event.preventDefault();
+      const steps = institutionGuidedSteps(fields);
+      institutionGuidedIndex = Math.min(steps.length - 1, institutionGuidedIndex + 1);
+      renderInstitutionStep(state, handlers, colorKeys);
+    });
+  });
+}
+
+function bindInstitutionModeControls(target, state, handlers, colorKeys) {
+  target.querySelectorAll('[data-institution-mode]').forEach(button => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.institutionMode;
+      institutionViewMode = ['choice', 'guided', 'full'].includes(mode) ? mode : 'choice';
+      if (institutionViewMode === 'guided') institutionGuidedIndex = 0;
+      renderInstitutionStep(state, handlers, colorKeys);
+    });
+  });
+}
+
+function updateSocialEditorVisibility() {
+  const steps = institutionGuidedSteps([]);
+  const guidedKey = steps[institutionGuidedIndex]?.key;
+  socialEditorShow(institutionViewMode === 'guided' && guidedKey === 'social');
+}
+
+function socialEditorShow(visible) {
+  document.querySelectorAll('#socialLinksEditor').forEach(socialEditor => {
+    socialEditor.hidden = !visible;
+  });
+}
+
 
 function renderContentStep(state, handlers, specialtyNames) {
   const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
@@ -261,29 +571,38 @@ function renderCareInsideContent(state, handlers, showCoverage = false) {
 
 function renderDesignStep(state, handlers, colorKeys) {
   const useInstitutionalColors = Boolean(state.design.useInstitutionalColors);
-  renderFields('#designFields', [
+  const fields = [
     toggle('Usar colores institucionales', 'design.useInstitutionalColors', useInstitutionalColors),
-    select('Color principal', 'design.primaryColor', state.design.primaryColor, colorKeys, true, key => colorPresets[key].label),
-    text('Otro color principal', 'design.customPrimaryColor', state.design.customPrimaryColor, false, !isOtherColor(state.design.primaryColor)),
-    select('Color secundario', 'design.secondaryColor', state.design.secondaryColor, colorKeys, false, key => colorPresets[key].label),
-    text('Otro color secundario', 'design.customSecondaryColor', state.design.customSecondaryColor, false, !isOtherColor(state.design.secondaryColor)),
-    select('Estilo visual', 'design.visualStyle', state.design.visualStyle, visualStyles),
-    select('Formato', 'design.format', state.design.format, formats),
+    ...(!useInstitutionalColors ? [
+      select('Color principal', 'design.primaryColor', state.design.primaryColor, colorKeys, true, key => colorPresets[key].label),
+      text('Otro color principal', 'design.customPrimaryColor', state.design.customPrimaryColor, false, !isOtherColor(state.design.primaryColor)),
+      select('Color secundario', 'design.secondaryColor', state.design.secondaryColor, colorKeys, false, key => colorPresets[key].label),
+      text('Otro color secundario', 'design.customSecondaryColor', state.design.customSecondaryColor, false, !isOtherColor(state.design.secondaryColor))
+    ] : []),
+    selectWithCustom('Estilo visual', 'design.visualStyle', state.design.visualStyle, visualStyles),
+    selectWithCustom('Formato', 'design.format', state.design.format, formats),
     select('Densidad del contenido', 'design.contentDensity', state.design.contentDensity, contentDensityOptions, false, labelContentDensity),
     select('Nivel de impacto visual', 'design.visualImpact', state.design.visualImpact, impactLevels),
-    select('Tipografía sugerida', 'design.typography', state.design.typography, typographyOptions),
+    selectWithCustom('Tipografía sugerida', 'design.typography', state.design.typography, typographyOptions),
     toggle('Solicitar pieza animada', 'promptOptions.requestAnimation', state.promptOptions.requestAnimation),
     toggle('Incluir iconos medicos', 'design.includeMedicalIcons', state.design.includeMedicalIcons),
     toggle('Incluir fondo tematico', 'design.includeThematicBackground', state.design.includeThematicBackground),
     toggle('Usar recursos segun especialidad', 'design.useAutomaticTheme', state.design.useAutomaticTheme)
-  ], handlers);
+  ];
+
+  renderFields('#designFields', fields, handlers);
   renderCustomImageAttachments(state, handlers);
 }
+
 
 function renderFields(target, fields, handlers) {
   const node = document.querySelector(target);
   if (!node) return;
   node.innerHTML = fields.map(field => renderField(field)).join('');
+  bindFieldControls(node, handlers);
+}
+
+function bindFieldControls(node, handlers) {
   node.querySelectorAll('[data-path]').forEach(input => {
     input.addEventListener('input', event => handlers.onFieldChange(event.target.dataset.path, getValue(event.target)));
     input.addEventListener('change', event => {
@@ -292,7 +611,12 @@ function renderFields(target, fields, handlers) {
         handlers.onFieldChange(path, event.target.files[0]?.name || '');
         event.target.value = '';
       } else {
-        handlers.onFieldChange(path, getValue(event.target));
+        const value = getValue(event.target);
+        if (event.target.dataset.customSelect === 'true') {
+          const customInput = event.target.parentElement?.querySelector('input[data-path]');
+          if (customInput) customInput.hidden = value !== 'Otro / Personalizar' && !customInput.value;
+        }
+        handlers.onFieldChange(path, value);
       }
     });
   });
@@ -318,6 +642,11 @@ function renderField(field) {
   if (field.type === 'textarea') {
     return `<label class="field${hidden}"><span>${field.label}${required}</span><textarea data-path="${field.path}" rows="3">${escapeHtml(field.value)}</textarea></label>`;
   }
+  if (field.type === 'selectCustom') {
+    const selected = field.options.includes(field.value) ? field.value : field.value ? field.value : 'Otro / Personalizar';
+    const customValue = field.options.includes(field.value) ? '' : field.value;
+    return `<label class="field${hidden}"><span>${field.label}${required}</span><select data-path="${field.path}" data-custom-select="true">${field.options.map(option => `<option value="${escapeHtml(option)}" ${option === selected ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}</select><input type="text" data-path="${field.path}" value="${escapeHtml(customValue)}" placeholder="Escribir opción personalizada" ${selected === 'Otro / Personalizar' || customValue ? '' : 'hidden'}></label>`;
+  }
   if (field.type === 'select') {
     return `<label class="field${hidden}"><span>${field.label}${required}</span><select data-path="${field.path}">${field.options.map(option => `<option value="${escapeHtml(option)}" ${option === field.value ? 'selected' : ''}>${escapeHtml(field.labeler ? field.labeler(option) : option)}</option>`).join('')}</select></label>`;
   }
@@ -328,8 +657,8 @@ function renderField(field) {
   return `<label class="field${hidden}"><span>${field.label}${required}</span><input type="text" data-path="${field.path}" value="${escapeHtml(field.value)}"></label>`;
 }
 
-function renderSocialLinks(state, handlers) {
-  const target = document.querySelector('#socialLinksEditor');
+function renderSocialLinks(state, handlers, targetSelector = '#socialLinksEditor') {
+  const target = document.querySelector(targetSelector);
   if (!target) return;
   target.innerHTML = `
     <div class="list-title">
@@ -487,8 +816,10 @@ function renderAttachmentList(state) {
 }
 
 function selectWithCustom(label, path, value, options, recommended = false) {
-  const choices = [...new Set([...(options || []), value].filter(Boolean))];
-  return select(label, path, value || choices[0] || '', choices.length ? choices : [''], recommended);
+  const baseChoices = [...new Set((options || []).filter(Boolean))];
+  const hasCurrent = value && !baseChoices.includes(value) && value !== 'Otro / Personalizar';
+  const choices = [...baseChoices, ...(hasCurrent ? [value] : []), ...(baseChoices.includes('Otro / Personalizar') ? [] : ['Otro / Personalizar'])];
+  return { type: 'selectCustom', label, path, value: value || choices[0] || '', options: choices.length ? choices : ['Otro / Personalizar'], recommended, customActive: hasCurrent || value === 'Otro / Personalizar' };
 }
 
 function parseLines(value = '') {

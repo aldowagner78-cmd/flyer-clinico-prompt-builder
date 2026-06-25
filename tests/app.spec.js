@@ -34,12 +34,22 @@ async function expectCurrentStep(page, id) {
   await expect(page.locator('.form-section.is-current')).toHaveAttribute('id', id);
 }
 
-async function next(page) {
-  await page.locator('.form-section.is-current [data-wizard-action="next"]').click();
+async function clickCurrentNext(page) {
+  await page.locator('.form-section.is-current [data-wizard-action="next"]').last().click();
+}
+
+async function clickCurrentPrevious(page) {
+  await page.locator('.form-section.is-current [data-wizard-action="previous"]').last().click();
 }
 
 async function goResult(page) {
-  await page.locator('.form-section.is-current [data-wizard-action="result"]').click();
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const currentId = await page.locator('.form-section.is-current').getAttribute('id');
+    if (currentId === 'resultado') return;
+    const nextButton = page.locator('.form-section.is-current [data-wizard-action="next"]').last();
+    await expect(nextButton).toBeVisible();
+    await nextButton.click();
+  }
   await expectCurrentStep(page, 'resultado');
 }
 
@@ -62,15 +72,51 @@ async function getPrompt(page) {
   return prompt.inputValue();
 }
 
+async function openInstitutionFullForm(page) {
+  const nameField = page.locator('[data-path="clinic.name"]').first();
+  if (await nameField.isVisible().catch(() => false)) return;
+
+  if (await page.locator('#createInstitutionButton').isVisible().catch(() => false)) {
+    await page.locator('#createInstitutionButton').click();
+  }
+
+  if (await page.locator('[data-institution-mode="full"]').isVisible().catch(() => false)) {
+    await page.locator('[data-institution-mode="full"]').click();
+  }
+
+  await expect(nameField).toBeVisible();
+}
+
 async function fillBasicInstitution(page) {
+  await openInstitutionFullForm(page);
   await fillPath(page, 'clinic.name', 'Centro Médico Rincón');
   await selectPath(page, 'clinic.institutionType', 'Centro médico');
   await fillPath(page, 'clinic.address', 'Av. San Martín 2450, San José del Rincón');
   await fillPath(page, 'clinic.primaryPhone', '342 555-2488');
 }
 
+async function continueFromInstitution(page) {
+  await expectCurrentStep(page, 'clinica');
+  const continueButton = page.locator('#continueInstitutionWithoutSavingButton');
+  const saveButton = page.locator('#saveInstitutionAndContinueButton');
+
+  if (await continueButton.isVisible().catch(() => false)) {
+    await continueButton.click();
+  } else if (await saveButton.isVisible().catch(() => false)) {
+    await saveButton.click();
+  } else {
+    await clickCurrentNext(page);
+  }
+
+  await expectCurrentStep(page, 'tipo');
+}
+
 async function choosePiece(page, pieceType) {
-  await next(page);
+  const currentId = await page.locator('.form-section.is-current').getAttribute('id');
+  if (currentId === 'clinica') {
+    await continueFromInstitution(page);
+  }
+
   await expectCurrentStep(page, 'tipo');
   await page.locator(`[data-piece-select="${pieceType}"]`).click();
   await expectCurrentStep(page, 'prestaciones');
@@ -105,37 +151,44 @@ test.describe('Etapa 10T - flujo principal', () => {
     );
 
     expect(visibleSteps).toEqual(['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado']);
-    expect(errors).toEqual([]);
+    await expect(page.locator('#pieceHome .piece-card')).toHaveCount(0);
+    await expect(page.locator('#clinica .step-header-controls [data-wizard-action="home"]')).toBeVisible();
+    await expect(page.locator('#clinica .section-heading [data-wizard-action="next"]')).toHaveCount(0);
+    await expect(errors).toEqual([]);
   });
 
-  test('guardar y cargar institución funciona desde el panel compacto', async ({ page }) => {
+  test('guardar y usar institución funciona desde el flujo intuitivo', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
     await startAssistant(page);
     await fillBasicInstitution(page);
+    await fillPath(page, 'clinic.logoFileName', 'logo_rincon.png');
 
-    await page.locator('#manageInstitutionButton').click();
-    await expect(page.locator('#institutionActionsPanel')).toBeVisible();
-    await page.locator('#saveInstitutionButton').click();
+    await page.locator('#saveInstitutionAndContinueButton').click();
     await expect(page.locator('#statusMessage')).toContainText(/Institución guardada/i);
+    await expectCurrentStep(page, 'tipo');
 
-    await fillPath(page, 'clinic.name', 'Otra institución temporal');
+    await clickCurrentPrevious(page);
+    await expectCurrentStep(page, 'clinica');
 
     const savedValue = await page.locator('#savedInstitutionSelect option', { hasText: 'Centro Médico Rincón' }).getAttribute('value');
     expect(savedValue).toBeTruthy();
 
     await page.locator('#savedInstitutionSelect').selectOption(savedValue);
-    await page.locator('#loadInstitutionButton').click();
+    await expect(page.locator('#savedInstitutionSummary')).toBeVisible();
+    await expect(page.locator('#savedInstitutionSummary')).toContainText('logo_rincon.png');
+    await expect(page.locator('#loadInstitutionButton')).toBeVisible();
 
-    await expect(page.locator('[data-path="clinic.name"]').first()).toHaveValue('Centro Médico Rincón');
-    expect(errors).toEqual([]);
+    await page.locator('#loadInstitutionButton').click();
+    await expectCurrentStep(page, 'tipo');
+    await expect(errors).toEqual([]);
   });
 
   for (const [pieceType, label] of Object.entries(PIECES)) {
-    test(`el ejemplo de ${label} genera prompt de una sola imagen`, async ({ page }) => {
+    test(`el flujo de ${label} genera prompt de una sola imagen`, async ({ page }) => {
       const errors = watchBrowserErrors(page);
       await openCleanApp(page);
-      await page.locator(`[data-demo-piece="${pieceType}"]`).click();
+      await startWithPiece(page, pieceType);
       await goResult(page);
 
       const prompt = await getPrompt(page);
@@ -147,7 +200,7 @@ test.describe('Etapa 10T - flujo principal', () => {
         expect(prompt).not.toContain('Matrícula:');
       }
 
-      expect(errors).toEqual([]);
+      await expect(errors).toEqual([]);
     });
   }
 });
@@ -194,7 +247,7 @@ test.describe('Etapa 10T - presets inteligentes por tarjeta', () => {
         expect(prompt).not.toContain(text);
       }
 
-      expect(errors).toEqual([]);
+      await expect(errors).toEqual([]);
     });
   }
 });
@@ -206,7 +259,7 @@ test.describe('Etapa 10T - diseño y resultado', () => {
     await startWithPiece(page, 'clinicalInfographic');
     await setOdontology(page);
 
-    await next(page);
+    await clickCurrentNext(page);
     await expectCurrentStep(page, 'diseno');
 
     await selectPath(page, 'design.visualStyle', 'infantil');
@@ -215,7 +268,7 @@ test.describe('Etapa 10T - diseño y resultado', () => {
     const prompt = await getPrompt(page);
     expect(prompt).toMatch(/Estilo visual: infantil/i);
     expectSingleImagePrompt(prompt);
-    expect(errors).toEqual([]);
+    await expect(errors).toEqual([]);
   });
 
   test('el prompt no contiene restos explícitos de la lógica vieja de alternativas', async ({ page }) => {
@@ -229,16 +282,53 @@ test.describe('Etapa 10T - diseño y resultado', () => {
     expect(prompt).not.toMatch(/Entregar 2 alternativas|exactamente 2|primera alternativa|segunda alternativa|comparativa/i);
     expect(prompt).not.toMatch(/panel dividido|mockup con varias opciones/i);
     expectSingleImagePrompt(prompt);
-    expect(errors).toEqual([]);
+    await expect(errors).toEqual([]);
+  });
+
+  test('usar colores institucionales oculta los campos de color manual', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'promotionCampaign');
+
+    await clickCurrentNext(page);
+    await expectCurrentStep(page, 'diseno');
+
+    const institutionalToggle = page.locator('[data-path="design.useInstitutionalColors"]').first();
+    const primaryColor = page.locator('[data-path="design.primaryColor"]').first();
+    const secondaryColor = page.locator('[data-path="design.secondaryColor"]').first();
+
+    await expect(institutionalToggle).toBeVisible();
+
+    if (await institutionalToggle.isChecked()) {
+      await expect(primaryColor).toBeHidden();
+      await expect(secondaryColor).toBeHidden();
+
+      await institutionalToggle.uncheck();
+      await expect(primaryColor).toBeVisible();
+      await expect(secondaryColor).toBeVisible();
+    } else {
+      await expect(primaryColor).toBeVisible();
+      await expect(secondaryColor).toBeVisible();
+    }
+
+    await institutionalToggle.check();
+    await expect(primaryColor).toBeHidden();
+    await expect(secondaryColor).toBeHidden();
+
+    await institutionalToggle.uncheck();
+    await expect(primaryColor).toBeVisible();
+    await expect(secondaryColor).toBeVisible();
+
+    await expect(errors).toEqual([]);
   });
 });
-
 
 test.describe('Etapa 11A - adjuntos por selector local', () => {
   test('completa nombres de logo, foto profesional e imagen personalizada sin subir archivos', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
     await startAssistant(page);
+    await openInstitutionFullForm(page);
 
     await page.locator('[data-file-target="clinic.logoFileName"]').setInputFiles({
       name: 'logo_rincon.png',
@@ -258,7 +348,7 @@ test.describe('Etapa 11A - adjuntos por selector local', () => {
     });
     await expect(page.locator('[data-path="professional.photoFileName"]').first()).toHaveValue('foto_profesional.jpg');
 
-    await next(page);
+    await clickCurrentNext(page);
     await expectCurrentStep(page, 'diseno');
     await page.locator('#addCustomAttachmentButton').click();
     await page.locator('[data-attachment-file]').last().setInputFiles({
@@ -272,7 +362,104 @@ test.describe('Etapa 11A - adjuntos por selector local', () => {
     expect(prompt).toContain('Logo de clínica: logo_rincon.png');
     expect(prompt).toContain('Foto profesional: foto_profesional.jpg');
     expect(prompt).toContain('Imagen temática: referencia_visual.webp');
-    expect(errors).toEqual([]);
+    await expect(errors).toEqual([]);
   });
 });
 
+test.describe('Etapa 11C - UX de institución y navegación', () => {
+  test('formulario completo muestra redes sociales antes de los botones finales', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+    await openInstitutionFullForm(page);
+
+    const inlineSocial = page.locator('#clinicSocialLinksEditor');
+    const finalActions = page.locator('.institution-final-actions');
+    await expect(inlineSocial).toBeVisible();
+    await expect(finalActions).toBeVisible();
+    await expect(inlineSocial).toContainText('Redes sociales');
+
+    const socialBeforeActions = await page.evaluate(() => {
+      const social = document.querySelector('#clinicSocialLinksEditor');
+      const actions = document.querySelector('.institution-final-actions');
+      return Boolean(social && actions && (social.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING));
+    });
+
+    expect(socialBeforeActions).toBe(true);
+    await expect(errors).toEqual([]);
+  });
+
+  test('tarjeta guiada de redes muestra el editor directo sin bloque explicativo redundante', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+    await page.locator('#createInstitutionButton').click();
+    await page.locator('[data-institution-mode="guided"]').click();
+
+    for (let i = 0; i < 5; i += 1) {
+      await page.locator('[data-institution-guided="next"]').click();
+    }
+
+    await expect(page.locator('.guided-card[data-guided-key="social"]')).toBeVisible();
+    await expect(page.locator('#clinicSocialLinksEditor')).toBeVisible();
+    await expect(page.locator('#clinicSocialLinksEditor')).toContainText('Redes sociales');
+    await expect(page.locator('#clinicSocialLinksEditor')).toContainText('Agregar red');
+    await expect(page.locator('.guided-card[data-guided-key="social"]')).not.toContainText('Editor de redes sociales');
+    await expect(errors).toEqual([]);
+  });
+
+  test('frase institucional tiene opciones predefinidas y opción personalizada', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+    await openInstitutionFullForm(page);
+
+    const phraseSelect = page.locator('select[data-path="clinic.institutionalPhrase"]').first();
+    await expect(phraseSelect).toBeVisible();
+
+    const options = await phraseSelect.locator('option').evaluateAll(items => items.map(item => item.textContent.trim()));
+    expect(options).toContain('Cuidamos tu salud, acompañamos tu vida');
+    expect(options).toContain('Atención humana, profesional y cercana');
+    expect(options).toContain('Otro / Personalizar');
+    expect(options.length).toBeGreaterThanOrEqual(11);
+
+    await phraseSelect.selectOption('Otro / Personalizar');
+    const customInput = page.locator('input[data-path="clinic.institutionalPhrase"]').first();
+    await expect(customInput).toBeVisible();
+    await customInput.fill('Frase personalizada de prueba');
+    await expect(customInput).toHaveValue('Frase personalizada de prueba');
+    await expect(errors).toEqual([]);
+  });
+
+  test('logo institucional solo muestra selector de archivo y no instrucción interna', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+    await openInstitutionFullForm(page);
+
+    await expect(page.locator('[data-file-target="clinic.logoFileName"]')).toBeVisible();
+    await expect(page.locator('[data-path="clinic.logoInstruction"]')).toHaveCount(0);
+    await expect(errors).toEqual([]);
+  });
+
+  test('crear nueva institución queda visualmente destacado', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+
+    const createButton = page.locator('#createInstitutionButton');
+    await expect(createButton).toBeVisible();
+    await expect(createButton).toHaveClass(/institution-create-button/);
+
+    const styles = await createButton.evaluate(button => {
+      const computed = window.getComputedStyle(button);
+      return {
+        background: computed.backgroundImage || computed.backgroundColor,
+        color: computed.color
+      };
+    });
+
+    expect(styles.background).not.toBe('none');
+    expect(errors).toEqual([]);
+  });
+});
