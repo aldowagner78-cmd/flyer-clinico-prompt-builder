@@ -308,6 +308,8 @@ function loadDemoData(pieceType = state.promptOptions.pieceType || PIECE_TYPES.p
 
 function createDemoState(pieceType = PIECE_TYPES.professionalFlyer) {
   const demo = createDefaultState();
+  demo.promptOptions.pieceType = pieceType;
+  demo.promptOptions.pieceTypeConfirmed = true;
   applyCommonDemoClinic(demo);
 
   switch (pieceType) {
@@ -852,11 +854,12 @@ function applyInterfaceTheme(color = 'violet', mode = 'light') {
 
 function selectPieceType(pieceType) {
   state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
+  state.promptOptions.pieceTypeConfirmed = true;
   applySpecialtyPreset(state.specialty.primaryProfessionalSpecialty, true);
   currentStep = 'tipo';
   update(true);
-  nextStep();
-  showStatus(`${labelPieceType(state.promptOptions.pieceType)} seleccionado.`);
+  showStep('tipo');
+  showStatus(`${labelPieceType(state.promptOptions.pieceType)} seleccionado. Tocá Siguiente para continuar.`);
 }
 
 
@@ -1300,6 +1303,7 @@ function startNewPiece(pieceType = PIECE_TYPES.professionalFlyer) {
   state = createDefaultState();
   if (preservedClinic?.name) state.clinic = preservedClinic;
   state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
+  state.promptOptions.pieceTypeConfirmed = false;
   currentStep = 'clinica';
   startPieceFlow(state.promptOptions.pieceType, false);
 }
@@ -1393,9 +1397,10 @@ function syncStepFooterControls(steps = availableSteps()) {
     }
 
     const isResult = step === resultStep;
+    const needsPieceSelection = step === 'tipo' && !state.promptOptions.pieceTypeConfirmed;
     footer.innerHTML = `
       <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-      ${isResult ? '' : `<button class="primary-button" type="button" data-wizard-action="next">${step === 'diseno' ? 'Ver resultado →' : 'Siguiente →'}</button>`}
+      ${isResult ? '' : `<button class="primary-button" type="button" data-wizard-action="next" ${needsPieceSelection ? 'disabled' : ''}>${step === 'diseno' ? 'Ver resultado →' : 'Siguiente →'}</button>`}
     `;
   });
 }
@@ -1419,7 +1424,8 @@ function updateWorkflowChrome() {
     button.disabled = index <= 0;
   });
   nextButtons.forEach(button => {
-    button.disabled = index >= steps.length - 1;
+    const isTypeStepBlocked = currentStep === 'tipo' && !state.promptOptions.pieceTypeConfirmed;
+    button.disabled = index >= steps.length - 1 || isTypeStepBlocked;
     button.textContent = index >= steps.length - 2 ? 'Ver resultado →' : 'Siguiente →';
   });
   resultButtons.forEach(button => {

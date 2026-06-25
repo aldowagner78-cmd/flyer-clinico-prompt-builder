@@ -76,6 +76,7 @@ export function createDefaultState() {
     promptOptions: {
       promptType: PROMPT_TYPES.finalFlyer,
       pieceType: PIECE_TYPES.professionalFlyer,
+      pieceTypeConfirmed: false,
       contentGoal: '',
       targetAudience: '',
       educationalTopic: '',

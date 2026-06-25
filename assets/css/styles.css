@@ -3704,3 +3704,55 @@ body.is-institution-editor-open .institution-panel-focused {
   color: #fff;
   font-weight: 950;
 }
+
+
+/* Etapa 11D.1: selección guiada de tipo de pieza */
+.piece-option-card.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 62%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-pale) 82%, white 18%), rgba(255, 255, 255, 0.96));
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--accent) 18%, transparent);
+  transform: translateY(-1px);
+}
+
+.piece-option-card.is-selected::after {
+  content: "Seleccionado";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, white 86%);
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.piece-selection-summary {
+  grid-column: 1 / -1;
+  padding: clamp(16px, 2.5vw, 22px);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), color-mix(in srgb, var(--accent-pale) 64%, white 36%));
+  box-shadow: 0 14px 34px rgba(79, 70, 229, 0.08);
+}
+
+.piece-selection-summary h3 {
+  margin: 4px 0 6px;
+  color: var(--ink);
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+}
+
+.piece-selection-summary p,
+.piece-selection-summary small {
+  display: block;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.piece-selection-summary small {
+  margin-top: 8px;
+  font-weight: 800;
+}

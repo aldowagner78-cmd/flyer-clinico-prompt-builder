@@ -88,7 +88,7 @@ export function renderForm(state, handlers) {
   const colorKeys = Object.keys(colorPresets).filter(key => !['naranja', 'gris', 'personalizado'].includes(key));
   const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
 
-  renderPieceStep(pieceType, handlers);
+  renderPieceStep(pieceType, handlers, Boolean(state.promptOptions.pieceTypeConfirmed));
   renderInstitutionStep(state, handlers, colorKeys);
   renderContentStep(state, handlers, specialtyNames);
   renderDesignStep(state, handlers, colorKeys);
@@ -97,15 +97,44 @@ export function renderForm(state, handlers) {
   renderVisibleServices(state, handlers);
 }
 
-function renderPieceStep(pieceType, handlers) {
+function renderPieceStep(pieceType, handlers, confirmed = false) {
   const target = document.querySelector('#pieceFields');
   if (!target) return;
-  target.innerHTML = `
-    <div class="smart-panel">
-      <strong>Elegí el tipo de pieza</strong>
-      <p>Seleccioná una tarjeta para adaptar el contenido, el diseño y el prompt final. Podés cambiar esta elección más adelante.</p>
-    </div>
-  `;
+
+  updatePieceOptionCards(pieceType, confirmed);
+
+  target.innerHTML = confirmed
+    ? `
+      <div class="piece-selection-summary">
+        <span class="guided-kicker">Tipo seleccionado</span>
+        <h3>${escapeHtml(labelPieceType(pieceType))}</h3>
+        <p>${escapeHtml(pieceTypeDescription(pieceType))}</p>
+        <small>Podés tocar otra tarjeta para cambiar la selección antes de continuar.</small>
+      </div>
+    `
+    : `
+      <div class="smart-panel">
+        <strong>Elegí el tipo de pieza</strong>
+        <p>Seleccioná una tarjeta para adaptar el contenido, el diseño y el prompt final. Después tocá Siguiente para continuar.</p>
+      </div>
+    `;
+}
+
+function updatePieceOptionCards(pieceType, confirmed = false) {
+  document.querySelectorAll('[data-piece-select]').forEach(button => {
+    const selected = confirmed && button.dataset.pieceSelect === pieceType;
+    button.classList.toggle('is-selected', selected);
+    button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  });
+}
+
+function pieceTypeDescription(pieceType) {
+  return {
+    professionalFlyer: 'Para profesionales, especialidades, horarios, prestaciones, turnos y datos de contacto.',
+    clinicalInfographic: 'Para educación sanitaria, prevención, pasos, recomendaciones y contenidos explicativos.',
+    informativeFlyer: 'Para comunicar servicios, estudios, prestaciones, novedades o información institucional.',
+    promotionCampaign: 'Para agenda abierta, jornadas, campañas preventivas, vigencias y llamados a la acción.'
+  }[pieceType] || 'Tipo de pieza seleccionado para adaptar el contenido y el prompt final.';
 }
 
 function renderInstitutionStep(state, handlers, colorKeys) {
@@ -885,7 +914,7 @@ function labelPieceType(value) {
     professionalFlyer: 'Flyer profesional',
     clinicalInfographic: 'Infografia clinica educativa',
     informativeFlyer: 'Flyer informativo',
-    promotionCampaign: 'Promocion / campaña'
+    promotionCampaign: 'Promoción / campaña'
   }[value] || value;
 }
 

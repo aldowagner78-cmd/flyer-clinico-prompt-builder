@@ -118,7 +118,12 @@ async function choosePiece(page, pieceType) {
   }
 
   await expectCurrentStep(page, 'tipo');
+  await expect(page.locator('.form-section.is-current [data-wizard-action="next"]').last()).toBeDisabled();
   await page.locator(`[data-piece-select="${pieceType}"]`).click();
+  await expectCurrentStep(page, 'tipo');
+  await expect(page.locator(`[data-piece-select="${pieceType}"]`)).toHaveClass(/is-selected/);
+  await expect(page.locator('#pieceFields')).toContainText(/Tipo seleccionado/i);
+  await clickCurrentNext(page);
   await expectCurrentStep(page, 'prestaciones');
 }
 
@@ -182,6 +187,29 @@ test.describe('Etapa 10T - flujo principal', () => {
     await page.locator('#loadInstitutionButton').click();
     await expectCurrentStep(page, 'tipo');
     await expect(errors).toEqual([]);
+  });
+
+  test('tipo de pieza se confirma antes de avanzar a contenido', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+    await fillBasicInstitution(page);
+    await continueFromInstitution(page);
+
+    await expectCurrentStep(page, 'tipo');
+    const nextButton = page.locator('.form-section.is-current [data-wizard-action="next"]').last();
+    await expect(nextButton).toBeDisabled();
+    await expect(page.locator('#pieceFields')).toContainText(/Elegí el tipo de pieza/i);
+
+    await page.locator('[data-piece-select="promotionCampaign"]').click();
+    await expectCurrentStep(page, 'tipo');
+    await expect(page.locator('[data-piece-select="promotionCampaign"]')).toHaveClass(/is-selected/);
+    await expect(page.locator('#pieceFields')).toContainText(/Promoción \/ campaña/i);
+    await expect(nextButton).toBeEnabled();
+
+    await nextButton.click();
+    await expectCurrentStep(page, 'prestaciones');
+    expect(errors).toEqual([]);
   });
 
   for (const [pieceType, label] of Object.entries(PIECES)) {

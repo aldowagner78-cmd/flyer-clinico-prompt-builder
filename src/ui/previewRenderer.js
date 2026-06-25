@@ -157,7 +157,7 @@ function labelPieceType(value) {
     professionalFlyer: 'Flyer profesional',
     clinicalInfographic: 'Infografia clinica',
     informativeFlyer: 'Flyer informativo',
-    promotionCampaign: 'Promocion / campaña'
+    promotionCampaign: 'Promoción / campaña'
   }[value] || 'Flyer profesional';
 }
 
