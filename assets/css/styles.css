@@ -2815,3 +2815,61 @@ body.is-wizard-open .side-panel {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* Etapa 11A - selectores locales de archivos para nombres de adjuntos */
+.file-name-field small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.file-picker-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.file-picker-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 10%, white);
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.file-picker-button input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.attachment-panel.full-width,
+.field.full-width {
+  grid-column: 1 / -1;
+}
+
+.attachment-row {
+  grid-template-columns: minmax(130px, 0.75fr) minmax(150px, 0.9fr) minmax(190px, 1.05fr) minmax(210px, 1.2fr) auto;
+}
+
+@media (max-width: 860px) {
+  .file-picker-row,
+  .attachment-row {
+    grid-template-columns: 1fr;
+  }
+
+  .file-picker-button {
+    width: 100%;
+  }
+}

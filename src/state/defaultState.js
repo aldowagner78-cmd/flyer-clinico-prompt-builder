@@ -27,7 +27,8 @@ export function createDefaultState() {
       fullName: '',
       license: '',
       roleNote: '',
-      showPhoto: true
+      showPhoto: true,
+      photoFileName: ''
     },
     specialty: {
       primaryProfessionalSpecialty: 'Clinica medica',
@@ -93,6 +94,9 @@ export function createDefaultState() {
       visualCreativityLevel: 'moderate',
       freeInstructions: '',
       suggestedPhrase: '',
+      suggestedPhraseSource: '',
+      suggestedPhraseSourceSpecialty: '',
+      requestAnimation: false,
       forbiddenPhrases: '',
       highlightData: '',
       smallData: ''

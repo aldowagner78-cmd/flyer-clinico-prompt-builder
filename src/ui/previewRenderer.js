@@ -1,10 +1,12 @@
 import { colorPresets } from '../data/designPresets.js';
+import { PIECE_TYPES } from '../state/schema.js';
 
 export function renderPreview(state, validation) {
   const summary = document.querySelector('#summaryPanel');
   summary.innerHTML = `
     <dl>
       <div><dt>Tipo de pieza</dt><dd>${escapeHtml(labelPieceType(state.promptOptions.pieceType))}</dd></div>
+      <div><dt>Resultado</dt><dd>${state.promptOptions.requestAnimation ? 'Animado' : 'Estático'}</dd></div>
       <div><dt>Objetivo</dt><dd>${escapeHtml(state.promptOptions.contentGoal) || 'Sin completar'}</dd></div>
       <div><dt>Institución</dt><dd>${escapeHtml(state.clinic.name) || 'Sin completar'}</dd></div>
       <div><dt>Tipo institución</dt><dd>${escapeHtml(state.clinic.institutionType) || 'Sin completar'}</dd></div>
@@ -16,7 +18,7 @@ export function renderPreview(state, validation) {
       <div><dt>Prestaciones visibles</dt><dd>${escapeHtml(listOrFallback(state.services.visibleServices))}</dd></div>
       <div><dt>Atencion</dt><dd>${escapeHtml(formatSchedules(state.schedule.items))}</dd></div>
       <div><dt>Redes</dt><dd>${escapeHtml(formatSocialLinks(state.clinic.socialLinks))}</dd></div>
-      <div><dt>Adjuntos</dt><dd>${escapeHtml(formatAttachments(state.attachments.items))}</dd></div>
+      <div><dt>Adjuntos</dt><dd>${escapeHtml(formatAttachments(state.attachments.items, state))}</dd></div>
       <div><dt>Densidad</dt><dd>${escapeHtml(labelContentDensity(state.design.contentDensity))}</dd></div>
       <div><dt>Color</dt><dd>${escapeHtml(getColorName(state.design.primaryColor, state.design.customPrimaryColor))}</dd></div>
       <div><dt>Estilo</dt><dd>${escapeHtml(state.design.visualStyle)}</dd></div>
@@ -79,13 +81,48 @@ function renderIssueGroup(title, badge, issues, className) {
 }
 
 function renderAttachmentsChecklist(state) {
-  const files = state.attachments.items.filter(item => item.fileName);
+  const files = collectAttachmentFiles(state).filter(item => item.fileName);
 
   if (!files.length) return '<li class="missing"><span>Sin adjuntos</span>No hay archivos seleccionados.</li>';
   return [
     '<li class="ok"><span>Antes</span>Antes de pegar el prompt en ChatGPT, adjunta estos archivos:</li>',
     ...files.map(item => `<li class="ok"><span>Adjuntar</span>${escapeHtml(labelAttachmentRole(item.role))}: ${escapeHtml(item.fileName)}${item.instruction ? ` - ${escapeHtml(item.instruction)}` : ''}</li>`)
   ].join('');
+}
+
+function collectAttachmentFiles(state) {
+  const pieceType = state?.promptOptions?.pieceType || PIECE_TYPES.professionalFlyer;
+  const items = Array.isArray(state?.attachments?.items)
+    ? state.attachments.items.filter(item => shouldKeepPreviewAttachmentForPiece(pieceType, item?.role)).map(item => ({ ...item }))
+    : [];
+  upsertAttachmentPreview(items, 'clinicLogo', state?.clinic?.logoFileName, state?.clinic?.logoInstruction || 'Usar como logo institucional, respetando proporciones.');
+  if (shouldIncludePreviewProfessionalPhoto(pieceType, state?.professional)) {
+    upsertAttachmentPreview(items, 'professionalPhoto', state?.professional?.photoFileName, 'Usar como foto profesional, sin deformar rostro ni alterar identidad.');
+  }
+  return items;
+}
+
+function shouldIncludePreviewProfessionalPhoto(pieceType, professional = {}) {
+  return pieceType === PIECE_TYPES.professionalFlyer
+    && Boolean(professional?.showPhoto)
+    && String(professional?.photoFileName || '').trim().length > 0;
+}
+
+function shouldKeepPreviewAttachmentForPiece(pieceType, role) {
+  if (role === 'professionalPhoto') return pieceType === PIECE_TYPES.professionalFlyer;
+  return true;
+}
+
+function upsertAttachmentPreview(items, role, fileName, instruction = '') {
+  const normalizedName = String(fileName || '').trim();
+  if (!normalizedName) return;
+  const existing = items.find(item => item?.role === role);
+  if (existing) {
+    existing.fileName = existing.fileName || normalizedName;
+    existing.instruction = existing.instruction || instruction;
+    return;
+  }
+  items.unshift({ role, fileName: normalizedName, instruction });
 }
 
 function formatSchedules(schedules) {
@@ -100,8 +137,8 @@ function formatSocialLinks(socialLinks) {
   return filled.map(item => `${item.type}: ${item.value}`).join(' / ');
 }
 
-function formatAttachments(attachments) {
-  const filled = attachments.filter(item => item.fileName);
+function formatAttachments(attachments, state = null) {
+  const filled = state ? collectAttachmentFiles(state).filter(item => item.fileName) : attachments.filter(item => item.fileName);
   if (!filled.length) return 'Sin adjuntos';
   return filled.map(item => `${labelAttachmentRole(item.role)}: ${item.fileName}`).join(' / ');
 }

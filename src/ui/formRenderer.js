@@ -9,6 +9,7 @@ const socialTypes = ['Instagram', 'Facebook', 'TikTok', 'LinkedIn', 'YouTube', '
 const contentDensityOptions = Object.values(CONTENT_DENSITIES);
 const pieceTypeOptions = Object.values(PIECE_TYPES);
 const attachmentRoles = Object.values(ATTACHMENT_ROLES);
+const customAttachmentRoles = [ATTACHMENT_ROLES.thematicImage, ATTACHMENT_ROLES.referenceFlyer, ATTACHMENT_ROLES.other];
 const toneOptions = ['Educativo', 'Preventivo', 'Prudente', 'Comunitario', 'Institucional', 'Cercano'];
 const noteOptions = [
   'Contenido informativo. No reemplaza la consulta médica.',
@@ -59,7 +60,7 @@ function renderInstitutionStep(state, handlers, colorKeys) {
     textarea('Frase institucional', 'clinic.institutionalPhrase', state.clinic.institutionalPhrase),
     select('Color principal institucional', 'clinic.defaultPrimaryColor', state.clinic.defaultPrimaryColor, colorKeys, false, key => colorPresets[key].label),
     select('Color secundario institucional', 'clinic.defaultSecondaryColor', state.clinic.defaultSecondaryColor, colorKeys, false, key => colorPresets[key].label),
-    text('Logo institucional esperado', 'clinic.logoFileName', state.clinic.logoFileName),
+    fileText('Logo institucional esperado', 'clinic.logoFileName', state.clinic.logoFileName, 'image/*', false, false, 'Elegí el archivo del logo para completar el nombre. Luego adjuntalo manualmente en ChatGPT.'),
     text('Instrucción para logo', 'clinic.logoInstruction', state.clinic.logoInstruction),
     toggle('Mostrar datos de contacto', 'clinic.showContactData', state.clinic.showContactData)
   ], handlers);
@@ -95,6 +96,7 @@ function renderProfessionalContent(state, handlers, specialtyNames, preset) {
     text('Nombre completo del profesional', 'professional.fullName', state.professional.fullName, true),
     text('Matrícula', 'professional.license', state.professional.license),
     toggle('Mostrar foto profesional', 'professional.showPhoto', state.professional.showPhoto),
+    fileText('Foto profesional esperada', 'professional.photoFileName', state.professional.photoFileName || '', 'image/*', false, !state.professional.showPhoto, 'Elegí la foto para completar el nombre. Luego adjuntala manualmente en ChatGPT.'),
     select('Especialidad o área', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
     text('Cómo se verá la especialidad', 'specialty.visibleSpecialtyText', state.specialty.visibleSpecialtyText || smartSpecialtyText(state)),
     text('Frase breve opcional', 'promptOptions.suggestedPhrase', state.promptOptions.suggestedPhrase)
@@ -270,10 +272,12 @@ function renderDesignStep(state, handlers, colorKeys) {
     select('Densidad del contenido', 'design.contentDensity', state.design.contentDensity, contentDensityOptions, false, labelContentDensity),
     select('Nivel de impacto visual', 'design.visualImpact', state.design.visualImpact, impactLevels),
     select('Tipografía sugerida', 'design.typography', state.design.typography, typographyOptions),
+    toggle('Solicitar pieza animada', 'promptOptions.requestAnimation', state.promptOptions.requestAnimation),
     toggle('Incluir iconos medicos', 'design.includeMedicalIcons', state.design.includeMedicalIcons),
     toggle('Incluir fondo tematico', 'design.includeThematicBackground', state.design.includeThematicBackground),
     toggle('Usar recursos segun especialidad', 'design.useAutomaticTheme', state.design.useAutomaticTheme)
   ], handlers);
+  renderCustomImageAttachments(state, handlers);
 }
 
 function renderFields(target, fields, handlers) {
@@ -292,6 +296,17 @@ function renderFields(target, fields, handlers) {
       }
     });
   });
+  node.querySelectorAll('[data-file-target]').forEach(input => {
+    input.addEventListener('change', event => {
+      const file = event.target.files?.[0];
+      const path = event.target.dataset.fileTarget;
+      const fileName = file?.name || '';
+      const textInput = path ? node.querySelector(`[data-path="${cssEscape(path)}"]`) : null;
+      if (textInput) textInput.value = fileName;
+      if (path) handlers.onFieldChange(path, fileName);
+      event.target.value = '';
+    });
+  });
 }
 
 function renderField(field) {
@@ -305,6 +320,10 @@ function renderField(field) {
   }
   if (field.type === 'select') {
     return `<label class="field${hidden}"><span>${field.label}${required}</span><select data-path="${field.path}">${field.options.map(option => `<option value="${escapeHtml(option)}" ${option === field.value ? 'selected' : ''}>${escapeHtml(field.labeler ? field.labeler(option) : option)}</option>`).join('')}</select></label>`;
+  }
+  if (field.type === 'fileText') {
+    const help = field.help ? `<small>${escapeHtml(field.help)}</small>` : '';
+    return `<label class="field file-name-field${hidden}"><span>${field.label}${required}</span><div class="file-picker-row"><input type="text" data-path="${field.path}" value="${escapeHtml(field.value)}" placeholder="Ej: logo_rincon.png"><span class="file-picker-button">Elegir archivo<input type="file" accept="${escapeHtml(field.accept || 'image/*')}" data-file-target="${field.path}"></span></div>${help}</label>`;
   }
   return `<label class="field${hidden}"><span>${field.label}${required}</span><input type="text" data-path="${field.path}" value="${escapeHtml(field.value)}"></label>`;
 }
@@ -385,6 +404,32 @@ function renderVisibleServices(state, handlers) {
   if (input) input.placeholder = 'Agregar dato visible personalizado';
 }
 
+function renderCustomImageAttachments(state, handlers) {
+  const target = document.querySelector('#designFields');
+  if (!target) return;
+  const customIndexes = state.attachments.items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => ![ATTACHMENT_ROLES.clinicLogo, ATTACHMENT_ROLES.professionalPhoto].includes(item.role));
+
+  target.insertAdjacentHTML('beforeend', `
+    <div class="list-editor attachment-panel full-width">
+      <div class="list-title">
+        <label>Imágenes personalizadas para GPT</label>
+        <button class="secondary-button" type="button" id="addCustomAttachmentButton">Agregar imagen</button>
+      </div>
+      <p class="helper-text">Elegí fotos, referencias o imágenes temáticas para que la app agregue sus nombres al prompt. Después adjuntalas manualmente en ChatGPT.</p>
+      <div class="repeatable-list">
+        ${customIndexes.length ? customIndexes.map(({ item, index }) => renderAttachmentRow(item, index, customAttachmentRoles)).join('') : '<p class="institution-empty-state">No hay imágenes personalizadas seleccionadas.</p>'}
+      </div>
+    </div>
+  `);
+  bindAttachmentControls(target, handlers);
+  target.querySelector('#addCustomAttachmentButton')?.addEventListener('click', () => {
+    if (handlers.onAddAttachmentWithRole) handlers.onAddAttachmentWithRole(ATTACHMENT_ROLES.thematicImage);
+    else handlers.onAddAttachment();
+  });
+}
+
 function renderAttachments(state, handlers) {
   const target = document.querySelector('#imageFields');
   if (!target) return;
@@ -395,18 +440,26 @@ function renderAttachments(state, handlers) {
     </div>
     <p class="helper-text">Los archivos no se envían solos. Adjuntalos manualmente en ChatGPT antes de pegar el prompt.</p>
     <div class="repeatable-list">
-      ${state.attachments.items.map((item, index) => `
-        <div class="repeatable-row" data-warning-path="attachments.items.${index}">
-          <label class="field"><span>Rol</span><select data-attachment-index="${index}" data-attachment-key="role">${attachmentRoles.map(role => `<option value="${escapeHtml(role)}" ${role === item.role ? 'selected' : ''}>${escapeHtml(labelAttachmentRole(role))}</option>`).join('')}</select></label>
-          <label class="field file-field"><span>Archivo</span><input type="file" accept="image/*" data-attachment-file="${index}"></label>
-          <label class="field"><span>Nombre de archivo</span><input type="text" value="${escapeHtml(item.fileName)}" data-attachment-index="${index}" data-attachment-key="fileName"></label>
-          <label class="field"><span>Instrucción opcional</span><input type="text" value="${escapeHtml(item.instruction)}" data-attachment-index="${index}" data-attachment-key="instruction"></label>
-          <button type="button" class="icon-button" data-remove-attachment="${index}">Quitar</button>
-        </div>
-      `).join('')}
+      ${state.attachments.items.map((item, index) => renderAttachmentRow(item, index, attachmentRoles)).join('')}
     </div>
   `;
   target.querySelector('#addAttachmentButton')?.addEventListener('click', handlers.onAddAttachment);
+  bindAttachmentControls(target, handlers);
+}
+
+function renderAttachmentRow(item, index, roles = attachmentRoles) {
+  return `
+    <div class="repeatable-row attachment-row" data-warning-path="attachments.items.${index}">
+      <label class="field"><span>Rol</span><select data-attachment-index="${index}" data-attachment-key="role">${roles.map(role => `<option value="${escapeHtml(role)}" ${role === item.role ? 'selected' : ''}>${escapeHtml(labelAttachmentRole(role))}</option>`).join('')}</select></label>
+      <label class="field file-field"><span>Elegir archivo</span><input type="file" accept="image/*" data-attachment-file="${index}"></label>
+      <label class="field"><span>Nombre de archivo</span><input type="text" value="${escapeHtml(item.fileName)}" data-attachment-index="${index}" data-attachment-key="fileName" placeholder="Ej: imagen_flyer.jpg"></label>
+      <label class="field"><span>Instrucción para GPT</span><input type="text" value="${escapeHtml(item.instruction)}" data-attachment-index="${index}" data-attachment-key="instruction" placeholder="Ej: usar como referencia visual"></label>
+      <button type="button" class="icon-button" data-remove-attachment="${index}">Quitar</button>
+    </div>
+  `;
+}
+
+function bindAttachmentControls(target, handlers) {
   target.querySelectorAll('[data-remove-attachment]').forEach(button => {
     button.addEventListener('click', () => handlers.onRemoveAttachment(Number(button.dataset.removeAttachment)));
   });
@@ -417,7 +470,7 @@ function renderAttachments(state, handlers) {
   target.querySelectorAll('[data-attachment-file]').forEach(input => {
     input.addEventListener('change', event => {
       const index = Number(event.target.dataset.attachmentFile);
-      const file = event.target.files[0];
+      const file = event.target.files?.[0];
       handlers.onUpdateAttachment(index, 'file', file ? { fileName: file.name, mimeType: file.type } : { fileName: '', mimeType: '' });
       event.target.value = '';
     });
@@ -462,6 +515,10 @@ function text(label, path, value, recommended = false, hidden = false) {
   return { type: 'text', label, path, value, recommended, hidden };
 }
 
+function fileText(label, path, value, accept = 'image/*', recommended = false, hidden = false, help = '') {
+  return { type: 'fileText', label, path, value, accept, recommended, hidden, help };
+}
+
 function textarea(label, path, value, recommended = false, hidden = false) {
   return { type: 'textarea', label, path, value, recommended, hidden };
 }
@@ -477,6 +534,11 @@ function toggle(label, path, value) {
 function getValue(input) {
   if (input.type === 'checkbox') return input.checked;
   return input.value;
+}
+
+function cssEscape(value = '') {
+  if (window.CSS?.escape) return CSS.escape(value);
+  return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\"');
 }
 
 function labelContentDensity(value) {

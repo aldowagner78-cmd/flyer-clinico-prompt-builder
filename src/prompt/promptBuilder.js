@@ -1,4 +1,5 @@
 import { colorPresets } from '../data/designPresets.js';
+import { PIECE_TYPES } from '../state/schema.js';
 
 export function buildPrompt(state) {
   const clinic = state?.clinic || {};
@@ -11,19 +12,15 @@ export function buildPrompt(state) {
   const attachments = state?.attachments || {};
   const options = state?.promptOptions || {};
   const pieceType = options.pieceType || 'professionalFlyer';
+  const animated = Boolean(options.requestAnimation);
 
   return cleanPrompt(`
 Comportate como experto en diseño de piezas visuales para clinicas, centros medicos y comunicacion sanitaria.
 
-Necesito crear una única ${outputLabel(pieceType)} vertical final para Instagram, WhatsApp y redes sociales.
+${buildOutputIntro(pieceType, animated)}
 
 SALIDA ESPERADA:
-- Entregar una sola pieza visual final lista para usar.
-- Crear una única imagen vertical completa, apta para publicar.
-- No generar alternativas.
-- No combinar varias piezas, versiones u opciones dentro de la misma imagen.
-- No incluir más de una pieza dentro del mismo lienzo.
-- No quiero una propuesta conceptual: quiero una imagen final lista para usar.
+${buildOutputRequirements(animated)}
 
 TIPO DE PIEZA:
 - Tipo: ${pieceTypeLabel(pieceType)}
@@ -46,6 +43,7 @@ ${buildSocialSection(clinic.socialLinks)}
 - Si no se adjunta logo institucional, usar el nombre del centro como marca textual sin inventar un logo oficial.
 
 DISEÑO VISUAL:
+- Tipo de resultado: ${animated ? 'pieza animada breve' : 'imagen estática'}
 - Formato: ${valueOrEmpty(design.format)}
 - Color principal: ${colorName(design.primaryColor, design.customPrimaryColor)}
 - Color secundario: ${colorName(design.secondaryColor, design.customSecondaryColor)}
@@ -64,9 +62,11 @@ ${needsStoryRule(design.format) ? `FORMATO HISTORIA / ESTADO:
 - Respetar margenes seguros superiores e inferiores para historias de Instagram y estados de WhatsApp.
 - Mantener textos dentro de zonas seguras.` : ''}
 
+${animated ? buildAnimationSection() : ''}
+
 ADJUNTOS:
 El usuario adjuntará manualmente estos archivos en ChatGPT antes de enviar el prompt, si fueron seleccionados.
-${buildAttachmentSection(attachments.items)}
+${buildAttachmentSection(mergePromptAttachments(pieceType, clinic, professional, attachments.items))}
 Si falta una imagen no obligatoria, resolver con recursos gráficos sobrios. No inventar logos, fotos ni referencias.
 
 RESTRICCIONES CRÍTICAS:
@@ -80,6 +80,49 @@ RESTRICCIONES CRÍTICAS:
 `);
 }
 
+
+function buildOutputIntro(pieceType, animated = false) {
+  if (animated) {
+    return `Necesito crear una única pieza animada vertical final, en formato de video corto o clip animado, basada en ${articleForOutput(pieceType)} ${outputLabel(pieceType)}, para Instagram, WhatsApp, historias, estados o reels breves.`;
+  }
+  return `Necesito crear una única ${outputLabel(pieceType)} vertical final para Instagram, WhatsApp y redes sociales.`;
+}
+
+function buildOutputRequirements(animated = false) {
+  if (animated) {
+    return `- Entregar una sola pieza animada final lista para usar.
+- Crear un único video corto vertical o clip animado completo, apto para publicar.
+- El resultado debe ser animado de verdad, no una imagen fija ni un póster estático.
+- No entregar una imagen estática si la herramienta permite generar animación o video.
+- No generar alternativas.
+- No combinar varias piezas, versiones u opciones dentro de la misma composición.
+- No incluir más de una pieza dentro del mismo lienzo o video.
+- No quiero una propuesta conceptual: quiero una pieza animada final lista para usar.`;
+  }
+
+  return `- Entregar una sola pieza visual final lista para usar.
+- Crear una única imagen vertical completa, apta para publicar.
+- No generar alternativas.
+- No combinar varias piezas, versiones u opciones dentro de la misma imagen.
+- No incluir más de una pieza dentro del mismo lienzo.
+- No quiero una propuesta conceptual: quiero una imagen final lista para usar.`;
+}
+
+function buildAnimationSection() {
+  return `MODO ANIMADO:
+- Crear una pieza animada breve, no una pieza estática.
+- El resultado esperado es un video corto vertical o clip animado real, no una sola imagen fija.
+- Duración sugerida: 5 a 8 segundos.
+- Formato vertical 9:16, apto para historias, estados, reels cortos y WhatsApp.
+- Animación suave, profesional y clínica.
+- Usar entrada progresiva de textos, apariciones suaves, pequeños desplazamientos o fundidos.
+- Mantener logo, datos de contacto y llamada a la acción legibles durante toda la animación.
+- Usar movimiento sutil de fondo, íconos o recursos visuales relacionados con la especialidad.
+- Evitar movimientos bruscos, efectos excesivos, parpadeos, transiciones agresivas o música sugerida.
+- El cierre debe dejar visible la llamada a la acción y los datos de contacto.
+- Si la herramienta permite exportar video o animación, priorizar ese formato final por encima de una imagen estática.`;
+}
+
 function buildPieceContent(pieceType, data) {
   const { professional, specialty, services, schedule, coverage, options } = data;
 
@@ -90,6 +133,7 @@ DATOS DEL PROFESIONAL:
 - Nombre completo: ${valueOrEmpty(professional.fullName)}
 - Matrícula: ${valueOrEmpty(professional.license)}
 - Mostrar foto profesional: ${yesNo(professional.showPhoto)}
+- Foto profesional esperada: ${professional.showPhoto ? valueOrEmpty(professional.photoFileName) : 'No corresponde'}
 
 ESPECIALIDADES / ÁREAS:
 - Especialidad o área: ${valueOrEmpty(specialty.primaryProfessionalSpecialty)}
@@ -167,6 +211,40 @@ function buildScheduleSection(items = []) {
   }).join('\n');
 }
 
+function mergePromptAttachments(pieceType, clinic = {}, professional = {}, items = []) {
+  const next = Array.isArray(items)
+    ? items.filter(item => shouldKeepAttachmentForPiece(pieceType, item?.role)).map(item => ({ ...item }))
+    : [];
+  upsertPromptAttachment(next, 'clinicLogo', clinic.logoFileName, clinic.logoInstruction || 'Usar como logo institucional, respetando proporciones.');
+  if (shouldIncludeProfessionalPhoto(pieceType, professional)) {
+    upsertPromptAttachment(next, 'professionalPhoto', professional.photoFileName, 'Usar como foto profesional, sin deformar rostro ni alterar identidad.');
+  }
+  return next;
+}
+
+function shouldIncludeProfessionalPhoto(pieceType, professional = {}) {
+  return pieceType === PIECE_TYPES.professionalFlyer
+    && Boolean(professional.showPhoto)
+    && hasText(professional.photoFileName);
+}
+
+function shouldKeepAttachmentForPiece(pieceType, role) {
+  if (role === 'professionalPhoto') return pieceType === PIECE_TYPES.professionalFlyer;
+  return true;
+}
+
+function upsertPromptAttachment(items, role, fileName, instruction = '') {
+  const normalizedName = String(fileName || '').trim();
+  if (!normalizedName) return;
+  const existing = items.find(item => item?.role === role);
+  if (existing) {
+    existing.fileName = existing.fileName || normalizedName;
+    existing.instruction = existing.instruction || instruction;
+    return;
+  }
+  items.unshift({ role, fileName: normalizedName, instruction });
+}
+
 function buildAttachmentSection(items = []) {
   const filled = items.filter(item => hasText(item?.fileName));
   if (!filled.length) return '- No se seleccionaron archivos locales para adjuntar.';
@@ -212,6 +290,11 @@ function densityInstruction(value) {
     balanced: '- Densidad equilibrada: información justa, buena lectura, sin saturar.',
     detailed: '- Densidad detallada: más información, pero manteniendo legibilidad en celular.'
   }[value] || '- Densidad equilibrada: información justa, buena lectura, sin saturar.';
+}
+
+
+function articleForOutput(pieceType) {
+  return pieceType === PIECE_TYPES.clinicalInfographic ? 'una' : 'un';
 }
 
 function outputLabel(pieceType) {

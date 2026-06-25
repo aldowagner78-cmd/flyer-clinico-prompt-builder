@@ -320,8 +320,8 @@ function validateColors(state, issues, fieldPaths) {
 
 function validateAttachments(state, issues, fieldPaths) {
   const attachments = getArray(state?.attachments?.items);
-  const hasProfessionalPhoto = attachments.some(item => item?.role === 'professionalPhoto' && hasText(item?.fileName));
-  const hasClinicLogo = attachments.some(item => item?.role === 'clinicLogo' && hasText(item?.fileName));
+  const hasProfessionalPhoto = hasText(state?.professional?.photoFileName) || attachments.some(item => item?.role === 'professionalPhoto' && hasText(item?.fileName));
+  const hasClinicLogo = hasText(state?.clinic?.logoFileName) || attachments.some(item => item?.role === 'clinicLogo' && hasText(item?.fileName));
 
   attachments.forEach((item, index) => {
     const hasFile = hasText(item?.fileName);

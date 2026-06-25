@@ -232,3 +232,47 @@ test.describe('Etapa 10T - diseño y resultado', () => {
     expect(errors).toEqual([]);
   });
 });
+
+
+test.describe('Etapa 11A - adjuntos por selector local', () => {
+  test('completa nombres de logo, foto profesional e imagen personalizada sin subir archivos', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+
+    await page.locator('[data-file-target="clinic.logoFileName"]').setInputFiles({
+      name: 'logo_rincon.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('logo')
+    });
+    await expect(page.locator('[data-path="clinic.logoFileName"]').first()).toHaveValue('logo_rincon.png');
+
+    await choosePiece(page, 'professionalFlyer');
+    const showPhotoToggle = page.locator('[data-path="professional.showPhoto"]').first();
+    if (!(await showPhotoToggle.isChecked())) await showPhotoToggle.check();
+    await expect(page.locator('[data-file-target="professional.photoFileName"]')).toBeVisible();
+    await page.locator('[data-file-target="professional.photoFileName"]').setInputFiles({
+      name: 'foto_profesional.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from('foto')
+    });
+    await expect(page.locator('[data-path="professional.photoFileName"]').first()).toHaveValue('foto_profesional.jpg');
+
+    await next(page);
+    await expectCurrentStep(page, 'diseno');
+    await page.locator('#addCustomAttachmentButton').click();
+    await page.locator('[data-attachment-file]').last().setInputFiles({
+      name: 'referencia_visual.webp',
+      mimeType: 'image/webp',
+      buffer: Buffer.from('referencia')
+    });
+
+    await goResult(page);
+    const prompt = await getPrompt(page);
+    expect(prompt).toContain('Logo de clínica: logo_rincon.png');
+    expect(prompt).toContain('Foto profesional: foto_profesional.jpg');
+    expect(prompt).toContain('Imagen temática: referencia_visual.webp');
+    expect(errors).toEqual([]);
+  });
+});
+

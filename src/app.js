@@ -27,11 +27,25 @@ let institutionActionsPanelOpen = false;
 let institutionManagePointerHandled = false;
 let institutionActionPointerHandled = false;
 let statusClearTimer = null;
+const GENERIC_SPECIALTY_WORDS = new Set(['consulta', 'control', 'controles', 'seguimiento', 'evaluacion', 'estudios', 'profesional', 'profesionales', 'prevencion', 'pacientes', 'salud', 'turnos', 'cuidar', 'orientar', 'periodico', 'periodicos', 'informacion', 'cuando', 'habitos']);
 
 
 const handlers = {
   onFieldChange(path, value) {
     setByPath(state, path, value);
+    if (path === 'clinic.logoFileName') syncSingleAttachment(ATTACHMENT_ROLES.clinicLogo, value, state.clinic.logoInstruction || 'Usar como logo institucional, respetando proporciones.');
+    if (path === 'clinic.logoInstruction') syncAttachmentInstruction(ATTACHMENT_ROLES.clinicLogo, value);
+    if (path === 'professional.photoFileName') syncSingleAttachment(ATTACHMENT_ROLES.professionalPhoto, value, 'Usar como foto profesional, sin deformar rostro ni alterar identidad.');
+    if (path === 'professional.showPhoto') {
+      if (value && state.professional.photoFileName) {
+        syncSingleAttachment(ATTACHMENT_ROLES.professionalPhoto, state.professional.photoFileName, 'Usar como foto profesional, sin deformar rostro ni alterar identidad.');
+      }
+      if (!value) syncSingleAttachment(ATTACHMENT_ROLES.professionalPhoto, '', '');
+    }
+    if (path === 'promptOptions.suggestedPhrase') {
+      state.promptOptions.suggestedPhraseSource = 'manual';
+      state.promptOptions.suggestedPhraseSourceSpecialty = state.specialty.primaryProfessionalSpecialty || '';
+    }
     if (path === 'specialty.primaryProfessionalSpecialty') applySpecialtyPreset(value, true);
     if (path === 'design.primaryColor') applyPrimaryColorPreset(value);
     if (path === 'design.useInstitutionalColors' && value) applyInstitutionalColors();
@@ -98,14 +112,11 @@ const handlers = {
     update(false);
   },
   onAddAttachment() {
-    state.attachments.items.push({
-      id: `attachment_${Date.now()}`,
-      role: ATTACHMENT_ROLES.other,
-      fileName: '',
-      mimeType: '',
-      status: 'missing',
-      instruction: ''
-    });
+    addAttachmentItem(ATTACHMENT_ROLES.other);
+    update(true);
+  },
+  onAddAttachmentWithRole(role) {
+    addAttachmentItem(role || ATTACHMENT_ROLES.other);
     update(true);
   },
   onRemoveAttachment(index) {
@@ -636,6 +647,10 @@ function applySpecialtyPreset(name, force = false) {
     state.services.mainHighlightedService = suggestedServices[0] || name;
   }
 
+  if (pieceType === PIECE_TYPES.professionalFlyer) {
+    syncSuggestedPhraseWithSpecialty(preset, name);
+  }
+
   if (pieceType === PIECE_TYPES.clinicalInfographic) {
     const topics = preset.infographicTopics || preset.topics || [];
     const audiences = preset.audiences || [];
@@ -676,6 +691,75 @@ function applySpecialtyPreset(name, force = false) {
     state.design.visualStyle = preset.design.visualStyle || state.design.visualStyle;
     state.design.typography = preset.design.typography || state.design.typography;
   }
+}
+
+
+function syncSuggestedPhraseWithSpecialty(preset, specialtyName) {
+  const nextPhrase = suggestedPhraseForPreset(preset, specialtyName);
+  const currentPhrase = String(state.promptOptions.suggestedPhrase || '').trim();
+  const currentSource = state.promptOptions.suggestedPhraseSource || '';
+  const currentSourceSpecialty = state.promptOptions.suggestedPhraseSourceSpecialty || '';
+  const detectedSpecialty = detectSpecialtyMention(currentPhrase);
+
+  const shouldReplace = !currentPhrase
+    || currentSource === 'preset'
+    || (!currentSource && !currentSourceSpecialty)
+    || (currentSourceSpecialty && currentSourceSpecialty !== specialtyName && currentSource !== 'manual')
+    || (detectedSpecialty && detectedSpecialty !== specialtyName);
+
+  if (!shouldReplace) return;
+  state.promptOptions.suggestedPhrase = nextPhrase;
+  state.promptOptions.suggestedPhraseSource = 'preset';
+  state.promptOptions.suggestedPhraseSourceSpecialty = specialtyName;
+}
+
+function suggestedPhraseForPreset(preset, specialtyName) {
+  const messages = Array.isArray(preset?.messages) ? preset.messages.filter(Boolean) : [];
+  if (messages[0]) return messages[0];
+  const focus = String(preset?.focus || specialtyName || '').trim();
+  return focus ? `Cuidar ${focus.toLowerCase()} empieza con una consulta profesional.` : 'Consultar a tiempo ayuda a cuidar la salud.';
+}
+
+function detectSpecialtyMention(value = '') {
+  const normalizedValue = normalizeText(value);
+  if (!normalizedValue) return '';
+
+  for (const specialty of specialties) {
+    const keywords = specialtyKeywords(specialty);
+    if (keywords.some(keyword => normalizedValue.includes(keyword))) return specialty.name;
+  }
+
+  return '';
+}
+
+function specialtyKeywords(specialty = {}) {
+  const rawKeywords = [
+    specialty.name,
+    specialty.focus,
+    ...(specialty.services || []),
+    ...(specialty.infographicTopics || []),
+    ...(specialty.informativeTitles || []),
+    ...(specialty.messages || []),
+    ...(specialty.blocks || [])
+  ];
+
+  const words = rawKeywords
+    .flatMap(item => normalizeText(item).split(' '))
+    .filter(word => word.length >= 6 && !GENERIC_SPECIALTY_WORDS.has(word));
+
+  return [...new Set([
+    ...rawKeywords.map(normalizeText).filter(item => item.length >= 8),
+    ...words
+  ])];
+}
+
+function normalizeText(value = '') {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
 }
 
 function buildVisibleSpecialtyText(values = []) {
@@ -758,6 +842,48 @@ function selectPieceType(pieceType) {
 }
 
 
+
+function addAttachmentItem(role = ATTACHMENT_ROLES.other, fileName = '', instruction = '') {
+  state.attachments.items.push({
+    id: `attachment_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    role,
+    fileName,
+    mimeType: '',
+    status: fileName ? 'selected' : 'missing',
+    instruction
+  });
+}
+
+function syncSingleAttachment(role, fileName, instruction = '') {
+  const normalizedName = String(fileName || '').trim();
+  state.attachments.items = Array.isArray(state.attachments.items) ? state.attachments.items : [];
+  const index = state.attachments.items.findIndex(item => item.role === role);
+
+  if (!normalizedName) {
+    if (index !== -1) state.attachments.items.splice(index, 1);
+    return;
+  }
+
+  const next = {
+    id: index !== -1 ? state.attachments.items[index].id : `attachment_${role}`,
+    role,
+    fileName: normalizedName,
+    mimeType: index !== -1 ? state.attachments.items[index].mimeType || '' : '',
+    status: 'selected',
+    instruction: instruction || (index !== -1 ? state.attachments.items[index].instruction || '' : '')
+  };
+
+  if (index === -1) {
+    state.attachments.items.unshift(next);
+  } else {
+    state.attachments.items[index] = { ...state.attachments.items[index], ...next };
+  }
+}
+
+function syncAttachmentInstruction(role, instruction = '') {
+  const item = state.attachments.items.find(attachment => attachment.role === role);
+  if (item) item.instruction = instruction;
+}
 
 function runInstitutionPanelAction(actionId) {
   const selectedInstitutionId = document.querySelector('#savedInstitutionSelect')?.value || '';
@@ -1188,6 +1314,7 @@ function shouldRenderForm(path) {
     || path === 'specialty.primaryProfessionalSpecialty'
     || path === 'promptOptions.contentGoal'
     || path === 'promptOptions.educationalTopic'
+    || path === 'professional.showPhoto'
     || path === 'services.allowServiceExpansion'
     || path === 'design.primaryColor'
     || path === 'design.secondaryColor'
@@ -1213,14 +1340,17 @@ function mapLegacyWarningPath(path) {
 }
 
 function buildAttachmentsChecklistText() {
+  const pieceType = state?.promptOptions?.pieceType || PIECE_TYPES.professionalFlyer;
   const files = state.attachments.items
     .filter(item => item.fileName)
+    .filter(item => item.role !== ATTACHMENT_ROLES.professionalPhoto || pieceType === PIECE_TYPES.professionalFlyer)
     .map(item => [labelAttachmentRole(item.role), item.fileName]);
   if (!files.length) return 'No hay archivos seleccionados para adjuntar antes de pegar el prompt.';
   return ['Antes de pegar el prompt en ChatGPT, adjunta estos archivos:']
     .concat(files.map(([label, value]) => `- ${label}: ${value}`))
     .join('\n');
 }
+
 
 function setByPath(target, path, value) {
   const parts = path.split('.');

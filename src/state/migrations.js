@@ -45,7 +45,8 @@ function migrateLegacyState(rawState) {
     fullName: firstString(doctor.fullName, doctor.name),
     license: stringFrom(doctor.license),
     roleNote: stringFrom(doctor.roleNote),
-    showPhoto: booleanFrom(doctor.showPhoto, true)
+    showPhoto: booleanFrom(doctor.showPhoto, true),
+    photoFileName: firstString(doctor.photoFileName, images.doctorPhotoName)
   });
 
   const primaryProfessionalSpecialty = firstString(
@@ -114,6 +115,9 @@ function migrateLegacyState(rawState) {
     visualCreativityLevel: inferCreativityLevel(advanced.creativity),
     freeInstructions: stringFrom(advanced.freeInstructions),
     suggestedPhrase: stringFrom(advanced.suggestedPhrase),
+    suggestedPhraseSource: '',
+    suggestedPhraseSourceSpecialty: '',
+    requestAnimation: false,
     forbiddenPhrases: stringFrom(advanced.forbiddenPhrases),
     highlightData: stringFrom(advanced.highlightData),
     smallData: stringFrom(advanced.smallData)
@@ -167,7 +171,8 @@ function sanitizeProfessional(professional) {
     fullName: stringFrom(professional.fullName),
     license: stringFrom(professional.license),
     roleNote: stringFrom(professional.roleNote),
-    showPhoto: booleanFrom(professional.showPhoto, true)
+    showPhoto: booleanFrom(professional.showPhoto, true),
+    photoFileName: stringFrom(professional.photoFileName)
   };
 }
 
@@ -243,6 +248,9 @@ function sanitizePromptOptions(promptOptions) {
     visualCreativityLevel: stringFrom(promptOptions.visualCreativityLevel) || 'moderate',
     freeInstructions: stringFrom(promptOptions.freeInstructions),
     suggestedPhrase: stringFrom(promptOptions.suggestedPhrase),
+    suggestedPhraseSource: stringFrom(promptOptions.suggestedPhraseSource),
+    suggestedPhraseSourceSpecialty: stringFrom(promptOptions.suggestedPhraseSourceSpecialty),
+    requestAnimation: booleanFrom(promptOptions.requestAnimation, false),
     forbiddenPhrases: stringFrom(promptOptions.forbiddenPhrases),
     highlightData: stringFrom(promptOptions.highlightData),
     smallData: stringFrom(promptOptions.smallData)
