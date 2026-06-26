@@ -1,3 +1,35 @@
+# Instalación y uso - Fix Resultado compacto
+
+## Qué cambia este parche
+
+- Compacta la zona `Acciones` en la pantalla `Resultado`.
+- Mantiene `Copiar prompt revisado` como acción principal.
+- Reubica acciones secundarias para reducir scroll.
+- Mantiene el resumen final dentro de `Resultado`.
+- No modifica lógica de prompts, adjuntos, logo, foto profesional, orden de prestaciones ni campos vacíos.
+
+## Ejecución local
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+py -m http.server 8000
+```
+
+Abrir:
+`http://127.0.0.1:8000/`
+
+## Prueba manual recomendada
+
+- Completar un flujo hasta `Resultado`.
+- Confirmar que `Acciones` aparece junto al prompt final y no debajo de toda la pantalla.
+- Confirmar que no aparece el panel lateral `Resumen / Vista rápida`.
+- Confirmar que `Copiar prompt revisado`, checklist, TXT, plantillas, JSON y limpiar siguen disponibles.
+
+---
+
 # Instalación y uso - Corrección post-Codex
 
 ## Qué corrige este parche
@@ -538,3 +570,8 @@ npm test
 ```
 
 ---
+
+
+## Nota de uso - Resultado
+
+En la pantalla Resultado, la acción principal es copiar el prompt revisado. Las opciones avanzadas se abren desde el botón `+`. Si el prompt menciona archivos referidos, ChatGPT debe pedirlos por nombre exacto antes de generar la pieza si el usuario no los adjuntó.

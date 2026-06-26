@@ -1,4 +1,57 @@
+
+# Fix botón Más opciones en Resultado - 2026-06-26
+
+## Archivos modificados
+- `index.html`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- Se eliminó el `+` textual del botón compacto de Más opciones para evitar que se vea duplicado junto al icono generado por CSS.
+
+## Por qué
+- El botón mostraba dos signos `+` y generaba ruido visual en Resultado.
+
+## Cómo probar
+- Abrir la app localmente con `py -m http.server 8000`.
+- Ir a Resultado.
+- Confirmar que junto a `Copiar prompt revisado` aparece un solo botón `+`.
+
+## Cómo revertir
+- Restaurar los archivos desde el commit anterior o revertir este parche.
+
 # Cambios realizados
+
+## Fix Resultado compacto - 2026-06-26
+
+### Archivos modificados
+- `index.html`
+- `assets/css/styles.css`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+- `README_INSTALACION.txt`
+- `docs/ROADMAP.md`
+
+### Qué se cambió
+- Se movió el bloque `Acciones` dentro de la tarjeta principal del prompt final.
+- Se compactaron botones y acciones secundarias para reducir altura del resultado.
+- Se mantiene `Copiar prompt revisado` como acción principal.
+- Se dejaron acciones secundarias visibles o dentro de `Más opciones`.
+- Se conserva el resumen final solo en `Resultado`.
+
+### Por qué se cambió
+- El bloque de acciones quedaba muy abajo y alargaba innecesariamente la pantalla final.
+- El usuario pidió reducir scroll y ubicar los botones en una zona más prolija.
+
+### Cómo probar
+- Abrir local con `py -m http.server 8000`.
+- Ir a `Resultado`.
+- Confirmar que `Acciones` aparece compacto junto al prompt final.
+- Confirmar que no vuelve el panel lateral de resumen.
+
+### Cómo revertir
+- Revertir los cambios de `index.html` y `assets/css/styles.css` de esta sección.
+
 
 ## Corrección post-Codex de layout, iconos y codificación - 2026-06-26
 
@@ -612,3 +665,11 @@ npx playwright test tests/app.spec.js -g "completa nombres de logo, foto profesi
 ### Cómo revertir
 - Restaurar este parche desde Git con `git checkout -- src/app.js src/state/defaultState.js` antes de commitear.
 
+
+## Ajuste Resultado - acciones compactas
+
+- Se eliminó la sección secundaria redundante de Acciones.
+- Se dejó un único botón principal para copiar el prompt revisado.
+- Se agregó un botón `+` para opciones avanzadas.
+- Se quitaron de la UI los botones `Descargar TXT` y `Copiar checklist de adjuntos`.
+- Se confirmó que el prompt conserva la regla para pedir archivos faltantes por nombre exacto.

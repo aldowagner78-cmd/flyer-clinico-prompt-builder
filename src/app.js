@@ -326,9 +326,9 @@ function bindStaticActions() {
   document.querySelectorAll('[data-copy-prompt-action]').forEach(button => {
     button.addEventListener('click', copyPrompt);
   });
-  document.querySelector('#copyAttachmentsButton').addEventListener('click', copyAttachmentsChecklist);
+  document.querySelector('#copyAttachmentsButton')?.addEventListener('click', copyAttachmentsChecklist);
   document.querySelector('#loadDemoButton')?.addEventListener('click', () => loadDemoData(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer));
-  document.querySelector('#downloadPromptButton').addEventListener('click', downloadPrompt);
+  document.querySelector('#downloadPromptButton')?.addEventListener('click', downloadPrompt);
   document.querySelector('#saveTemplateButton').addEventListener('click', () => {
     saveTemplate(state);
     showStatus('Plantilla guardada en este navegador.');
