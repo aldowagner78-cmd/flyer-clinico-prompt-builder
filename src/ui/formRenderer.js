@@ -722,6 +722,23 @@ function renderInlineServiceSelectorHtml(state, preset, title, help) {
           `).join('')}
         </div>
       ` : '<p class="helper-text">No hay sugerencias automáticas para esta especialidad. Agregá datos visibles personalizados debajo.</p>'}
+      <div class="inline-visible-services-editor">
+        <div class="list-title">
+          <label for="newServiceGuided">Datos visibles elegidos</label>
+          <button class="secondary-button" type="button" data-content-add-service>Agregar dato</button>
+        </div>
+        <div class="inline-entry">
+          <input id="newServiceGuided" type="text" data-content-new-service placeholder="Agregar dato visible personalizado">
+        </div>
+        <ul class="editable-list inline-visible-services-list">
+          ${state.services.visibleServices.length ? state.services.visibleServices.map((item, index) => `
+            <li>
+              <span>${escapeHtml(item)}</span>
+              <button type="button" class="icon-button" data-content-remove-service="${index}" aria-label="Eliminar ${escapeHtml(item)}">Quitar</button>
+            </li>
+          `).join('') : '<li class="empty-inline-item">Todavía no seleccionaste datos visibles.</li>'}
+        </ul>
+      </div>
       <p class="helper-text">${state.services.visibleServices.length > 5 ? 'Hay muchos datos visibles. Para redes conviene mostrar hasta 5.' : 'Sugerencia: 3 a 5 opciones visibles.'}</p>
     </div>
   `;
@@ -822,6 +839,7 @@ function bindContentModeControls(target, state, handlers, specialtyNames, preset
       contentViewMode = button.dataset.contentMode === 'full' ? 'full' : 'guided';
       if (contentViewMode === 'guided') contentGuidedIndex = Math.min(contentGuidedIndex, contentGuidedSteps(state, specialtyNames, preset, pieceType).length - 1);
       renderContentStep(state, handlers, specialtyNames);
+      renderVisibleServices(state, handlers);
     });
   });
 }
@@ -833,6 +851,7 @@ function bindContentGuidedControls(target, state, handlers, specialtyNames, pres
       if (button.dataset.contentGuided === 'previous') contentGuidedIndex = Math.max(0, contentGuidedIndex - 1);
       if (button.dataset.contentGuided === 'next') contentGuidedIndex = Math.min(steps.length - 1, contentGuidedIndex + 1);
       renderContentStep(state, handlers, specialtyNames);
+      renderVisibleServices(state, handlers);
     });
   });
 }
@@ -840,6 +859,27 @@ function bindContentGuidedControls(target, state, handlers, specialtyNames, pres
 function bindInlineServiceSelector(target, state, handlers) {
   target.querySelectorAll('[data-content-service-suggestion]').forEach(input => {
     input.addEventListener('change', () => handlers.onToggleServiceOption(input.value, input.checked));
+  });
+
+  const input = target.querySelector('[data-content-new-service]');
+  const addButton = target.querySelector('[data-content-add-service]');
+  const addVisibleService = () => {
+    const value = String(input?.value || '').trim();
+    if (!value) return;
+    handlers.onToggleServiceOption(value, true);
+    if (input) input.value = '';
+  };
+
+  addButton?.addEventListener('click', addVisibleService);
+  input?.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addVisibleService();
+    }
+  });
+
+  target.querySelectorAll('[data-content-remove-service]').forEach(button => {
+    button.addEventListener('click', () => handlers.onRemoveService(Number(button.dataset.contentRemoveService)));
   });
 }
 
@@ -1342,8 +1382,12 @@ function renderSchedulesInTarget(targetSelector, state, handlers) {
 }
 
 function renderVisibleServices(state, handlers) {
+  const editor = document.querySelector('[data-visible-services-editor]');
+  if (editor) editor.hidden = contentViewMode === 'guided';
+
   const list = document.querySelector('#servicesList');
   if (!list) return;
+
   list.innerHTML = state.services.visibleServices.map((item, index) => `
     <li>
       <span>${escapeHtml(item)}</span>

@@ -1,5 +1,35 @@
 # Changelog
 
+## [fix-promocion-prestaciones] - 2026-06-26
+
+### Agregado
+- Prueba automatizada para validar que Promoción / campaña muestre los puntos visibles solo dentro de la tarjeta guiada correspondiente.
+- Mejora funcional pendiente documentada: reemplazar "Fecha o período" por campos "Desde" y "Hasta" con selectores de fecha.
+
+### Modificado
+- `index.html` identifica el bloque externo de prestaciones visibles para poder ocultarlo en modo guiado.
+- `src/ui/formRenderer.js` integra el alta, baja y listado de datos visibles dentro de las tarjetas guiadas de contenido.
+- `tests/app.spec.js` agrega cobertura para el caso detectado en Promoción / campaña.
+- `README_INSTALACION.txt` y `CAMBIOS_REALIZADOS.md` documentan la corrección.
+
+### Corregido
+- En Promoción / campaña, "Prestaciones visibles en el flyer" ya no aparece debajo de tarjetas como "Condiciones y CTA".
+- Se evita la sensación de navegación duplicada en el wizard de contenido guiado.
+- Los datos visibles quedan contextualizados dentro de la tarjeta "Puntos visibles".
+
+### Pendiente
+- Implementar rango de fechas con "Desde" y "Hasta" usando selectores de fecha.
+- Adjuntos múltiples.
+- Regla para archivos faltantes antes de generar.
+- Orden manual de prestaciones visibles.
+- Campos manuales vacíos por defecto y revisión de desplegables.
+
+### Compatibilidad
+- App web estática.
+- Sin backend.
+- Compatible con GitHub Pages.
+- Sin dependencias nuevas.
+
 ## [11D.4] - 2026-06-26
 
 ### Agregado

@@ -8,6 +8,16 @@
 - No prometer automatizaciones que requieren backend o integraciones externas.
 - Evolucionar sin romper configuraciones JSON existentes cuando sea posible.
 
+
+## Mejoras funcionales pendientes detectadas en prueba visual
+
+- Cambiar los campos "Fecha o período" por dos campos separados:
+  - `Desde`: selector de fecha.
+  - `Hasta`: selector de fecha.
+- Aplicar el cambio en Promoción / campaña y en cualquier otro flujo que pida período.
+- El prompt final debe expresar el rango de forma clara, por ejemplo: `Período: desde AAAA-MM-DD hasta AAAA-MM-DD`.
+- Mantener compatibilidad con datos anteriores que usen `promptOptions.campaignValidity`.
+
 ## Fase 0: Documentacion
 
 Estado: en curso.
