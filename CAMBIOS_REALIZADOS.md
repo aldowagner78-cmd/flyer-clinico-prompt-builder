@@ -1,5 +1,107 @@
 # Cambios realizados
 
+## Corrección post-Codex de layout, iconos y codificación - 2026-06-26
+
+### Archivos modificados
+- `index.html`
+- `assets/css/styles.css`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se corrigieron caracteres rotos visibles en la interfaz.
+- Se reemplazaron iconos rotos de tarjetas, botones y resultado por caracteres válidos.
+- Se corrigió el botón `Inicio` para que sea claro y accesible.
+- Se mantuvo oculto el panel lateral durante el asistente.
+- Se movieron acciones importantes al contenido de `Resultado`, para no perder funciones al ocultar el lateral.
+
+### Por qué se cambió
+- La etapa generada por Codex introdujo errores visuales de codificación e iconos.
+- El panel lateral oculto dejaba acciones útiles inaccesibles.
+- Se busca conservar el beneficio de más ancho útil sin perder funciones.
+
+### Cómo probar
+- Abrir local con `py -m http.server 8000`.
+- Revisar Home, Tipo de pieza, Institución, Contenido, Diseño y Resultado.
+- Confirmar que no hay textos tipo textos corruptos ni iconos rotos.
+- Confirmar que `Inicio` se ve correctamente.
+- Confirmar que el resumen no aparece lateralmente durante el asistente.
+- Confirmar que Resultado muestra resumen y acciones.
+
+### Cómo revertir
+- Revertir este parche desde Git o restaurar el backup previo si hubiera problemas.
+
+---
+
+## Layout sin resumen lateral - 2026-06-26
+
+### Archivos modificados
+- `index.html`
+- `assets/css/styles.css`
+- `tests/app.spec.js`
+- `docs/ROADMAP.md`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Que se cambio
+- Se movio el resumen desde el panel lateral hacia la pantalla Resultado.
+- Se oculto el contenedor lateral para que no ocupe ancho durante el asistente.
+- Se paso el asistente a una sola columna principal.
+- Se movio el mensaje de estado al contenido principal.
+- Se agregaron reglas para evitar scroll horizontal y mejorar ancho util en formularios, tarjetas y resultado.
+- Se agregaron verificaciones Playwright de resumen en Resultado y ausencia de overflow horizontal.
+
+### Por que se cambio
+- El panel lateral comprimía formularios y tarjetas en pantallas medianas y moviles.
+- El resumen es mas util al final, junto con la revision asistida antes de copiar el prompt.
+
+### Como probar
+- Iniciar el asistente y confirmar que no aparece el panel lateral `Resumen / Vista rapida`.
+- Avanzar a Resultado y confirmar que el resumen aparece dentro del contenido principal.
+- Revisar que no haya scroll horizontal en desktop, tablet ni movil.
+- Ejecutar los tests dirigidos de esta etapa en `chromium-desktop` y `mobile-chrome`.
+
+### Como revertir
+- Revertir los archivos listados desde Git o aplicar el backup previo al parche.
+
+---
+
+## Etapa modernizacion visual segura - 2026-06-26
+
+### Archivos modificados
+- `assets/css/styles.css`
+- `docs/ROADMAP.md`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Que se cambio
+- Se agrego una capa final de estilos para modernizar la interfaz sin cambiar arquitectura, rutas ni IDs.
+- Se ajusto la paleta hacia un aspecto clinico mas sobrio y menos decorativo.
+- Se reforzo la jerarquia de botones primarios y secundarios.
+- Se unificaron cards, encabezados, paneles guiados, resultado asistido y espaciados.
+- Se mejoro el boton de inicio del asistente y el boton para volver al inicio con icono y texto claro desde CSS.
+- Se ajusto el responsive movil para wizard, cards, acciones y formularios.
+- Se agrego en roadmap un pendiente futuro para prompts de animaciones/videos.
+
+### Por que se cambio
+- La etapa buscaba limpieza UX y modernizacion visual sin tocar la logica funcional central.
+- El usuario debe ver pantallas mas limpias, una accion principal clara y navegacion comprensible.
+
+### Como probar
+- Ejecutar las validaciones sintacticas:
+  `node --check src/app.js`
+  `node --check src/ui/formRenderer.js`
+  `node --check src/prompt/promptBuilder.js`
+- Ejecutar los tests dirigidos en desktop y mobile indicados para esta etapa.
+- Confirmar visualmente Home, wizard guiado, formulario completo, adjuntos multiples, orden manual y resultado asistido.
+
+### Como revertir
+- Revertir los archivos listados desde Git o aplicar el backup previo al parche.
+
+---
+
 ## Etapa campos vacíos y desplegables - 2026-06-26
 
 ### Archivos modificados

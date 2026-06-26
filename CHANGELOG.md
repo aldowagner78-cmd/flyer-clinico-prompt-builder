@@ -1,5 +1,52 @@
 # Changelog
 
+## [Corrección post-Codex de layout e iconos] - 2026-06-26
+
+### Corregido
+- Se repararon textos e iconos rotos por mojibake en `index.html`.
+- Se corrigió el botón `Inicio` para que tenga texto e icono reales, no generados por pseudo-elementos.
+- Se mantuvo el resumen fuera del lateral y visible solo en `Resultado`.
+- Se recuperaron las acciones útiles del panel lateral dentro de la pantalla `Resultado`.
+
+### Pruebas recomendadas
+- Prueba visual local con `py -m http.server 8000`.
+- Tests dirigidos de apertura, resultado y ausencia de scroll horizontal.
+
+---
+
+## [Layout sin resumen lateral] - 2026-06-26
+
+### Modificado
+- Se retiro el panel lateral `Resumen / Vista rapida` durante el asistente.
+- El resumen ahora aparece integrado en la pantalla `Resultado`.
+- El layout del asistente pasa a una sola columna principal para ganar ancho util.
+- Se reforzaron reglas anti scroll horizontal en desktop, tablet y movil.
+- El mensaje de estado queda visible en el contenido principal.
+
+### Pruebas
+- Se agregaron validaciones dirigidas para confirmar que el lateral no se muestra, que el resumen aparece en Resultado y que no hay overflow horizontal.
+- Antes de commit, ejecutar `npm test`.
+
+---
+
+## [Etapa modernizacion visual segura] - 2026-06-26
+
+### Modificado
+- Interfaz general modernizada con paleta clinica mas sobria, cards mas consistentes y menor decoracion visual.
+- Home y boton de inicio reforzados con jerarquia clara.
+- Boton de volver al inicio normalizado visualmente con icono y texto mediante CSS, sin cambiar IDs ni acciones.
+- Botones primarios/secundarios, encabezados, tarjetas, resultado asistido y responsive movil ajustados.
+
+### Documentacion
+- `docs/ROADMAP.md` suma pendiente futuro para prompts de animaciones/videos orientados a Gemini, Instagram y WhatsApp.
+
+### Pruebas
+- Validacion sintactica puntual recomendada: `node --check src/app.js`, `node --check src/ui/formRenderer.js`, `node --check src/prompt/promptBuilder.js`.
+- Pruebas Playwright dirigidas recomendadas en `chromium-desktop` y `mobile-chrome`.
+- Antes de commit, ejecutar `npm test`.
+
+---
+
 ## [Etapa campos vacíos y desplegables] - 2026-06-26
 
 ### Modificado
