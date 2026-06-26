@@ -5011,3 +5011,206 @@ body.is-wizard-open .result-actions-panel {
     grid-template-columns: 1fr;
   }
 }
+
+/* Fix Resultado: acciones compactas dentro del panel principal */
+.result-actions-compact {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(239, 246, 255, 0.86));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.result-actions-compact .panel-title-row {
+  margin-bottom: 10px;
+}
+
+.result-actions-compact .panel-title-row h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.result-actions-compact .panel-title-row span {
+  font-size: 0.68rem;
+}
+
+.result-actions-compact .action-grid-v2 {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.78fr) minmax(220px, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.result-actions-compact .action-group {
+  gap: 6px;
+}
+
+.result-actions-compact .action-group-title {
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
+}
+
+.result-actions-compact .copy-prompt-primary {
+  min-height: 42px;
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  border-radius: 12px;
+}
+
+.result-actions-compact .secondary-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.result-actions-compact .secondary-button,
+.result-actions-compact .file-action,
+.result-actions-compact .danger-button {
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 11px;
+  font-size: 0.78rem;
+  line-height: 1.15;
+  box-shadow: none !important;
+}
+
+.result-actions-compact .more-actions {
+  grid-column: 1 / -1;
+  border-radius: 12px;
+}
+
+.result-actions-compact .more-actions summary {
+  padding: 9px 11px;
+  font-size: 0.78rem;
+}
+
+.result-actions-compact .more-actions-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  padding: 0 10px 10px;
+}
+
+.result-actions-compact input[type="file"] {
+  max-width: 100%;
+}
+
+.prompt-card .result-actions-compact {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .result-actions-compact .action-grid-v2,
+  .result-actions-compact .secondary-actions,
+  .result-actions-compact .more-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+/* Fix Resultado: acciones compactas sin sección secundaria redundante */
+.prompt-output-toolbar-compact {
+  align-items: start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.prompt-actions-inline {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.prompt-actions-inline .copy-prompt-primary {
+  min-height: 44px;
+  min-width: 220px;
+  padding: 11px 18px;
+  font-size: 0.92rem;
+}
+
+.more-actions-inline {
+  position: relative;
+  overflow: visible;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.more-actions-inline summary {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(14, 165, 233, 0.32);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--accent-strong);
+  font-size: 1.25rem;
+  line-height: 1;
+  box-shadow: 0 10px 22px rgba(14, 165, 233, 0.12);
+}
+
+.more-actions-inline summary::after {
+  content: "";
+}
+
+.more-actions-inline[open] summary {
+  background: rgba(14, 165, 233, 0.1);
+}
+
+.more-actions-inline[open] summary::before {
+  content: "−";
+}
+
+.more-actions-inline summary::before {
+  content: "+";
+  font-weight: 950;
+}
+
+.more-actions-inline > .more-actions-grid {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(320px, 82vw);
+  padding: 12px;
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.16);
+}
+
+.more-actions-inline .secondary-button,
+.more-actions-inline .danger-button,
+.more-actions-inline .file-action {
+  min-height: 38px;
+  padding: 9px 12px;
+  font-size: 0.84rem;
+}
+
+.result-actions-panel {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .prompt-output-toolbar-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .prompt-actions-inline {
+    justify-content: stretch;
+  }
+
+  .prompt-actions-inline .copy-prompt-primary {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .more-actions-inline > .more-actions-grid {
+    right: 0;
+    width: min(300px, 88vw);
+  }
+}

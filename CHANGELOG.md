@@ -1,4 +1,27 @@
+
+## 2026-06-26 - Fix botón Más opciones en Resultado
+
+### Corregido
+- Se quitó el signo `+` duplicado del botón compacto de Más opciones en Resultado.
+- No se modificó la lógica del prompt ni de las acciones avanzadas.
+
 # Changelog
+
+## [Fix Resultado compacto] - 2026-06-26
+
+### Modificado
+- Se reubicó el panel `Acciones` dentro del bloque principal del resultado.
+- Se compactaron botones principales, secundarios y `Más opciones`.
+- Se redujo el alto total de la pantalla final.
+
+### Conservado
+- Resumen final visible en `Resultado`.
+- Panel lateral oculto durante el asistente.
+- Acciones de copiar, checklist, TXT, plantilla, JSON y limpiar.
+
+### Pendiente
+- Agregar PWA instalable en una etapa separada.
+
 
 ## [Corrección post-Codex de layout e iconos] - 2026-06-26
 
@@ -376,3 +399,12 @@
 - `Cómo se verá la especialidad` ya no se autocompleta con `Clínica médica` al iniciar el flujo guiado.
 - La especialidad seleccionada se mantiene como desplegable y fallback del prompt, sin invadir campos manuales.
 
+
+## Ajuste Resultado - acciones compactas
+
+### Modificado
+- Resultado ahora usa un único botón principal de copiado y un menú compacto de opciones avanzadas.
+- Se redujo el alto ocupado por acciones finales.
+
+### Corregido
+- Se quitaron acciones redundantes que hacían largo el cierre del flujo.

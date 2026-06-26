@@ -1,5 +1,13 @@
 # Roadmap
 
+### Resultado compacto
+
+- Completado: acciones finales reubicadas y compactadas dentro de `Resultado`.
+- Mantener como criterio futuro que el resultado no genere scroll innecesario.
+- Mantener `Copiar prompt revisado` como acción principal y opciones avanzadas agrupadas.
+
+
+
 ## Pendientes futuros
 
 ### PWA instalable
