@@ -427,6 +427,63 @@ test.describe('Etapa 11A - adjuntos por selector local', () => {
   });
 });
 
+test.describe('Mejora funcional - adjuntos múltiples', () => {
+  test('captura varios archivos personalizados y los lista en prompt y checklist', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'informativeFlyer');
+
+    await clickCurrentNext(page);
+    await expectCurrentStep(page, 'diseno');
+    await page.locator('#designFields [data-design-mode="full"]').click();
+
+    const multiPicker = page.locator('[data-multiple-attachment-file="thematicImage"]').first();
+    await expect(multiPicker).toBeVisible();
+    await expect(page.locator('#designFields')).toContainText('Adjuntar archivos');
+    await multiPicker.setInputFiles([
+      {
+        name: 'referencia_frente.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('referencia-frente')
+      },
+      {
+        name: 'referencia_color.jpg',
+        mimeType: 'image/jpeg',
+        buffer: Buffer.from('referencia-color')
+      }
+    ]);
+
+    await expect(page.locator('#designFields')).toContainText('referencia_frente.png');
+    await expect(page.locator('#designFields')).toContainText('referencia_color.jpg');
+    await expect(page.locator('#designFields')).toContainText('Paleta de colores');
+    await expect(page.locator('#designFields')).toContainText('Inspirarse sin copiar');
+    await expect(page.locator('[data-attachment-instruction-select]').first()).toBeVisible();
+    await expect(page.locator('#designFields .attachment-file-button')).toHaveCount(0);
+
+    const storedAttachmentNames = await page.evaluate(() => {
+      const stored = JSON.parse(localStorage.getItem('flyerClinicoPromptBuilder.state') || '{}');
+      return (stored.attachments?.items || []).map(item => item.fileName);
+    });
+    expect(storedAttachmentNames).not.toContain('referencia_frente.png');
+    expect(storedAttachmentNames).not.toContain('referencia_color.jpg');
+
+    await goResult(page);
+
+    const prompt = await getPrompt(page);
+    expect(prompt).toContain('Imagen temática: referencia_frente.png');
+    expect(prompt).toContain('Imagen temática: referencia_color.jpg');
+    expect(prompt).toMatch(/pedilos por nombre exacto/i);
+    expect(prompt).toMatch(/No generes la pieza hasta recibir/i);
+
+    const checklist = page.locator('#attachmentsChecklist');
+    await expect(checklist).toContainText('referencia_frente.png');
+    await expect(checklist).toContainText('referencia_color.jpg');
+    await expect(checklist).toContainText(/pedilo por nombre exacto/i);
+
+    await expect(errors).toEqual([]);
+  });
+});
+
 test.describe('Etapa 11C - UX de institución y navegación', () => {
   test('formulario completo muestra redes sociales antes de los botones finales', async ({ page }) => {
     const errors = watchBrowserErrors(page);

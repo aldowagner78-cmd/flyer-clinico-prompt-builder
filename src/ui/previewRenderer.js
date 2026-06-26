@@ -159,7 +159,7 @@ function renderAttachmentsChecklist(state, precomputedFiles = null) {
   }
 
   return [
-    '<li class="missing attachment-reminder"><span>Importante</span>Adjuntá manualmente estos archivos en ChatGPT antes de pegar el prompt. La app solo guarda los nombres.</li>',
+    '<li class="missing attachment-reminder"><span>Importante</span>La app solo guarda nombres: no sube archivos. Adjuntá manualmente estos archivos en ChatGPT antes de pegar el prompt. Si falta alguno, pedilo por nombre exacto antes de generar.</li>',
     ...files.map((item, index) => `
       <li class="ok attachment-item">
         <span>${escapeHtml(String(index + 1).padStart(2, '0'))}</span>

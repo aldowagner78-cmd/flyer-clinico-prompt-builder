@@ -65,9 +65,14 @@ ${needsStoryRule(design.format) ? `FORMATO HISTORIA / ESTADO:
 ${animated ? buildAnimationSection() : ''}
 
 ADJUNTOS:
-El usuario adjuntará manualmente estos archivos en ChatGPT antes de enviar el prompt, si fueron seleccionados.
+La app solo copió nombres de archivo; no subió ni adjuntó archivos reales.
+El usuario debe adjuntar manualmente estos archivos en ChatGPT antes de enviar el prompt, si fueron seleccionados.
 ${buildAttachmentSection(mergePromptAttachments(pieceType, clinic, professional, attachments.items))}
-Si falta una imagen no obligatoria, resolver con recursos gráficos sobrios. No inventar logos, fotos ni referencias.
+Regla obligatoria para archivos faltantes:
+- Si esta lista menciona archivos y no están adjuntos en la conversación, pedilos por nombre exacto antes de generar.
+- Respondé: "Para poder realizar la tarea necesito que subas los siguientes archivos:" y listá los archivos faltantes con el mismo nombre usado en este prompt.
+- No generes la pieza hasta recibir esos archivos.
+Si falta una imagen no obligatoria que no fue listada como adjunto, resolver con recursos gráficos sobrios. No inventar logos, fotos ni referencias.
 
 RESTRICCIONES CRÍTICAS:
 - No inventes datos médicos, administrativos, horarios, teléfonos, redes sociales, logos ni matrículas.

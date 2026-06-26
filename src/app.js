@@ -9,6 +9,8 @@ import { renderForm } from './ui/formRenderer.js';
 import { renderPreview, renderResult } from './ui/previewRenderer.js';
 import { validateState } from './ui/validation.js';
 
+const DEFAULT_ATTACHMENT_INSTRUCTION = 'Usar como referencia visual.';
+
 let state = loadState();
 let currentStep = '';
 const pieceWorkflows = {
@@ -120,6 +122,36 @@ const handlers = {
   },
   onAddAttachmentWithRole(role) {
     addAttachmentItem(role || ATTACHMENT_ROLES.other);
+    update(true);
+  },
+  onAddMultipleAttachments(role, files, instruction = DEFAULT_ATTACHMENT_INSTRUCTION) {
+    const normalizedFiles = normalizeAttachmentFiles(files);
+    if (!normalizedFiles.length) return;
+    normalizedFiles.forEach(file => {
+      addAttachmentItem(role || ATTACHMENT_ROLES.other, file.fileName, instruction, file.mimeType);
+    });
+    update(true);
+  },
+  onUpdateAttachmentFiles(index, files, roleOverride = '') {
+    const item = state.attachments.items[index];
+    if (!item) return;
+    const normalizedFiles = normalizeAttachmentFiles(files);
+    if (!normalizedFiles.length) {
+      item.fileName = '';
+      item.mimeType = '';
+      item.status = 'missing';
+      update(true);
+      return;
+    }
+
+    const [firstFile, ...extraFiles] = normalizedFiles;
+    const role = roleOverride || item.role || ATTACHMENT_ROLES.other;
+    item.role = role;
+    item.fileName = firstFile.fileName;
+    item.mimeType = firstFile.mimeType;
+    item.status = 'selected';
+    if (!item.instruction) item.instruction = DEFAULT_ATTACHMENT_INSTRUCTION;
+    extraFiles.forEach(file => addAttachmentItem(role, file.fileName, item.instruction || DEFAULT_ATTACHMENT_INSTRUCTION, file.mimeType));
     update(true);
   },
   onRemoveAttachment(index) {
@@ -867,15 +899,24 @@ function selectPieceType(pieceType) {
 
 
 
-function addAttachmentItem(role = ATTACHMENT_ROLES.other, fileName = '', instruction = '') {
+function addAttachmentItem(role = ATTACHMENT_ROLES.other, fileName = '', instruction = '', mimeType = '') {
   state.attachments.items.push({
     id: `attachment_${Date.now()}_${Math.random().toString(16).slice(2)}`,
     role,
     fileName,
-    mimeType: '',
+    mimeType,
     status: fileName ? 'selected' : 'missing',
     instruction
   });
+}
+
+function normalizeAttachmentFiles(files = []) {
+  return Array.from(files || [])
+    .map(file => ({
+      fileName: String(file?.fileName || file?.name || '').trim(),
+      mimeType: String(file?.mimeType || file?.type || '').trim()
+    }))
+    .filter(file => file.fileName);
 }
 
 function syncSingleAttachment(role, fileName, instruction = '') {
@@ -1575,6 +1616,7 @@ function buildAttachmentsChecklistText() {
   if (!files.length) return 'No hay archivos seleccionados para adjuntar antes de pegar el prompt.';
   return ['Antes de pegar el prompt en ChatGPT, adjunta estos archivos:']
     .concat(files.map(([label, value]) => `- ${label}: ${value}`))
+    .concat('Si falta algún archivo de esta lista en ChatGPT, pedilo por nombre exacto y no generes la pieza hasta recibirlo.')
     .join('\n');
 }
 
