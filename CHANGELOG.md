@@ -1,3 +1,26 @@
+## 2026-06-26 - Etapa PWA instalable
+
+## 2026-06-26 - Fix texto de adjuntos en Resultado
+
+### Corregido
+- Se ajustó el texto de ayuda del Resultado para mantener la frase "Si hay adjuntos" esperada por la prueba automatizada.
+- Se conserva la aclaración para archivos referidos que deben subirse manualmente en ChatGPT.
+
+
+### Agregado
+- `manifest.webmanifest` con nombre, tema, alcance, modo `standalone` e iconos instalables.
+- Iconos PWA en `assets/icons/`.
+- `service-worker.js` con cache básico de la app.
+- `src/pwa.js` para registrar el service worker en contextos seguros.
+- Tests básicos de manifest y service worker.
+
+### Compatibilidad
+- Preparado para instalación desde Chrome/Edge en Android y escritorio.
+- Mantiene rutas relativas para GitHub Pages.
+
+### Pendiente
+- Probar instalación real desde Chrome en Android después de publicar.
+
 
 ## 2026-06-26 - Fix botón Más opciones en Resultado
 

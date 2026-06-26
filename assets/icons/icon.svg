@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title>Generador médico promocional</title>
+  <desc>Icono con cruz médica y destello para la PWA.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#14b8ff"/>
+      <stop offset="55%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#075985" flood-opacity=".24"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#e0f2fe"/>
+  <rect x="56" y="56" width="400" height="400" rx="96" fill="url(#bg)" filter="url(#shadow)"/>
+  <path d="M236 142h48v88h88v48h-88v92h-48v-92h-88v-48h88z" fill="#fff"/>
+  <circle cx="360" cy="150" r="26" fill="#fde68a"/>
+  <path d="M370 106c4 34 21 51 55 55-34 4-51 21-55 55-4-34-21-51-55-55 34-4 51-21 55-55z" fill="#fff" opacity=".88"/>
+</svg>

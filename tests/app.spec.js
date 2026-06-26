@@ -1027,3 +1027,39 @@ test.describe('Etapa 11D.4 - resultado asistido', () => {
     await expect(errors).toEqual([]);
   });
 });
+
+
+test.describe('Etapa PWA - instalable', () => {
+  test('manifest PWA queda enlazado y declara iconos instalables', async ({ page, request }) => {
+    await openCleanApp(page);
+
+    const manifestHref = await page.locator('link[rel="manifest"]').getAttribute('href');
+    expect(manifestHref).toBe('manifest.webmanifest');
+
+    const manifestResponse = await request.get('/manifest.webmanifest');
+    expect(manifestResponse.ok()).toBeTruthy();
+
+    const manifest = await manifestResponse.json();
+    expect(manifest.name).toContain('Generador');
+    expect(manifest.short_name).toBeTruthy();
+    expect(manifest.display).toBe('standalone');
+    expect(manifest.start_url).toBe('./');
+    expect(manifest.scope).toBe('./');
+    expect(manifest.icons.some(icon => icon.sizes.includes('192x192'))).toBeTruthy();
+    expect(manifest.icons.some(icon => icon.sizes.includes('512x512'))).toBeTruthy();
+
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', /#0ea5e9/i);
+  });
+
+  test('service worker queda disponible para instalación PWA', async ({ request }) => {
+    const response = await request.get('/service-worker.js');
+    expect(response.ok()).toBeTruthy();
+
+    const source = await response.text();
+    expect(source).toContain('flyer-clinico-prompt-builder');
+    expect(source).toContain('self.addEventListener');
+    expect(source).toContain('install');
+    expect(source).toContain('fetch');
+  });
+});
+
