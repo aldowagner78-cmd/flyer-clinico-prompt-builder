@@ -1,3 +1,64 @@
+# Etapa PWA instalable - 2026-06-26
+
+## 2026-06-26 - Fix texto de adjuntos en Resultado
+
+### Archivos modificados
+- `index.html`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se cambió el texto visible del Resultado para incluir "Si hay adjuntos" y mantener la indicación sobre archivos referidos.
+
+### Por qué
+- La batería completa falló en el test de checklist de adjuntos porque el texto visible ya no contenía la frase esperada.
+
+### Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "checklist de adjuntos queda visible" --project=chromium-desktop --project=mobile-chrome
+```
+
+### Cómo revertir
+- Revertir este parche o restaurar el texto anterior en `index.html`.
+
+
+## Archivos modificados
+- `index.html`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+- `docs/ROADMAP.md`
+
+## Archivos agregados
+- `manifest.webmanifest`
+- `service-worker.js`
+- `src/pwa.js`
+- `assets/icons/icon.svg`
+- `assets/icons/icon-192.png`
+- `assets/icons/icon-512.png`
+- `assets/icons/maskable-512.png`
+
+## Qué se cambió
+- Se agregó soporte PWA para instalación desde Chrome/Edge.
+- Se agregó manifest, iconos, service worker y registro automático.
+- Se agregaron tests básicos para verificar manifest y service worker.
+
+## Por qué se cambió
+- Para facilitar el uso en celulares Android y escritorio sin crear una app nativa pesada.
+
+## Cómo probar
+- Ejecutar `py -m http.server 8000`.
+- Abrir `http://127.0.0.1:8000/`.
+- Verificar que la app carga normal.
+- Ejecutar tests PWA dirigidos.
+- Publicar en GitHub Pages y probar instalación desde Chrome.
+
+## Cómo revertir
+- Eliminar archivos PWA agregados.
+- Quitar referencias a manifest/iconos/service worker de `index.html`.
+- Quitar `src/pwa.js` y tests PWA.
+
 
 # Fix botón Más opciones en Resultado - 2026-06-26
 

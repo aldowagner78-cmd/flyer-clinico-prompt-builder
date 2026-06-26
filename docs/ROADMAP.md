@@ -1,5 +1,15 @@
 # Roadmap
 
+### PWA instalable - completado en etapa actual
+
+- Agregado `manifest.webmanifest`.
+- Agregados iconos de app.
+- Registrado `service-worker.js` simple.
+- Preparado para instalación en Android y escritorio desde Chrome/Edge.
+- Documentada instalación en `README_INSTALACION.txt`.
+- Pendiente de validación manual real después de publicar en GitHub Pages.
+
+
 ### Resultado compacto
 
 - Completado: acciones finales reubicadas y compactadas dentro de `Resultado`.

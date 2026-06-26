@@ -1,11 +1,19 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Flyer Clinico Prompt Builder</title>
-    <meta name="description" content="Generador local de prompts para disenar flyers clinicos con ChatGPT.">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%238b5cf6'/%3E%3Cpath d='M31 15h6v14h14v6H37v14h-6V35H17v-6h14z' fill='white'/%3E%3C/svg%3E">
+    <title>Flyer Clínico Prompt Builder</title>
+    <meta name="description" content="Generador local de prompts para diseñar flyers clínicos con ChatGPT.">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Flyer Clínico">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Flyer Clínico">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="stylesheet" href="assets/css/styles.css">
   </head>
   <body class="is-home">
@@ -339,7 +347,7 @@
                     </details>
                   </div>
                 </div>
-                <p class="prompt-helper">Primero verificá la revisión final. Si hay archivos referidos, subilos en ChatGPT antes de pegar el prompt.</p>
+                <p class="prompt-helper">Primero verificá la revisión final. Si hay adjuntos o archivos referidos, subilos en ChatGPT antes de pegar el prompt.</p>
                 <textarea id="promptOutput" class="prompt-output" readonly></textarea>              </div>
             </div>
 
@@ -352,6 +360,7 @@
     </main>
 
     <script type="module" src="src/app.js"></script>
+    <script type="module" src="src/pwa.js"></script>
   </body>
 </html>
 

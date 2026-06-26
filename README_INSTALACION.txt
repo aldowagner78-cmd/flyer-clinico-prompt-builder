@@ -1,3 +1,60 @@
+# Instalación PWA - Chrome Android y escritorio
+
+## Qué agrega esta etapa
+
+- Instalación como PWA desde navegadores compatibles.
+- Uso más cómodo en Android y escritorio.
+- Icono propio de la app.
+- Apertura en modo independiente cuando el navegador lo permita.
+- Cache básico de archivos estáticos.
+
+## Requisitos
+
+- Chrome o Edge actualizado.
+- GitHub Pages o servidor local.
+- Para pruebas locales:
+  ```powershell
+  py -m http.server 8000
+  ```
+
+## Ejecución local
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+py -m http.server 8000
+```
+
+Abrir:
+`http://127.0.0.1:8000/`
+
+## Instalación en Android con Chrome
+
+1. Abrir la URL publicada de GitHub Pages.
+2. Tocar menú `⋮`.
+3. Elegir `Agregar a pantalla principal` o `Instalar app`.
+4. Confirmar instalación.
+5. Abrir desde el icono creado.
+
+## Instalación en escritorio con Chrome/Edge
+
+1. Abrir la URL publicada.
+2. Buscar el icono de instalación en la barra de direcciones, o abrir menú.
+3. Elegir `Instalar`.
+4. Confirmar.
+
+## Pruebas rápidas PWA
+
+```powershell
+npx playwright test tests/app.spec.js -g "Etapa PWA" --project=chromium-desktop
+```
+
+## Nota
+
+La PWA no reemplaza la publicación en GitHub Pages. La instalación usa los mismos archivos estáticos publicados.
+
 # Instalación y uso - Fix Resultado compacto
 
 ## Qué cambia este parche
