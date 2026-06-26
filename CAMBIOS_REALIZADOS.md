@@ -1,3 +1,81 @@
+# Cambios realizados
+
+## Fix visual período campaña y navegación guiada - 2026-06-26
+
+### Archivos modificados
+- `src/ui/formRenderer.js`
+- `src/app.js`
+- `assets/css/styles.css`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se creó un grupo visual `Período de campaña` para contener `Desde` y `Hasta`.
+- Se aplicó el mismo grupo al modo guiado y al formulario completo.
+- Se reforzó la limpieza de navegación inferior duplicada cuando una tarjeta guiada ya tiene botones propios.
+- Se agregaron estilos para que los campos de fecha se vean consistentes con el resto del formulario.
+- Se amplió la prueba de campaña para verificar título del grupo, selectores de fecha, layout horizontal en escritorio y ausencia de footer duplicado.
+
+### Por qué se cambió
+- El usuario veía `Desde` y `Hasta` sin contexto.
+- En el paso a paso los campos seguían apilados.
+- Quedaba navegación inferior duplicada debajo de la tarjeta guiada.
+
+### Cómo probar rápido
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+`npx playwright test tests/app.spec.js -g "promoción usa fechas desde y hasta con selectores de fecha" --project=chromium-desktop --project=mobile-chrome`
+
+Resultado esperado:
+`2 passed`
+
+### Cómo probar completo antes de commit
+`npm test`
+
+### Cómo revertir
+Usar Git:
+`git checkout -- src/ui/formRenderer.js src/app.js assets/css/styles.css tests/app.spec.js README_INSTALACION.txt CHANGELOG.md CAMBIOS_REALIZADOS.md`
+
+---
+
+
+## 2026-06-26 - Fix visual fechas y navegación guiada
+
+### Archivos modificados
+- `assets/css/styles.css`
+- `src/app.js`
+- `src/ui/formRenderer.js`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Los campos `Desde` y `Hasta` de Promoción / campaña ahora usan el estilo visual general de inputs.
+- En escritorio, `Desde` y `Hasta` quedan alineados uno al lado del otro, con ancho reducido.
+- En móvil, el rango de fechas vuelve a una columna para mantener legibilidad táctil.
+- Se elimina la navegación inferior duplicada cuando una tarjeta guiada ya tiene navegación propia.
+- Se oculta el contenedor secundario vacío para evitar el residuo visual debajo del wizard.
+- El botón para pasar al siguiente paso queda dentro de la última tarjeta guiada.
+
+### Por qué se cambió
+- La prueba visual mostraba inputs de fecha con estilo nativo sin integración visual.
+- También quedaban botones `Anterior / Siguiente` duplicados debajo del wizard y un contenedor vacío fuera de contexto.
+
+### Cómo probar
+- Ejecutar primero el test puntual:
+  `npx playwright test tests/app.spec.js -g "promoción usa fechas desde y hasta con selectores de fecha|muestra diseño guiado y mantiene Formulario completo como respaldo" --project=chromium-desktop --project=mobile-chrome`
+- Revisar visualmente Promoción / campaña en GitHub Pages o local.
+- Antes de commit, ejecutar: `npm test`.
+
+### Cómo revertir
+- Restaurar los archivos listados desde el backup anterior al parche.
+
+
 
 ## Fix puntual - texto residual en fecha de campaña
 

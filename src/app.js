@@ -1401,6 +1401,12 @@ function syncStepFooterControls(steps = availableSteps()) {
       return;
     }
 
+    const hasGuidedCardNavigation = section.classList.contains('has-guided-card-navigation') || section.querySelector('.content-guided-card, .design-guided-card');
+    if (hasGuidedCardNavigation) {
+      footer?.remove();
+      return;
+    }
+
     if (!footer) {
       footer = document.createElement('div');
       footer.className = 'step-footer-controls';

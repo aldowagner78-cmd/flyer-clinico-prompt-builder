@@ -35,6 +35,23 @@ async function expectCurrentStep(page, id) {
 }
 
 async function clickCurrentNext(page) {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const guidedNext = page.locator('.form-section.is-current [data-content-guided="next"], .form-section.is-current [data-design-guided="next"]').last();
+    const stepNext = page.locator('.form-section.is-current [data-wizard-action="next"]').last();
+
+    if (await stepNext.isVisible().catch(() => false)) {
+      await stepNext.click();
+      return;
+    }
+
+    if (await guidedNext.isVisible().catch(() => false)) {
+      await guidedNext.click();
+      continue;
+    }
+
+    break;
+  }
+
   await page.locator('.form-section.is-current [data-wizard-action="next"]').last().click();
 }
 
@@ -43,9 +60,16 @@ async function clickCurrentPrevious(page) {
 }
 
 async function goResult(page) {
-  for (let attempt = 0; attempt < 6; attempt += 1) {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
     const currentId = await page.locator('.form-section.is-current').getAttribute('id');
     if (currentId === 'resultado') return;
+
+    const guidedNext = page.locator('.form-section.is-current [data-content-guided="next"], .form-section.is-current [data-design-guided="next"]').last();
+    if (await guidedNext.isVisible().catch(() => false)) {
+      await guidedNext.click();
+      continue;
+    }
+
     const nextButton = page.locator('.form-section.is-current [data-wizard-action="next"]').last();
     await expect(nextButton).toBeVisible();
     await nextButton.click();
@@ -609,10 +633,41 @@ test.describe('Etapa 11D.2 - contenido guiado', () => {
     await expect(contentCard).toHaveAttribute('data-content-guided-key', 'campaign-type');
     await expect(contentCard).not.toContainText(/Fecha o período/i);
 
-    const startDate = page.locator('input[type="date"][data-path="promptOptions.campaignStartDate"]').first();
-    const endDate = page.locator('input[type="date"][data-path="promptOptions.campaignEndDate"]').first();
+    const dateGroup = page.locator('#serviceFields .date-range-group').first();
+    await expect(dateGroup).toBeVisible();
+    await expect(dateGroup).toContainText(/Período de campaña/i);
+
+    let startDate = page.locator('input[type="date"][data-path="promptOptions.campaignStartDate"]').first();
+    let endDate = page.locator('input[type="date"][data-path="promptOptions.campaignEndDate"]').first();
     await expect(startDate).toBeVisible();
     await expect(endDate).toBeVisible();
+    await expect(page.locator('#additionalSpecialtiesEditor')).toBeHidden();
+    await expect(page.locator('#prestaciones > .step-footer-controls')).toHaveCount(0);
+
+    if (test.info().project.name === 'chromium-desktop') {
+      const startBox = await startDate.boundingBox();
+      const endBox = await endDate.boundingBox();
+      expect(Math.abs(startBox.y - endBox.y)).toBeLessThanOrEqual(8);
+      expect(startBox.width).toBeLessThanOrEqual(320);
+      expect(endBox.width).toBeLessThanOrEqual(320);
+    }
+
+    await page.locator('#serviceFields [data-content-mode="full"]').click();
+    const fullDateGroup = page.locator('#serviceFields .date-range-group').first();
+    await expect(fullDateGroup).toBeVisible();
+    await expect(fullDateGroup).toContainText(/Período de campaña/i);
+    startDate = page.locator('input[type="date"][data-path="promptOptions.campaignStartDate"]').first();
+    endDate = page.locator('input[type="date"][data-path="promptOptions.campaignEndDate"]').first();
+    await expect(startDate).toBeVisible();
+    await expect(endDate).toBeVisible();
+
+    if (test.info().project.name === 'chromium-desktop') {
+      const startBox = await startDate.boundingBox();
+      const endBox = await endDate.boundingBox();
+      expect(Math.abs(startBox.y - endBox.y)).toBeLessThanOrEqual(8);
+      expect(startBox.width).toBeLessThanOrEqual(320);
+      expect(endBox.width).toBeLessThanOrEqual(320);
+    }
 
     await startDate.fill('2026-03-01');
     await endDate.fill('2026-03-15');
@@ -638,6 +693,7 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
     await expect(designCard).toBeVisible();
     await expect(designCard).toHaveAttribute('data-design-guided-key', 'format');
     await expect(designCard).toContainText(/Formato/i);
+    await expect(page.locator('#diseno > .step-footer-controls')).toHaveCount(0);
     await expect(page.locator('select[data-path="design.format"]').first()).toBeVisible();
     await expect(page.locator('#designFields [data-design-mode="full"]')).toBeVisible();
 
