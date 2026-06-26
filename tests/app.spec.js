@@ -659,3 +659,83 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
   });
 });
 
+
+
+test.describe('Etapa 11D.4 - resultado asistido', () => {
+  test('resultado muestra revisión final y botón de copiar más destacado', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+    await goResult(page);
+
+    await expect(page.locator('#finalReview')).toBeVisible();
+    await expect(page.locator('#finalReview')).toContainText(/Revisión final/i);
+    await expect(page.locator('#finalReviewSteps')).toContainText(/Datos mínimos/i);
+    await expect(page.locator('#finalReviewSteps')).toContainText(/Copiar y generar/i);
+
+    const resultCopyButton = page.locator('#resultado [data-copy-prompt-action]');
+    await expect(resultCopyButton).toBeVisible();
+    await expect(resultCopyButton).toHaveClass(/copy-prompt-result-button/);
+    await expect(resultCopyButton).toContainText(/Copiar prompt revisado/i);
+
+    await expect(page.locator('#copyPromptButton')).toHaveClass(/copy-prompt-primary/);
+    await expect(page.locator('#copyPromptButton')).toContainText(/revisado/i);
+
+    await resultCopyButton.click();
+    await expect(page.locator('#statusMessage')).toContainText(/Prompt revisado copiado/i);
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('checklist de adjuntos queda visible y enumera archivos antes de enviar', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+    await fillBasicInstitution(page);
+
+    await page.locator('[data-file-target="clinic.logoFileName"]').setInputFiles({
+      name: 'logo_revision_final.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('logo')
+    });
+
+    await choosePiece(page, 'professionalFlyer');
+
+    const showPhotoToggle = page.locator('[data-path="professional.showPhoto"]').first();
+    if (!(await showPhotoToggle.isChecked())) await showPhotoToggle.check();
+
+    await page.locator('[data-file-target="professional.photoFileName"]').setInputFiles({
+      name: 'foto_revision_final.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from('foto')
+    });
+
+    await goResult(page);
+
+    const attachmentsCard = page.locator('.result-attachments-card');
+    await expect(attachmentsCard).toBeVisible();
+    await expect(attachmentsCard).toHaveClass(/is-highlighted/);
+    await expect(attachmentsCard).toContainText(/Adjuntá manualmente/i);
+    await expect(attachmentsCard).toContainText('logo_revision_final.png');
+    await expect(attachmentsCard).toContainText('foto_revision_final.jpg');
+    await expect(page.locator('#finalReviewSteps')).toContainText(/archivo/i);
+    await expect(page.locator('.prompt-helper')).toContainText(/Si hay adjuntos/i);
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('advertencias finales quedan agrupadas antes de copiar', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+    await goResult(page);
+
+    await expect(page.locator('#finalReviewTitle')).toContainText(/Revisá antes de copiar/i);
+    await expect(page.locator('.result-warning-card')).toBeVisible();
+    await expect(page.locator('.result-warning-card')).toContainText(/Advertencias y sugerencias/i);
+    await expect(page.locator('#warnings')).toContainText(/Falta o conviene completar/i);
+    await expect(page.locator('#finalReviewSummary')).toContainText(/advertencia/i);
+
+    await expect(errors).toEqual([]);
+  });
+});

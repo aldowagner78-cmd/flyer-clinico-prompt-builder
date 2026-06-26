@@ -2,7 +2,10 @@
 
 ## Archivos modificados
 
-- `src/ui/formRenderer.js`
+- `index.html`
+- `assets/css/styles.css`
+- `src/app.js`
+- `src/ui/previewRenderer.js`
 - `tests/app.spec.js`
 - `README_INSTALACION.txt`
 - `CHANGELOG.md`
@@ -14,25 +17,29 @@
 
 ## Qué se cambió
 
-- Se agregó un modo de diseño guiado por tarjetas dentro del paso "Diseño".
-- Las tarjetas de Diseño cubren:
-  - Formato.
-  - Colores.
-  - Estilo visual.
-  - Tipografía y densidad.
-  - Iconos, fondo y recursos según especialidad.
-  - Modo animado.
-  - Imágenes personalizadas.
-- Se mantuvo el botón "Formulario completo" como respaldo para editar todos los campos juntos.
-- Se reutilizó la lógica existente de adjuntos personalizados sin subir archivos reales.
-- Se agregaron pruebas automatizadas para validar el nuevo flujo guiado de Diseño.
-- Se adaptaron pruebas previas que esperaban todos los campos de Diseño visibles desde el inicio.
+- Se implementó la Etapa 11D.4: Resultado más claro y asistido.
+- Se agregó un panel de "Revisión final" antes de copiar.
+- Se reorganizó el resultado en tarjetas:
+  - Checklist de datos.
+  - Adjuntos antes de enviar.
+  - Advertencias y sugerencias.
+- Se destacó el botón "Copiar prompt revisado" en el resultado y en el panel lateral.
+- Se mejoró el checklist de adjuntos para indicar que los archivos deben subirse manualmente en ChatGPT.
+- Se agregaron pruebas automatizadas para:
+  - Revisión final visible.
+  - Botón de copiar destacado.
+  - Checklist de adjuntos visible y enumerado.
+  - Advertencias agrupadas antes de copiar.
 
 ## Por qué se cambió
 
-- El roadmap pendiente pedía completar la Etapa 11D.3: Diseño guiado.
-- La app ya tenía los campos de diseño, pero faltaba presentarlos como flujo guiado por tarjetas para usuarios no técnicos.
-- El cambio mantiene la estructura existente y evita reescribir el motor de prompts.
+- El roadmap pendiente pedía completar la Etapa 11D.4:
+  - Resultado más claro y más asistido.
+  - Checklist de adjuntos más visible.
+  - Botón Copiar prompt más destacado.
+  - Advertencias finales y revisión antes de copiar/generar.
+- El cambio ayuda a usuarios no técnicos a saber qué revisar antes de pegar el prompt en ChatGPT.
+- No modifica la lógica del prompt final ni elimina funciones existentes.
 
 ## Cómo probar
 
@@ -56,39 +63,32 @@ Prueba manual mínima:
 2. Comenzar asistente.
 3. Crear o completar institución.
 4. Elegir un tipo de pieza.
-5. Completar Contenido.
-6. Pasar a Diseño.
-7. Confirmar que aparece "Diseño guiado".
-8. Avanzar tarjetas internas con "Siguiente tarjeta".
-9. Confirmar que aparecen formato, colores, estilo, tipografía/densidad, recursos, modo animado e imágenes.
-10. Tocar "Formulario completo".
-11. Volver a "Diseño guiado".
-12. Agregar una imagen personalizada por nombre.
-13. Pasar a Resultado y confirmar que el prompt se genera.
+5. Completar Contenido guiado.
+6. Completar Diseño guiado.
+7. Ir a Resultado.
+8. Confirmar que aparece el panel "Revisión final".
+9. Confirmar que se ven tarjetas de checklist, adjuntos y advertencias.
+10. Confirmar que el botón dice "Copiar prompt revisado".
+11. Si hay logo, foto o imagen de referencia, confirmar que aparece en "Adjuntos antes de enviar".
+12. Copiar el prompt y confirmar que aparece mensaje de estado.
 
 ## Resultado esperado
 
 - La app inicia sin errores.
 - El flujo principal mantiene 5 pasos visibles.
-- El paso Contenido mantiene tarjetas guiadas.
-- El paso Diseño muestra tarjetas guiadas.
-- El formulario completo sigue disponible.
-- El modo animado modifica el prompt final.
-- Las imágenes personalizadas aparecen en el prompt y checklist de adjuntos.
-- Las pruebas automatizadas pasan cuando Playwright tiene navegadores instalados.
+- El resultado es más claro.
+- El checklist de adjuntos es visible.
+- El botón de copiar está destacado.
+- Las advertencias aparecen antes de copiar.
+- Las pruebas automatizadas pasan.
+- No aparecen ZIPs, reportes ni temporales en `git status`.
 
 ## Cómo revertir
 
-Restaurar desde copia de seguridad o revertir estos archivos:
-
-- `src/ui/formRenderer.js`
-- `tests/app.spec.js`
-- `README_INSTALACION.txt`
-- `CHANGELOG.md`
-- `CAMBIOS_REALIZADOS.md`
-
-Si usás Git:
+Revertir el commit de la Etapa 11D.4:
 
 ```bash
-git checkout -- src/ui/formRenderer.js tests/app.spec.js README_INSTALACION.txt CHANGELOG.md CAMBIOS_REALIZADOS.md
+git revert <hash-del-commit>
 ```
+
+O restaurar los archivos modificados desde el backup previo al parche.

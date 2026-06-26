@@ -271,7 +271,9 @@ function bindStaticActions() {
     button.addEventListener('click', () => showStep(button.dataset.stepTarget));
   });
 
-  document.querySelector('#copyPromptButton').addEventListener('click', copyPrompt);
+  document.querySelectorAll('[data-copy-prompt-action]').forEach(button => {
+    button.addEventListener('click', copyPrompt);
+  });
   document.querySelector('#copyAttachmentsButton').addEventListener('click', copyAttachmentsChecklist);
   document.querySelector('#loadDemoButton')?.addEventListener('click', () => loadDemoData(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer));
   document.querySelector('#downloadPromptButton').addEventListener('click', downloadPrompt);
@@ -1440,11 +1442,11 @@ async function copyPrompt() {
   const prompt = document.querySelector('#promptOutput').value;
   try {
     await navigator.clipboard.writeText(prompt);
-    showStatus('Prompt copiado.');
+    showStatus('Prompt revisado copiado. Ahora adjuntá los archivos indicados en ChatGPT si corresponde.');
   } catch {
     document.querySelector('#promptOutput').select();
     document.execCommand('copy');
-    showStatus('Prompt copiado.');
+    showStatus('Prompt revisado copiado. Ahora adjuntá los archivos indicados en ChatGPT si corresponde.');
   }
 }
 
@@ -1624,10 +1626,10 @@ function updateActionLabels(pieceType) {
   const demoButton = document.querySelector('#loadDemoButton');
 
   const labels = {
-    [PIECE_TYPES.professionalFlyer]: ['Acción principal', 'Copiar prompt de flyer', 'Descargar prompt de flyer', 'Cargar ejemplo de flyer'],
-    [PIECE_TYPES.clinicalInfographic]: ['Acción principal', 'Copiar prompt de infografía', 'Descargar prompt de infografía', 'Cargar ejemplo de infografía'],
-    [PIECE_TYPES.informativeFlyer]: ['Acción principal', 'Copiar prompt informativo', 'Descargar prompt informativo', 'Cargar ejemplo informativo'],
-    [PIECE_TYPES.promotionCampaign]: ['Acción principal', 'Copiar prompt de campaña', 'Descargar prompt de campaña', 'Cargar ejemplo de campaña']
+    [PIECE_TYPES.professionalFlyer]: ['Acción principal', 'Copiar prompt revisado de flyer', 'Descargar prompt de flyer', 'Cargar ejemplo de flyer'],
+    [PIECE_TYPES.clinicalInfographic]: ['Acción principal', 'Copiar prompt revisado de infografía', 'Descargar prompt de infografía', 'Cargar ejemplo de infografía'],
+    [PIECE_TYPES.informativeFlyer]: ['Acción principal', 'Copiar prompt informativo revisado', 'Descargar prompt informativo', 'Cargar ejemplo informativo'],
+    [PIECE_TYPES.promotionCampaign]: ['Acción principal', 'Copiar prompt revisado de campaña', 'Descargar prompt de campaña', 'Cargar ejemplo de campaña']
   };
 
   const [, copyLabel, downloadLabel, demoLabel] = labels[pieceType] || labels[PIECE_TYPES.professionalFlyer];

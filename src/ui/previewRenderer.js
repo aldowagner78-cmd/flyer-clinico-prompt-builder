@@ -30,12 +30,81 @@ export function renderPreview(state, validation) {
 }
 
 export function renderResult(prompt, validation, state) {
+  const attachmentFiles = collectAttachmentFiles(state).filter(item => item.fileName);
   document.querySelector('#promptOutput').value = prompt;
   document.querySelector('#checklist').innerHTML = validation.checklist.map(item => `
     <li class="${item.ok ? 'ok' : 'missing'}"><span>${item.ok ? 'OK' : 'Revisar'}</span>${escapeHtml(item.label)}</li>
   `).join('');
-  document.querySelector('#attachmentsChecklist').innerHTML = renderAttachmentsChecklist(state);
+  document.querySelector('#attachmentsChecklist').innerHTML = renderAttachmentsChecklist(state, attachmentFiles);
   document.querySelector('#warnings').innerHTML = renderIssues(validation);
+  renderFinalReview(validation, attachmentFiles);
+}
+
+function renderFinalReview(validation, attachmentFiles = []) {
+  const checklist = Array.isArray(validation?.checklist) ? validation.checklist : [];
+  const issues = Array.isArray(validation?.issues) ? validation.issues : [];
+  const completed = checklist.filter(item => item.ok).length;
+  const total = checklist.length;
+  const warningsCount = issues.filter(item => item.severity === 'warning' || item.severity === 'blocking').length;
+  const suggestionsCount = issues.filter(item => item.severity === 'suggestion').length;
+  const hasAttachments = attachmentFiles.length > 0;
+
+  const title = document.querySelector('#finalReviewTitle');
+  const summary = document.querySelector('#finalReviewSummary');
+  const steps = document.querySelector('#finalReviewSteps');
+
+  if (title) {
+    title.textContent = warningsCount
+      ? 'Revisá antes de copiar'
+      : 'Listo para copiar con revisión final';
+  }
+
+  if (summary) {
+    summary.textContent = warningsCount
+      ? `Hay ${warningsCount} advertencia${warningsCount === 1 ? '' : 's'} para revisar. El prompt se puede copiar, pero conviene corregir o confirmar esos puntos.`
+      : 'Los datos mínimos están completos. Revisá los adjuntos y copiá el prompt final cuando estés conforme.';
+  }
+
+  if (!steps) return;
+
+  steps.innerHTML = [
+    renderFinalReviewStep('Datos mínimos', `${completed}/${total || 0} puntos completos en el checklist principal.`, completed === total && total > 0 ? 'ok' : 'review'),
+    renderFinalReviewStep(
+      'Adjuntos',
+      hasAttachments
+        ? `${attachmentFiles.length} archivo${attachmentFiles.length === 1 ? '' : 's'} para adjuntar manualmente antes de pegar el prompt.`
+        : 'No hay archivos seleccionados. Si el diseño necesita logos, fotos o referencias, agregalos antes de copiar.',
+      hasAttachments ? 'review' : 'ok'
+    ),
+    renderFinalReviewStep(
+      'Advertencias',
+      warningsCount
+        ? `${warningsCount} advertencia${warningsCount === 1 ? '' : 's'} y ${suggestionsCount} sugerencia${suggestionsCount === 1 ? '' : 's'} detectadas.`
+        : suggestionsCount
+          ? `${suggestionsCount} sugerencia${suggestionsCount === 1 ? '' : 's'} opcional${suggestionsCount === 1 ? '' : 'es'} para mejorar el resultado.`
+          : 'Sin advertencias importantes.',
+      warningsCount ? 'review' : 'ok'
+    ),
+    renderFinalReviewStep('Copiar y generar', 'Copiá el prompt revisado y pegalo en ChatGPT después de subir los adjuntos indicados.', 'next')
+  ].join('');
+}
+
+function renderFinalReviewStep(title, text, status = 'ok') {
+  const labels = {
+    ok: 'OK',
+    review: 'Revisar',
+    next: 'Sigue'
+  };
+
+  return `
+    <li class="${escapeHtml(status)}">
+      <span>${escapeHtml(labels[status] || 'OK')}</span>
+      <div>
+        <strong>${escapeHtml(title)}</strong>
+        <small>${escapeHtml(text)}</small>
+      </div>
+    </li>
+  `;
 }
 
 function renderIssues(validation) {
@@ -80,13 +149,26 @@ function renderIssueGroup(title, badge, issues, className) {
   ].join('');
 }
 
-function renderAttachmentsChecklist(state) {
-  const files = collectAttachmentFiles(state).filter(item => item.fileName);
+function renderAttachmentsChecklist(state, precomputedFiles = null) {
+  const files = Array.isArray(precomputedFiles)
+    ? precomputedFiles
+    : collectAttachmentFiles(state).filter(item => item.fileName);
 
-  if (!files.length) return '<li class="missing"><span>Sin adjuntos</span>No hay archivos seleccionados.</li>';
+  if (!files.length) {
+    return '<li class="ok no-attachments"><span>Sin adjuntos</span>No hay archivos seleccionados. Si necesitás logo, foto o referencia visual, agregalos antes de copiar.</li>';
+  }
+
   return [
-    '<li class="ok"><span>Antes</span>Antes de pegar el prompt en ChatGPT, adjunta estos archivos:</li>',
-    ...files.map(item => `<li class="ok"><span>Adjuntar</span>${escapeHtml(labelAttachmentRole(item.role))}: ${escapeHtml(item.fileName)}${item.instruction ? ` - ${escapeHtml(item.instruction)}` : ''}</li>`)
+    '<li class="missing attachment-reminder"><span>Importante</span>Adjuntá manualmente estos archivos en ChatGPT antes de pegar el prompt. La app solo guarda los nombres.</li>',
+    ...files.map((item, index) => `
+      <li class="ok attachment-item">
+        <span>${escapeHtml(String(index + 1).padStart(2, '0'))}</span>
+        <div>
+          <strong>${escapeHtml(labelAttachmentRole(item.role))}: ${escapeHtml(item.fileName)}</strong>
+          ${item.instruction ? `<small>${escapeHtml(item.instruction)}</small>` : ''}
+        </div>
+      </li>
+    `)
   ].join('');
 }
 

@@ -1,5 +1,39 @@
 # Changelog
 
+## [11D.4] - 2026-06-26
+
+### Agregado
+- Panel de revisión final antes de copiar el prompt.
+- Resumen asistido de datos mínimos, adjuntos, advertencias y siguiente acción.
+- Tarjetas separadas para checklist de datos, adjuntos y advertencias.
+- Botón "Copiar prompt revisado" destacado dentro del resultado.
+- Pruebas automatizadas para resultado asistido, adjuntos visibles y advertencias finales.
+
+### Modificado
+- `index.html` reorganiza el paso Resultado para hacerlo más claro.
+- `src/ui/previewRenderer.js` genera la revisión final y el checklist de adjuntos enriquecido.
+- `src/app.js` conecta todos los botones de copia mediante `data-copy-prompt-action`.
+- `assets/css/styles.css` agrega estilos para el resultado asistido y botón destacado.
+- `tests/app.spec.js` agrega cobertura de 11D.4.
+
+### Corregido
+- El usuario ve una advertencia clara cuando debe adjuntar archivos manualmente en ChatGPT.
+- El botón principal aclara que copia el prompt ya revisado.
+- Las advertencias quedan agrupadas antes de copiar o generar.
+
+### Pendiente
+- Adjuntos múltiples.
+- Regla para archivos faltantes antes de generar.
+- Orden manual de prestaciones visibles.
+- Campos manuales vacíos por defecto y revisión de desplegables.
+- Modernización visual general.
+
+### Compatibilidad
+- App web estática.
+- Sin backend.
+- Compatible con flujo actual de GitHub Pages.
+- Validación prevista en Chrome, Firefox y Edge mediante Playwright.
+
 ## [11D.3] - 2026-06-26
 
 ### Agregado

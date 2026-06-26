@@ -255,23 +255,66 @@
               <span>8</span>
               <div>
                 <h2>Resultado final</h2>
-                <p>Prompt completo, checklist y acciones de exportacion.</p>
+                <p>Revisión asistida, checklist de adjuntos y prompt listo para copiar.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
                 <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
               </div>
             </div>
-            <div class="result-grid">
+
+            <article class="final-review-panel" id="finalReview" aria-live="polite">
               <div>
-                <h3>Checklist</h3>
-                <ul id="checklist" class="checklist"></ul>
-                <h3>Adjuntos antes de enviar</h3>
-                <ul id="attachmentsChecklist" class="checklist"></ul>
-                <h3>Advertencias</h3>
-                <ul id="warnings" class="warnings"></ul>
+                <p class="eyebrow">Revisión final</p>
+                <h3 id="finalReviewTitle">Antes de copiar</h3>
+                <p id="finalReviewSummary">Confirmá datos, adjuntos y advertencias antes de pegar el prompt en ChatGPT.</p>
               </div>
-              <div>
-                <label for="promptOutput">Prompt generado</label>
+              <ol id="finalReviewSteps" class="final-review-steps"></ol>
+            </article>
+
+            <div class="result-grid result-grid-assisted">
+              <div class="result-side">
+                <article class="result-card result-checklist-card">
+                  <div class="result-card-heading">
+                    <span aria-hidden="true">✅</span>
+                    <div>
+                      <h3>Checklist de datos</h3>
+                      <p>Campos mínimos que conviene revisar antes de generar.</p>
+                    </div>
+                  </div>
+                  <ul id="checklist" class="checklist"></ul>
+                </article>
+
+                <article class="result-card result-attachments-card is-highlighted">
+                  <div class="result-card-heading">
+                    <span aria-hidden="true">📎</span>
+                    <div>
+                      <h3>Adjuntos antes de enviar</h3>
+                      <p>Archivos que tenés que adjuntar manualmente en ChatGPT.</p>
+                    </div>
+                  </div>
+                  <ul id="attachmentsChecklist" class="checklist attachments-checklist"></ul>
+                </article>
+
+                <article class="result-card result-warning-card">
+                  <div class="result-card-heading">
+                    <span aria-hidden="true">⚠️</span>
+                    <div>
+                      <h3>Advertencias y sugerencias</h3>
+                      <p>Revisá estos avisos antes de copiar o generar la pieza.</p>
+                    </div>
+                  </div>
+                  <ul id="warnings" class="warnings"></ul>
+                </article>
+              </div>
+
+              <div class="prompt-card">
+                <div class="prompt-output-toolbar">
+                  <label for="promptOutput">Prompt generado</label>
+                  <button class="primary-button copy-prompt-result-button" type="button" data-copy-prompt-action>
+                    Copiar prompt revisado
+                  </button>
+                </div>
+                <p class="prompt-helper">Primero verificá el panel de revisión final. Si hay adjuntos, subilos en ChatGPT antes de pegar este texto.</p>
                 <textarea id="promptOutput" class="prompt-output" readonly></textarea>
               </div>
             </div>
@@ -296,7 +339,7 @@
           <div class="action-grid action-grid-v2">
             <div class="action-group primary-actions">
               <span class="action-group-title" id="primaryActionTitle">Acción principal</span>
-              <button class="primary-button" type="button" id="copyPromptButton">Copiar prompt</button>
+              <button class="primary-button copy-prompt-primary" type="button" id="copyPromptButton" data-copy-prompt-action>Copiar prompt revisado</button>
             </div>
 
             <div class="action-group secondary-actions">
