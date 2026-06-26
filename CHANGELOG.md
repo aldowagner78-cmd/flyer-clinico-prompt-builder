@@ -1,5 +1,20 @@
 # Changelog
 
+## [Etapa campos vacíos y desplegables] - 2026-06-26
+
+### Modificado
+- Campos manuales del flujo profesional quedan vacíos por defecto: nombre, matrícula, especialidad visible y observaciones.
+- `Texto para turnos` pasa a desplegable con valores predefinidos y opción `Otro / Personalizar`.
+- `Título` profesional pasa a desplegable editable con opción `Otro / Personalizar`, manteniendo `Odont.`.
+- Selects editables normalizan la opción `Otro / Personalizar` para mostrar el campo manual solo cuando corresponde.
+
+### Pruebas
+- Prueba puntual recomendada: `npx playwright test tests/app.spec.js -g "campos manuales|texto visible y observaciones" --project=chromium-desktop --project=mobile-chrome`.
+- Antes de commit, ejecutar `npm test`.
+
+---
+
+
 ## [Fix orden prestaciones y título profesional] - 2026-06-26
 
 ### Modificado
@@ -307,3 +322,10 @@
 
 ### Pendiente
 - Ejecutar los 4 tests puntuales y luego `npm test` antes de commit.
+
+## [Fix campos vacíos] - 2026-06-26
+
+### Corregido
+- `Cómo se verá la especialidad` ya no se autocompleta con `Clínica médica` al iniciar el flujo guiado.
+- La especialidad seleccionada se mantiene como desplegable y fallback del prompt, sin invadir campos manuales.
+

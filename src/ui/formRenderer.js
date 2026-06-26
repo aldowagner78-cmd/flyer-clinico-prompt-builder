@@ -2,7 +2,7 @@ import { colorPresets, formats, impactLevels, typographyOptions, visualStyles } 
 import { specialties } from '../data/specialties.js';
 import { ATTACHMENT_ROLES, CONTENT_DENSITIES, PIECE_TYPES } from '../state/schema.js';
 
-const titles = ['Dr.', 'Dra.', 'Odont.', 'Lic.', 'Prof.', 'Equipo', 'Otro'];
+const titles = ['Dr.', 'Dra.', 'Odont.', 'Lic.', 'Prof.', 'Equipo', 'Otro / Personalizar'];
 const modalities = ['presencial', 'virtual', 'ambas'];
 const institutionTypes = ['Centro médico', 'Clínica', 'Consultorio', 'Sanatorio', 'Laboratorio', 'Instituto', 'Centro odontológico', 'Centro de diagnóstico', 'Otro'];
 const socialTypes = ['Instagram', 'Facebook', 'TikTok', 'LinkedIn', 'YouTube', 'Sitio web', 'Email', 'WhatsApp', 'Otra'];
@@ -30,17 +30,25 @@ const attachmentInstructionOptions = [
   'Otro / Personalizar'
 ];
 const customInstructionOption = 'Otro / Personalizar';
+const appointmentTextOptions = [
+  'Solicitar turno por WhatsApp.',
+  'Consultar disponibilidad por WhatsApp.',
+  'Turnos con reserva previa.',
+  'Atención por orden de llegada.',
+  'Coordinar turno con recepción.',
+  'Otro / Personalizar'
+];
 const toneOptions = ['Educativo', 'Preventivo', 'Prudente', 'Comunitario', 'Institucional', 'Cercano'];
 const noteOptions = [
   'Contenido informativo. No reemplaza la consulta médica.',
   'Consultá con un profesional ante dudas o síntomas.',
   'No indica diagnóstico ni tratamiento.',
   'Actividad sujeta a disponibilidad de turnos.',
-  'Personalizar nota'
+  'Otro / Personalizar'
 ];
-const ctaOptions = ['Solicitar turno por WhatsApp', 'Consultar disponibilidad', 'Escribinos para más información', 'Reservá tu turno', 'Consultá requisitos', 'Personalizar CTA'];
-const informationTypes = ['Nuevo servicio', 'Nuevo estudio', 'Nueva prestación', 'Cambio de horario', 'Agenda abierta', 'Incorporación profesional', 'Información para pacientes', 'Comunicado institucional', 'Recordatorio', 'Otro'];
-const campaignTypes = ['Agenda abierta', 'Turnos disponibles', 'Campaña preventiva', 'Jornada especial', 'Semana de controles', 'Chequeo general', 'Vacunación', 'Nuevo servicio', 'Promoción institucional', 'Otro'];
+const ctaOptions = ['Solicitar turno por WhatsApp', 'Consultar disponibilidad', 'Escribinos para más información', 'Reservá tu turno', 'Consultá requisitos', 'Otro / Personalizar'];
+const informationTypes = ['Nuevo servicio', 'Nuevo estudio', 'Nueva prestación', 'Cambio de horario', 'Agenda abierta', 'Incorporación profesional', 'Información para pacientes', 'Comunicado institucional', 'Recordatorio', 'Otro / Personalizar'];
+const campaignTypes = ['Agenda abierta', 'Turnos disponibles', 'Campaña preventiva', 'Jornada especial', 'Semana de controles', 'Chequeo general', 'Vacunación', 'Nuevo servicio', 'Promoción institucional', 'Otro / Personalizar'];
 const institutionalPhraseOptions = [
   'Cuidamos tu salud, acompañamos tu vida',
   'Tu salud, cerca de vos',
@@ -559,7 +567,7 @@ function professionalContentSteps(state, specialtyNames, preset) {
       title: 'Profesional',
       help: 'Completá nombre, matrícula y foto solo si debe aparecer en el flyer.',
       fields: [
-        select('Título', 'professional.title', state.professional.title, titles),
+        selectWithCustom('Título', 'professional.title', state.professional.title, titles),
         text('Nombre completo del profesional', 'professional.fullName', state.professional.fullName, true),
         text('Matrícula', 'professional.license', state.professional.license),
         select('Especialidad o área', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
@@ -572,7 +580,7 @@ function professionalContentSteps(state, specialtyNames, preset) {
       title: 'Especialidad visible y frase',
       help: 'Definí cómo se verá la especialidad y una frase breve opcional.',
       fields: [
-        text('Cómo se verá la especialidad', 'specialty.visibleSpecialtyText', state.specialty.visibleSpecialtyText || smartSpecialtyText(state)),
+        text('Cómo se verá la especialidad', 'specialty.visibleSpecialtyText', state.specialty.visibleSpecialtyText, false, false, `Ej: ${smartSpecialtyText(state) || 'Cardiología'}`),
         text('Frase breve opcional', 'promptOptions.suggestedPhrase', state.promptOptions.suggestedPhrase)
       ]
     },
@@ -734,11 +742,11 @@ function renderContentGuidedBody(state, step) {
 function careFields(state) {
   return [
     toggle('Requiere turno previo', 'schedule.requiresAppointment', state.schedule.requiresAppointment),
-    text('Texto para turnos', 'schedule.appointmentText', state.schedule.appointmentText),
+    selectWithCustom('Texto para turnos', 'schedule.appointmentText', state.schedule.appointmentText, appointmentTextOptions, false),
     select('Modalidad', 'schedule.modality', state.schedule.modality, modalities),
     toggle('Obras sociales', 'coverage.insurance', state.coverage.insurance),
     toggle('Particulares', 'coverage.privatePatients', state.coverage.privatePatients),
-    textarea('Observación administrativa', 'schedule.administrativeNote', state.schedule.administrativeNote)
+    textarea('Observación administrativa', 'schedule.administrativeNote', state.schedule.administrativeNote, false, false, 'Ej: Traer estudios previos o consultar requisitos antes del turno.')
   ];
 }
 
@@ -944,13 +952,13 @@ function bindInlineScheduleControls(target, handlers) {
 
 function renderProfessionalContent(state, handlers, specialtyNames, preset) {
   renderFields('#serviceFields', [
-    select('Título', 'professional.title', state.professional.title, titles),
+    selectWithCustom('Título', 'professional.title', state.professional.title, titles),
     text('Nombre completo del profesional', 'professional.fullName', state.professional.fullName, true),
     text('Matrícula', 'professional.license', state.professional.license),
     toggle('Mostrar foto profesional', 'professional.showPhoto', state.professional.showPhoto),
     fileText('Foto profesional esperada', 'professional.photoFileName', state.professional.photoFileName || '', 'image/*', false, !state.professional.showPhoto, 'Elegí la foto para completar el nombre. Luego adjuntala manualmente en ChatGPT.'),
     select('Especialidad o área', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
-    text('Cómo se verá la especialidad', 'specialty.visibleSpecialtyText', state.specialty.visibleSpecialtyText || smartSpecialtyText(state)),
+    text('Cómo se verá la especialidad', 'specialty.visibleSpecialtyText', state.specialty.visibleSpecialtyText, false, false, `Ej: ${smartSpecialtyText(state) || 'Cardiología'}`),
     text('Frase breve opcional', 'promptOptions.suggestedPhrase', state.promptOptions.suggestedPhrase)
   ], handlers);
 
@@ -1109,11 +1117,11 @@ function renderCareInsideContent(state, handlers, showCoverage = false) {
 
   renderFields('#inlineCareFields', [
     toggle('Requiere turno previo', 'schedule.requiresAppointment', state.schedule.requiresAppointment),
-    text('Texto para turnos', 'schedule.appointmentText', state.schedule.appointmentText),
+    selectWithCustom('Texto para turnos', 'schedule.appointmentText', state.schedule.appointmentText, appointmentTextOptions, false),
     select('Modalidad', 'schedule.modality', state.schedule.modality, modalities),
     toggle('Obras sociales', 'coverage.insurance', state.coverage.insurance),
     toggle('Particulares', 'coverage.privatePatients', state.coverage.privatePatients),
-    textarea('Observación administrativa', 'schedule.administrativeNote', state.schedule.administrativeNote)
+    textarea('Observación administrativa', 'schedule.administrativeNote', state.schedule.administrativeNote, false, false, 'Ej: Traer estudios previos o consultar requisitos antes del turno.')
   ], handlers);
 
   renderSchedulesInTarget('#inlineSchedulesEditor', state, handlers);
@@ -1353,7 +1361,7 @@ function renderField(field) {
     return `<label class="field toggle-field${hidden}"><input type="checkbox" data-path="${field.path}" ${field.value ? 'checked' : ''}><span>${field.label}</span></label>`;
   }
   if (field.type === 'textarea') {
-    return `<label class="field${hidden}"><span>${field.label}${required}</span><textarea data-path="${field.path}" rows="3">${escapeHtml(field.value)}</textarea></label>`;
+    return `<label class="field${hidden}"><span>${field.label}${required}</span><textarea data-path="${field.path}" rows="3" placeholder="${escapeHtml(field.placeholder || '')}">${escapeHtml(field.value)}</textarea></label>`;
   }
   if (field.type === 'date') {
     return `<label class="field date-field${hidden}"><span>${field.label}${required}</span><input type="date" data-path="${field.path}" value="${escapeHtml(field.value)}"></label>`;
@@ -1361,7 +1369,7 @@ function renderField(field) {
   if (field.type === 'selectCustom') {
     const selected = field.options.includes(field.value) ? field.value : field.value ? field.value : 'Otro / Personalizar';
     const customValue = field.options.includes(field.value) ? '' : field.value;
-    return `<label class="field${hidden}"><span>${field.label}${required}</span><select data-path="${field.path}" data-custom-select="true">${field.options.map(option => `<option value="${escapeHtml(option)}" ${option === selected ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}</select><input type="text" data-path="${field.path}" value="${escapeHtml(customValue)}" placeholder="Escribir opción personalizada" ${selected === 'Otro / Personalizar' || customValue ? '' : 'hidden'}></label>`;
+    return `<label class="field${hidden}"><span>${field.label}${required}</span><select data-path="${field.path}" data-custom-select="true">${field.options.map(option => `<option value="${escapeHtml(option)}" ${option === selected ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}</select><input type="text" data-path="${field.path}" value="${escapeHtml(customValue)}" placeholder="Escribir opción personalizada" aria-label="Opción personalizada" ${selected === 'Otro / Personalizar' || customValue ? '' : 'hidden'}></label>`;
   }
   if (field.type === 'select') {
     return `<label class="field${hidden}"><span>${field.label}${required}</span><select data-path="${field.path}">${field.options.map(option => `<option value="${escapeHtml(option)}" ${option === field.value ? 'selected' : ''}>${escapeHtml(field.labeler ? field.labeler(option) : option)}</option>`).join('')}</select></label>`;
@@ -1370,7 +1378,7 @@ function renderField(field) {
     const help = field.help ? `<small>${escapeHtml(field.help)}</small>` : '';
     return `<label class="field file-name-field${hidden}"><span>${field.label}${required}</span><div class="file-picker-row"><input type="text" data-path="${field.path}" value="${escapeHtml(field.value)}" placeholder="Ej: logo_rincon.png"><span class="file-picker-button">Elegir archivo<input type="file" accept="${escapeHtml(field.accept || 'image/*')}" data-file-target="${field.path}"></span></div>${help}</label>`;
   }
-  return `<label class="field${hidden}"><span>${field.label}${required}</span><input type="text" data-path="${field.path}" value="${escapeHtml(field.value)}"></label>`;
+  return `<label class="field${hidden}"><span>${field.label}${required}</span><input type="text" data-path="${field.path}" value="${escapeHtml(field.value)}" placeholder="${escapeHtml(field.placeholder || '')}"></label>`;
 }
 
 function renderSocialLinks(state, handlers, targetSelector = '#socialLinksEditor') {
@@ -1726,16 +1734,16 @@ function isOtherColor(value) {
   return value === 'otro' || value === 'personalizado';
 }
 
-function text(label, path, value, recommended = false, hidden = false) {
-  return { type: 'text', label, path, value, recommended, hidden };
+function text(label, path, value, recommended = false, hidden = false, placeholder = '') {
+  return { type: 'text', label, path, value, recommended, hidden, placeholder };
 }
 
 function fileText(label, path, value, accept = 'image/*', recommended = false, hidden = false, help = '') {
   return { type: 'fileText', label, path, value, accept, recommended, hidden, help };
 }
 
-function textarea(label, path, value, recommended = false, hidden = false) {
-  return { type: 'textarea', label, path, value, recommended, hidden };
+function textarea(label, path, value, recommended = false, hidden = false, placeholder = '') {
+  return { type: 'textarea', label, path, value, recommended, hidden, placeholder };
 }
 
 function date(label, path, value, recommended = false, hidden = false) {

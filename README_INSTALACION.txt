@@ -1,3 +1,41 @@
+# Instalación y uso - Etapa campos vacíos y desplegables
+
+## Qué agrega este parche
+
+- Mantiene campos manuales vacíos por defecto.
+- Usa placeholders orientativos donde conviene, sin escribir contenido por el usuario.
+- Convierte `Texto para turnos` en desplegable con valores frecuentes.
+- Permite personalizar `Título` y `Texto para turnos` con `Otro / Personalizar`.
+- Mantiene `Odont.` en el selector de título profesional.
+
+## Prueba puntual recomendada
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+npx playwright test tests/app.spec.js -g "campos manuales|texto visible y observaciones" --project=chromium-desktop --project=mobile-chrome
+```
+
+Resultado esperado:
+`4 passed`
+
+## Prueba visual
+
+- Abrir Flyer profesional.
+- Confirmar que nombre, matrícula, especialidad visible y observaciones arrancan vacíos.
+- Confirmar que `Título` incluye `Odont.` y `Otro / Personalizar`.
+- Confirmar que `Texto para turnos` es desplegable y el campo manual solo aparece al elegir `Otro / Personalizar`.
+
+## Prueba completa antes de commit
+
+```powershell
+npm test
+```
+
+---
+
 # Instalación y uso - Fix orden prestaciones y título Odont.
 
 ## Qué corrige este parche

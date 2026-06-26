@@ -718,6 +718,70 @@ test.describe('Etapa 11D.2 - contenido guiado', () => {
   });
 
 
+
+  test('campos manuales de profesional quedan vacíos y el título permite personalizar', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+
+    await expectCurrentStep(page, 'prestaciones');
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'professional');
+
+    await expect(page.locator('input[data-path="professional.fullName"]').first()).toHaveValue('');
+    await expect(page.locator('input[data-path="professional.license"]').first()).toHaveValue('');
+
+    const titleSelect = page.locator('select[data-path="professional.title"]').first();
+    await expect(titleSelect).toBeVisible();
+    const titleOptions = await titleSelect.locator('option').evaluateAll(items => items.map(item => item.textContent.trim()));
+    expect(titleOptions).toContain('Dr.');
+    expect(titleOptions).toContain('Dra.');
+    expect(titleOptions).toContain('Odont.');
+    expect(titleOptions).toContain('Otro / Personalizar');
+
+    const customTitle = page.locator('input[data-path="professional.title"]').first();
+    await expect(customTitle).toBeHidden();
+    await titleSelect.selectOption('Otro / Personalizar');
+    await expect(customTitle).toBeVisible();
+    await customTitle.fill('Esp.');
+    await expect(customTitle).toHaveValue('Esp.');
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('texto visible y observaciones no se completan solos; los defaults quedan en desplegables', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'specialty');
+
+    const visibleText = page.locator('input[data-path="specialty.visibleSpecialtyText"]').first();
+    await expect(visibleText).toBeVisible();
+    await expect(visibleText).toHaveValue('');
+    await expect(visibleText).toHaveAttribute('placeholder', /Ej:/);
+
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'care');
+
+    const appointmentSelect = page.locator('select[data-path="schedule.appointmentText"]').first();
+    await expect(appointmentSelect).toBeVisible();
+    await expect(appointmentSelect).toHaveValue('Solicitar turno por WhatsApp.');
+
+    const customAppointment = page.locator('input[data-path="schedule.appointmentText"]').first();
+    await expect(customAppointment).toBeHidden();
+    await appointmentSelect.selectOption('Otro / Personalizar');
+    await expect(customAppointment).toBeVisible();
+
+    const administrativeNote = page.locator('textarea[data-path="schedule.administrativeNote"]').first();
+    await expect(administrativeNote).toBeVisible();
+    await expect(administrativeNote).toHaveValue('');
+
+    await expect(errors).toEqual([]);
+  });
+
+
   test('promoción usa fechas desde y hasta con selectores de fecha', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);

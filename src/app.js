@@ -709,9 +709,9 @@ function applySpecialtyPreset(name, force = false) {
   const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
   state.specialty.primaryProfessionalSpecialty = name;
   state.specialty.communicationFocus = preset.focus || name;
-  state.specialty.visibleSpecialtyText = state.specialty.visibleSpecialtyText && !force
-    ? state.specialty.visibleSpecialtyText
-    : buildVisibleSpecialtyText([name, ...state.specialty.additionalSpecialties]);
+  // Campo manual: no se completa automaticamente.
+  // La especialidad elegida queda como desplegable y se usa como fallback en el prompt.
+  state.specialty.visibleSpecialtyText = state.specialty.visibleSpecialtyText || '';
 
   const suggestedServices = Array.isArray(preset.services) ? preset.services.slice(0, 5) : [];
   if (force || !state.services.visibleServices.length) {
