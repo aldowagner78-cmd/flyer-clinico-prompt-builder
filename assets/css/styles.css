@@ -544,6 +544,28 @@ textarea:focus {
   background: #f8fafc;
 }
 
+.attachment-file-name {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(124, 58, 237, 0.16);
+  border-radius: 999px;
+  background: var(--accent-pale);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.attachment-file-name.muted {
+  background: rgba(248, 250, 252, 0.9);
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .list-editor {
   margin-top: 20px;
   padding: 18px;
@@ -3254,6 +3276,38 @@ body.is-wizard-open .side-panel {
   cursor: pointer;
 }
 
+.attachment-list-title {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.attachment-list-title > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.attachment-list-title small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.attachment-title-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+
+.attachment-file-input-hidden {
+  display: none !important;
+}
+
+.multi-file-picker {
+  min-height: 42px;
+}
+
 .attachment-panel.full-width,
 .field.full-width {
   grid-column: 1 / -1;
@@ -3272,6 +3326,15 @@ body.is-wizard-open .side-panel {
   .file-picker-button {
     width: 100%;
   }
+  .attachment-title-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .attachment-title-actions > * {
+    flex: 1 1 100%;
+  }
+
 }
 
 @media (max-width: 720px) {
@@ -4278,5 +4341,60 @@ body.is-institution-editor-open .institution-panel-focused {
 @media (max-width: 720px) {
   .field-group-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+
+/* Mejora adjuntos múltiples: interfaz limpia para nombres de archivos */
+.attachment-row {
+  grid-template-columns:
+    minmax(150px, 0.85fr)
+    minmax(240px, 1.2fr)
+    minmax(200px, 1fr)
+    minmax(250px, 1.2fr)
+    auto;
+  align-items: start;
+}
+
+.attachment-file-field,
+.attachment-instruction-field {
+  align-content: start;
+}
+
+.attachment-file-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.attachment-file-button {
+  width: 100%;
+  min-height: 42px;
+}
+
+.attachment-custom-instruction {
+  margin-top: 8px;
+}
+
+.attachment-custom-instruction.is-hidden {
+  display: none;
+}
+
+@media (max-width: 1180px) {
+  .attachment-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .attachment-row .icon-button {
+    width: fit-content;
+  }
+}
+
+@media (max-width: 720px) {
+  .attachment-row {
+    grid-template-columns: 1fr;
+  }
+
+  .attachment-row .icon-button {
+    width: 100%;
   }
 }

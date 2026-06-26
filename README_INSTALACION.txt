@@ -1,3 +1,105 @@
+# Instalación y uso - Fix texto de navegación guiada
+
+## Qué corrige este parche
+
+- Cambia todos los botones `Siguiente tarjeta` por `Siguiente`.
+- Mantiene intactos los atributos y la lógica de navegación del wizard.
+- No toca la lógica de adjuntos, logo institucional ni foto profesional.
+
+## Prueba puntual recomendada
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+npx playwright test tests/app.spec.js -g "captura varios archivos personalizados|promoción usa fechas desde y hasta con selectores de fecha|muestra diseño guiado" --project=chromium-desktop --project=mobile-chrome
+```
+
+Resultado esperado:
+tests puntuales pasando sin errores.
+
+---
+
+# Instalación y uso - Fix limpieza adjuntos y sesión
+
+## Qué corrige este parche
+
+- Quita el botón inútil `Adjuntar archivos` dentro de cada fila ya creada.
+- Mantiene el botón principal `Adjuntar archivos` para copiar nombres de varios archivos de referencia.
+- Evita recordar adjuntos transitorios entre sesiones:
+  - referencias visuales,
+  - adjuntos manuales,
+  - foto profesional.
+- Conserva únicamente el logo institucional guardado en la institución.
+- No sube archivos reales: solo copia nombres para que el prompt los liste y ChatGPT los pida si faltan.
+
+## Prueba puntual recomendada
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome
+```
+
+Resultado esperado:
+`2 passed`
+
+---
+
+# Instalación y uso - Fix UX adjuntos múltiples
+
+## Qué corrige este parche
+
+- Cambia el botón principal a `Adjuntar archivos`.
+- Mantiene la regla clave: la app no sube archivos reales, solo copia nombres de referencia para el prompt.
+- Oculta el control nativo `Browse / No files selected` en las filas de adjuntos múltiples.
+- Muestra cada archivo como `Archivo referido: nombre.ext`.
+- Convierte `Instrucción para GPT` en desplegable con opciones predefinidas y `Otro / Personalizar`.
+- Amplía las opciones de `Rol` para referencias visuales sin tocar la lógica de logo institucional ni foto profesional, que siguen siendo adjuntos individuales.
+- Aplica a las secciones de adjuntos múltiples, incluyendo imágenes personalizadas y adjuntos manuales.
+
+## Prueba puntual recomendada
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome
+```
+
+Resultado esperado:
+`2 passed`
+
+---
+
+# Instalación y uso - Fix adjuntos múltiples
+
+## Qué corrige este parche
+
+- La app no sube archivos reales: solo copia nombres de archivos para agregarlos al prompt.
+- Los nombres capturados desde selectores múltiples quedan visibles en el formulario.
+- El prompt indica que, si faltan archivos adjuntos en ChatGPT, la IA debe pedirlos por nombre exacto antes de generar.
+- Se mantiene compatibilidad con el checklist final de adjuntos.
+
+## Prueba puntual recomendada
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome
+```
+
+Resultado esperado:
+`2 passed`
+
+---
+
 # Instalación y uso - Parche fix 3 problemas
 
 ## Requisitos
@@ -40,6 +142,24 @@ Prueba puntual recomendada antes de la batería completa:
 
 ```powershell
 npx playwright test tests/app.spec.js -g "promoción usa fechas desde y hasta con selectores de fecha|muestra diseño guiado y mantiene Formulario completo como respaldo" --project=chromium-desktop --project=mobile-chrome
+```
+
+
+
+## Adjuntos múltiples
+
+Este parche agrega una mejora funcional:
+
+- En Diseño, el bloque "Imágenes personalizadas para GPT" permite elegir varios archivos de una sola vez.
+- En Adjuntos manuales, también se pueden elegir varios archivos.
+- La app no sube archivos ni guarda contenido: solo captura nombres locales para armar el prompt y el checklist.
+- Si una fila ya existe y se eligen varios archivos, el primero completa esa fila y los demás se agregan como adjuntos nuevos.
+- El prompt final incluye la regla: si falta algún archivo listado, ChatGPT debe pedirlo por nombre exacto antes de generar y no debe crear la pieza hasta recibirlo.
+
+Prueba puntual recomendada:
+
+```powershell
+npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome
 ```
 
 

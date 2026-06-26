@@ -1,5 +1,163 @@
 # Cambios realizados
 
+## Fix texto de navegación guiada - 2026-06-26
+
+### Archivos modificados
+- `src/ui/formRenderer.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se reemplazó el texto visible `Siguiente tarjeta` por `Siguiente`.
+- Se mantuvieron los mismos `data-*` y handlers de navegación.
+
+### Por qué se cambió
+- El texto era innecesariamente largo y menos limpio para el usuario.
+
+### Cómo probar
+- Abrir el flujo guiado de contenido y diseño.
+- Confirmar que los botones dicen `Siguiente`.
+- Confirmar que la navegación sigue avanzando correctamente.
+- Antes de commit, ejecutar `npm test`.
+
+### Cómo revertir
+- Restaurar `src/ui/formRenderer.js` desde el commit anterior.
+
+---
+
+
+## Fix limpieza adjuntos y sesión - 2026-06-26
+
+### Archivos modificados
+- `src/state/storage.js`
+- `src/ui/formRenderer.js`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se eliminó el botón `Adjuntar archivos` dentro de cada fila ya creada.
+- Se mantiene la acción principal de adjuntar/copiar nombres en el encabezado de cada sección de adjuntos múltiples.
+- Se limpian del estado persistido los adjuntos transitorios y la foto profesional.
+- Se conserva únicamente el logo institucional como adjunto persistente.
+- Se agregó verificación automática para que los adjuntos múltiples no queden guardados en `localStorage`.
+
+### Por qué se cambió
+- La interfaz mostraba una acción repetida que no aportaba valor.
+- Los nombres de archivos referidos no deben reaparecer en sesiones futuras porque son datos específicos de cada pieza.
+
+### Cómo probar
+- Ejecutar el test puntual de adjuntos múltiples en desktop y mobile.
+- Confirmar visualmente que cada fila muestra el archivo referido sin botón extra.
+- Recargar la app y confirmar que referencias y foto profesional quedan limpias; el logo institucional guardado se mantiene.
+
+### Cómo revertir
+- Restaurar los archivos listados desde el backup previo o desde Git.
+
+---
+
+
+## Fix UX adjuntos múltiples - 2026-06-26
+
+### Archivos modificados
+- `src/app.js`
+- `src/ui/formRenderer.js`
+- `assets/css/styles.css`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se reemplazó la acción visible por `Adjuntar archivos`.
+- Se ocultó el input nativo de archivo en las filas de adjuntos múltiples.
+- Se mantuvo visible el nombre capturado mediante el texto `Archivo referido`.
+- Se agregó un desplegable para instrucciones de GPT con opciones predefinidas y opción personalizada.
+- Se ampliaron roles para referencias visuales.
+- No se tocó la lógica de logo institucional ni foto profesional, que siguen usando campos individuales de un solo archivo.
+
+### Por qué se cambió
+- La selección múltiple funcionaba, pero la interfaz mostraba controles nativos confusos y campos demasiado manuales para usuarios no técnicos.
+
+### Cómo probar
+- Ejecutar el test puntual de adjuntos múltiples en desktop y mobile.
+- Revisar visualmente Diseño > Formulario completo > Imágenes personalizadas para GPT.
+- Confirmar que el prompt y checklist mantienen los nombres de archivo.
+
+### Cómo revertir
+- Restaurar los archivos listados desde el commit anterior o desde el ZIP de backup.
+
+## Fix adjuntos múltiples - 2026-06-26
+
+### Archivos modificados
+- `src/ui/formRenderer.js`
+- `src/ui/previewRenderer.js`
+- `src/prompt/promptBuilder.js`
+- `assets/css/styles.css`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se agregaron chips/textos visibles con el nombre de archivo referido en cada fila de adjunto.
+- Se cambió el texto de interfaz para aclarar que la app solo copia nombres y no sube archivos.
+- Se incorporó en el prompt la respuesta que debe dar ChatGPT si faltan archivos: “Para poder realizar la tarea necesito que subas los siguientes archivos:”.
+- Se mantuvo la instrucción de no generar hasta recibir los archivos referidos.
+
+### Cómo probar
+- Ejecutar el test puntual de adjuntos múltiples en desktop y mobile.
+- Verificar visualmente que los nombres seleccionados aparecen en el formulario, prompt y checklist.
+
+### Cómo revertir
+- Restaurar los archivos listados desde el commit anterior o desde el ZIP de backup.
+
+## Adjuntos múltiples - 2026-06-26
+
+### Archivos modificados
+- `src/app.js`
+- `src/ui/formRenderer.js`
+- `src/ui/previewRenderer.js`
+- `src/prompt/promptBuilder.js`
+- `assets/css/styles.css`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+- `docs/ROADMAP.md`
+
+### Qué se cambió
+- Se agregó selector múltiple para imágenes personalizadas dentro de Diseño.
+- Se agregó selector múltiple en Adjuntos manuales.
+- Al seleccionar varios archivos en una fila, el primero queda en esa fila y el resto se agrega como filas nuevas.
+- El prompt final lista todos los nombres seleccionados.
+- El checklist de adjuntos lista todos los nombres seleccionados.
+- Se agregó una regla explícita para que ChatGPT pida por nombre exacto cualquier archivo listado que no haya sido adjuntado antes de generar.
+- Se agregaron pruebas automatizadas del flujo de adjuntos múltiples.
+
+### Por qué se cambió
+- El usuario necesitaba seleccionar varios archivos personalizados sin repetir el flujo de agregar uno por uno.
+- El prompt y el checklist debían ser más seguros cuando la pieza depende de archivos adjuntos.
+
+### Cómo probar rápido
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+`npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome`
+
+Resultado esperado:
+`2 passed`
+
+### Cómo probar completo antes de commit
+`npm test`
+
+### Cómo revertir
+Usar Git:
+`git checkout -- src/app.js src/ui/formRenderer.js src/ui/previewRenderer.js src/prompt/promptBuilder.js assets/css/styles.css tests/app.spec.js README_INSTALACION.txt CHANGELOG.md CAMBIOS_REALIZADOS.md docs/ROADMAP.md`
+
+---
+
 ## Fix visual período campaña y navegación guiada - 2026-06-26
 
 ### Archivos modificados
@@ -190,3 +348,48 @@ O revertir el commit del parche:
 ```bash
 git revert <hash-del-commit>
 ```
+
+## Fix adjuntos múltiples - texto de checklist
+
+### Archivos modificados
+- `src/ui/previewRenderer.js`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se reemplazó el texto del checklist para que contenga exactamente “pedilo por nombre exacto”.
+- No se cambió el comportamiento de selección de archivos: la app solo captura nombres, no sube archivos reales.
+
+### Por qué se cambió
+- Los tests puntuales ya encontraban los nombres de archivo, pero fallaban porque el checklist decía “debe pedirlo por nombre exacto” en vez de “pedilo por nombre exacto”.
+
+### Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome
+```
+
+### Cómo revertir
+- Restaurar `src/ui/previewRenderer.js`, `CHANGELOG.md` y `CAMBIOS_REALIZADOS.md` desde Git.
+
+## Fix puntual - input oculto para tests de adjuntos (2026-06-26)
+
+### Archivos modificados
+- `src/ui/formRenderer.js`
+- `assets/css/styles.css`
+
+### Qué se cambió
+- Se restauró el input `data-attachment-file` como control oculto dentro de cada fila de adjunto.
+- El control oculto mantiene compatibilidad con Playwright y no muestra el botón nativo `Browse / No files selected`.
+
+### Por qué se cambió
+- Los tests heredados usan `setInputFiles` sobre `[data-attachment-file]`.
+- La UX debía permanecer limpia, sin botón interno visible dentro de cada fila.
+
+### Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "completa nombres de logo, foto profesional e imagen personalizada sin subir archivos|las tarjetas de diseño cubren formato, colores, estilo, tipografía, densidad, recursos, animación e imágenes" --project=chromium-desktop --project=mobile-chrome
+```
+
+### Cómo revertir
+- Quitar el input oculto `attachment-file-input-hidden` de `renderAttachmentRow`.
+- Quitar la regla CSS `.attachment-file-input-hidden`.

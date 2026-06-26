@@ -8,8 +8,28 @@ const institutionTypes = ['Centro médico', 'Clínica', 'Consultorio', 'Sanatori
 const socialTypes = ['Instagram', 'Facebook', 'TikTok', 'LinkedIn', 'YouTube', 'Sitio web', 'Email', 'WhatsApp', 'Otra'];
 const contentDensityOptions = Object.values(CONTENT_DENSITIES);
 const pieceTypeOptions = Object.values(PIECE_TYPES);
-const attachmentRoles = Object.values(ATTACHMENT_ROLES);
-const customAttachmentRoles = [ATTACHMENT_ROLES.thematicImage, ATTACHMENT_ROLES.referenceFlyer, ATTACHMENT_ROLES.other];
+const attachmentRoles = [
+  ATTACHMENT_ROLES.thematicImage,
+  ATTACHMENT_ROLES.referenceFlyer,
+  'colorPalette',
+  'backgroundImage',
+  'graphicResources',
+  'screenshotReference',
+  'contentDocument',
+  'visualExample',
+  ATTACHMENT_ROLES.other
+];
+const customAttachmentRoles = attachmentRoles;
+const attachmentInstructionOptions = [
+  'Usar como referencia visual.',
+  'Respetar estilo y colores.',
+  'Usar como imagen temática.',
+  'Usar como imagen de fondo.',
+  'Inspirarse sin copiar.',
+  'Tomar solo elementos generales.',
+  'Otro / Personalizar'
+];
+const customInstructionOption = 'Otro / Personalizar';
 const toneOptions = ['Educativo', 'Preventivo', 'Prudente', 'Comunitario', 'Institucional', 'Cercano'];
 const noteOptions = [
   'Contenido informativo. No reemplaza la consulta médica.',
@@ -493,7 +513,7 @@ function renderGuidedContentStep(state, handlers, specialtyNames, preset, pieceT
       <div class="guided-card-actions">
         <button class="secondary-button" type="button" ${contentGuidedIndex <= 0 ? 'data-wizard-action="previous"' : 'data-content-guided="previous"'}>← Anterior</button>
         <button class="secondary-button" type="button" data-content-mode="full">Formulario completo</button>
-        ${isLast ? '<button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>' : '<button class="primary-button" type="button" data-content-guided="next">Siguiente tarjeta →</button>'}
+        ${isLast ? '<button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>' : '<button class="primary-button" type="button" data-content-guided="next">Siguiente →</button>'}
       </div>
     </div>
   `;
@@ -1177,7 +1197,7 @@ function renderGuidedDesignStep(state, handlers, fields) {
       <div class="guided-card-actions">
         <button class="secondary-button" type="button" ${designGuidedIndex <= 0 ? 'data-wizard-action="previous"' : 'data-design-guided="previous"'}>← Anterior</button>
         <button class="secondary-button" type="button" data-design-mode="full">Formulario completo</button>
-        ${isLast ? '<button class="primary-button" type="button" data-wizard-action="next">Ver resultado →</button>' : '<button class="primary-button" type="button" data-design-guided="next">Siguiente tarjeta →</button>'}
+        ${isLast ? '<button class="primary-button" type="button" data-wizard-action="next">Ver resultado →</button>' : '<button class="primary-button" type="button" data-design-guided="next">Siguiente →</button>'}
       </div>
     </div>
   `;
@@ -1451,11 +1471,20 @@ function renderCustomImageAttachmentsHtml(state) {
 
   return `
     <div class="list-editor attachment-panel full-width">
-      <div class="list-title">
-        <label>Imágenes personalizadas para GPT</label>
-        <button class="secondary-button" type="button" id="addCustomAttachmentButton">Agregar imagen</button>
+      <div class="list-title attachment-list-title">
+        <div>
+          <label>Imágenes personalizadas para GPT</label>
+          <small>La app solo copia nombres de archivo para agregarlos al prompt.</small>
+        </div>
+        <div class="attachment-title-actions">
+          <label class="file-picker-button multi-file-picker">
+            Adjuntar archivos
+            <input type="file" accept="image/*" multiple data-multiple-attachment-file="${ATTACHMENT_ROLES.thematicImage}">
+          </label>
+          <button class="secondary-button" type="button" id="addCustomAttachmentButton">Agregar nombre manual</button>
+        </div>
       </div>
-      <p class="helper-text">Elegí fotos, referencias o imágenes temáticas para que la app agregue sus nombres al prompt. Después adjuntalas manualmente en ChatGPT.</p>
+      <p class="helper-text">No se sube ningún archivo desde esta app. Solo se guardan los nombres como referencia para el prompt; después esos mismos archivos se adjuntan manualmente en ChatGPT.</p>
       <div class="repeatable-list">
         ${customIndexes.length ? customIndexes.map(({ item, index }) => renderAttachmentRow(item, index, customAttachmentRoles)).join('') : '<p class="institution-empty-state">No hay imágenes personalizadas seleccionadas.</p>'}
       </div>
@@ -1475,11 +1504,20 @@ function renderAttachments(state, handlers) {
   const target = document.querySelector('#imageFields');
   if (!target) return;
   target.innerHTML = `
-    <div class="list-title">
-      <label>Adjuntos manuales para ChatGPT</label>
-      <button class="secondary-button" type="button" id="addAttachmentButton">Agregar adjunto</button>
+    <div class="list-title attachment-list-title">
+      <div>
+        <label>Adjuntos manuales para ChatGPT</label>
+        <small>Los nombres se capturan localmente; después adjuntás esos archivos en ChatGPT.</small>
+      </div>
+      <div class="attachment-title-actions">
+        <label class="file-picker-button multi-file-picker">
+          Adjuntar archivos
+          <input type="file" accept="image/*" multiple data-multiple-attachment-file="${ATTACHMENT_ROLES.other}">
+        </label>
+        <button class="secondary-button" type="button" id="addAttachmentButton">Agregar nombre manual</button>
+      </div>
     </div>
-    <p class="helper-text">Los archivos no se envían solos. Adjuntalos manualmente en ChatGPT antes de pegar el prompt.</p>
+    <p class="helper-text">No se sube ningún archivo desde esta app. Solo se agregan sus nombres al prompt para que ChatGPT los pida si el usuario no los adjunta.</p>
     <div class="repeatable-list">
       ${state.attachments.items.map((item, index) => renderAttachmentRow(item, index, attachmentRoles)).join('')}
     </div>
@@ -1489,12 +1527,28 @@ function renderAttachments(state, handlers) {
 }
 
 function renderAttachmentRow(item, index, roles = attachmentRoles) {
+  const instructionValue = String(item.instruction || '').trim();
+  const usesCustomInstruction = instructionValue && !attachmentInstructionOptions.includes(instructionValue);
+  const instructionSelectValue = usesCustomInstruction ? customInstructionOption : instructionValue;
+  const customInstructionValue = usesCustomInstruction ? instructionValue : '';
   return `
     <div class="repeatable-row attachment-row" data-warning-path="attachments.items.${index}">
       <label class="field"><span>Rol</span><select data-attachment-index="${index}" data-attachment-key="role">${roles.map(role => `<option value="${escapeHtml(role)}" ${role === item.role ? 'selected' : ''}>${escapeHtml(labelAttachmentRole(role))}</option>`).join('')}</select></label>
-      <label class="field file-field"><span>Elegir archivo</span><input type="file" accept="image/*" data-attachment-file="${index}"></label>
-      <label class="field"><span>Nombre de archivo</span><input type="text" value="${escapeHtml(item.fileName)}" data-attachment-index="${index}" data-attachment-key="fileName" placeholder="Ej: imagen_flyer.jpg"></label>
-      <label class="field"><span>Instrucción para GPT</span><input type="text" value="${escapeHtml(item.instruction)}" data-attachment-index="${index}" data-attachment-key="instruction" placeholder="Ej: usar como referencia visual"></label>
+      <label class="field attachment-file-field">
+        <span>Archivo referido</span>
+        <div class="attachment-file-actions">
+          <span class="attachment-file-name${item.fileName ? '' : ' muted'}">${item.fileName ? `Archivo referido: ${escapeHtml(item.fileName)}` : 'Ningún archivo referido.'}</span>
+          <input class="attachment-file-input-hidden" type="file" accept="image/*" multiple data-attachment-file="${index}" tabindex="-1" aria-hidden="true">
+        </div>
+      </label>
+      <label class="field attachment-name-field"><span>Nombre de archivo</span><input type="text" value="${escapeHtml(item.fileName)}" data-attachment-index="${index}" data-attachment-key="fileName" placeholder="Ej: imagen_flyer.jpg"></label>
+      <label class="field attachment-instruction-field">
+        <span>Instrucción para GPT</span>
+        <select data-attachment-instruction-select="${index}">
+          ${attachmentInstructionOptions.map(option => `<option value="${escapeHtml(option)}" ${option === instructionSelectValue ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
+        </select>
+        <input type="text" class="attachment-custom-instruction${usesCustomInstruction ? '' : ' is-hidden'}" value="${escapeHtml(customInstructionValue)}" data-attachment-index="${index}" data-attachment-key="instruction" placeholder="Escribí la instrucción personalizada">
+      </label>
       <button type="button" class="icon-button" data-remove-attachment="${index}">Quitar</button>
     </div>
   `;
@@ -1508,11 +1562,50 @@ function bindAttachmentControls(target, handlers) {
     input.addEventListener('input', () => handlers.onUpdateAttachment(Number(input.dataset.attachmentIndex), input.dataset.attachmentKey, input.value));
     input.addEventListener('change', () => handlers.onUpdateAttachment(Number(input.dataset.attachmentIndex), input.dataset.attachmentKey, input.value));
   });
+  target.querySelectorAll('[data-attachment-instruction-select]').forEach(select => {
+    select.addEventListener('change', event => {
+      const index = Number(event.target.dataset.attachmentInstructionSelect);
+      const row = event.target.closest('.attachment-row');
+      const customInput = row?.querySelector('.attachment-custom-instruction');
+      if (event.target.value === customInstructionOption) {
+        if (customInput) {
+          customInput.classList.remove('is-hidden');
+          handlers.onUpdateAttachment(index, 'instruction', customInput.value);
+          customInput.focus();
+        } else {
+          handlers.onUpdateAttachment(index, 'instruction', '');
+        }
+        return;
+      }
+      if (customInput) {
+        customInput.classList.add('is-hidden');
+        customInput.value = '';
+      }
+      handlers.onUpdateAttachment(index, 'instruction', event.target.value);
+    });
+  });
   target.querySelectorAll('[data-attachment-file]').forEach(input => {
     input.addEventListener('change', event => {
       const index = Number(event.target.dataset.attachmentFile);
-      const file = event.target.files?.[0];
-      handlers.onUpdateAttachment(index, 'file', file ? { fileName: file.name, mimeType: file.type } : { fileName: '', mimeType: '' });
+      const files = Array.from(event.target.files || []);
+      const row = event.target.closest('.attachment-row');
+      const role = row?.querySelector('[data-attachment-key="role"]')?.value || ATTACHMENT_ROLES.other;
+
+      if (handlers.onUpdateAttachmentFiles) {
+        handlers.onUpdateAttachmentFiles(index, files, role);
+      } else {
+        const file = files[0];
+        handlers.onUpdateAttachment(index, 'file', file ? { fileName: file.name, mimeType: file.type } : { fileName: '', mimeType: '' });
+      }
+      event.target.value = '';
+    });
+  });
+
+  target.querySelectorAll('[data-multiple-attachment-file]').forEach(input => {
+    input.addEventListener('change', event => {
+      const role = event.target.dataset.multipleAttachmentFile || ATTACHMENT_ROLES.other;
+      const files = Array.from(event.target.files || []);
+      if (handlers.onAddMultipleAttachments) handlers.onAddMultipleAttachments(role, files);
       event.target.value = '';
     });
   });
@@ -1620,10 +1713,16 @@ function labelPieceType(value) {
 
 function labelAttachmentRole(value) {
   return {
-    clinicLogo: 'Logo de clinica',
+    clinicLogo: 'Logo de clínica',
     professionalPhoto: 'Foto profesional',
     referenceFlyer: 'Flyer de referencia',
-    thematicImage: 'Imagen tematica',
+    thematicImage: 'Imagen temática',
+    colorPalette: 'Paleta de colores',
+    backgroundImage: 'Imagen de fondo',
+    graphicResources: 'Íconos / recursos gráficos',
+    screenshotReference: 'Captura de pantalla',
+    contentDocument: 'Documento o texto de referencia',
+    visualExample: 'Ejemplo visual',
     other: 'Otro'
   }[value] || value;
 }

@@ -1,5 +1,77 @@
 # Changelog
 
+## [Fix texto de navegación guiada] - 2026-06-26
+
+### Modificado
+- Botones `Siguiente tarjeta` renombrados a `Siguiente` en tarjetas guiadas de contenido y diseño.
+- Sin cambios funcionales en navegación ni adjuntos.
+
+### Pruebas
+- Prueba puntual recomendada: `npx playwright test tests/app.spec.js -g "captura varios archivos personalizados|promoción usa fechas desde y hasta con selectores de fecha|muestra diseño guiado" --project=chromium-desktop --project=mobile-chrome`.
+- Antes de commit, ejecutar `npm test`.
+
+
+## [Fix limpieza adjuntos y sesión] - 2026-06-26
+
+### Modificado
+- Se quitó el botón de adjuntar dentro de cada fila de archivo referido.
+- El selector de archivos queda solo en la acción principal de cada sección de adjuntos múltiples.
+- Los adjuntos transitorios ya no se guardan entre sesiones.
+- La foto profesional tampoco se recuerda entre sesiones.
+- El logo institucional sigue siendo el único adjunto recordado por estar asociado a la institución.
+
+### Pruebas
+- Prueba puntual recomendada: `npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome`.
+- Antes de commit, ejecutar `npm test`.
+
+
+## [Fix UX adjuntos múltiples] - 2026-06-26
+
+### Modificado
+- Botones de selección múltiple renombrados a `Adjuntar archivos`.
+- Filas de adjuntos múltiples rediseñadas para ocultar el control nativo del navegador y mostrar un estado claro de archivo referido.
+- `Instrucción para GPT` ahora usa desplegable con opciones predefinidas y opción `Otro / Personalizar`.
+- Se ampliaron roles de referencia visual sin modificar los campos individuales de logo institucional ni foto profesional.
+
+### Pruebas
+- Prueba puntual recomendada: `npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome`.
+- Antes de commit, ejecutar `npm test`.
+
+## [Fix adjuntos múltiples - texto de checklist] - 2026-06-26
+
+### Corregido
+- Se ajustó el texto del checklist de adjuntos para que indique “pedilo por nombre exacto” cuando falta un archivo referido.
+- Se mantiene la regla del prompt: no generar la pieza hasta recibir los archivos listados por nombre exacto.
+
+### Pruebas
+- Ejecutar solo: `npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome`.
+
+
+## [Fix adjuntos múltiples] - 2026-06-26
+
+### Corregido
+- Los nombres capturados desde selectores de archivo ahora quedan visibles como texto en el formulario, no solo como valor interno del input.
+- Se aclara en la interfaz que la app no sube archivos reales: solo copia nombres para incorporarlos al prompt.
+- Se refuerza la regla del prompt para que ChatGPT pida por nombre exacto los archivos faltantes antes de generar.
+
+## [Adjuntos múltiples] - 2026-06-26
+
+### Agregado
+- Selector para elegir varios archivos personalizados de una sola vez en imágenes para GPT.
+- Selector múltiple en Adjuntos manuales para capturar varios nombres sin subir archivos.
+- Soporte para elegir varios archivos desde una fila existente: el primero actualiza la fila y los demás crean filas nuevas.
+- Regla explícita en el prompt: si falta un archivo listado, la IA debe pedirlo por nombre exacto antes de generar.
+- Prueba automatizada para validar que varios archivos aparecen en prompt y checklist.
+
+### Modificado
+- Checklist de adjuntos indica que debe pedirse por nombre exacto cualquier archivo faltante.
+- Textos de adjuntos aclaran que la app solo guarda nombres locales.
+
+### Pruebas
+- Prueba puntual recomendada: `npx playwright test tests/app.spec.js -g "captura varios archivos personalizados" --project=chromium-desktop --project=mobile-chrome`.
+- Antes de commit, ejecutar `npm test`.
+
+
 ## [Fix visual período campaña y navegación guiada] - 2026-06-26
 
 ### Corregido
@@ -200,3 +272,12 @@
 - Sin backend.
 - Compatible con flujo actual de GitHub Pages.
 - Validación prevista en Chrome, Firefox y Edge mediante pruebas Playwright cuando estén instalados los navegadores.
+
+## 2026-06-26 - Fix compatibilidad tests de adjuntos
+
+### Corregido
+- Se restauró el selector local oculto para adjuntos personalizados, manteniendo la interfaz limpia.
+- Se evita mostrar el control nativo del navegador dentro de cada fila.
+
+### Pendiente
+- Ejecutar los 4 tests puntuales y luego `npm test` antes de commit.

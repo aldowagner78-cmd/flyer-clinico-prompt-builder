@@ -21,6 +21,15 @@
 - El bloque externo de prestaciones visibles queda oculto durante el modo guiado.
 - El resumen de institución muestra la frase institucional guardada.
 
+
+### Resuelto en parche Adjuntos múltiples
+
+- Se permite seleccionar varios archivos personalizados de una sola vez.
+- La app captura múltiples nombres de archivo sin subirlos realmente.
+- El prompt final y el checklist listan todos los archivos seleccionados.
+- El prompt incluye la regla: si algún archivo listado no fue adjuntado en ChatGPT, la IA debe pedirlo por nombre exacto antes de generar y no debe crear la pieza hasta recibirlo.
+
+
 ### Pendiente
 
 - Revisar si otros flujos futuros piden períodos y aplicar el mismo patrón `Desde` / `Hasta` donde corresponda.
