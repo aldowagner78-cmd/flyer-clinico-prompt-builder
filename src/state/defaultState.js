@@ -83,6 +83,8 @@ export function createDefaultState() {
       mainMessage: '',
       infoBlocksText: '',
       campaignType: '',
+      campaignStartDate: '',
+      campaignEndDate: '',
       campaignValidity: '',
       campaignConditions: '',
       campaignCallToAction: '',

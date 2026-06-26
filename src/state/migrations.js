@@ -240,6 +240,20 @@ function sanitizeAttachments(attachments) {
 function sanitizePromptOptions(promptOptions) {
   return {
     promptType: stringFrom(promptOptions.promptType) || PROMPT_TYPES.finalFlyer,
+    pieceType: stringFrom(promptOptions.pieceType) || 'professionalFlyer',
+    pieceTypeConfirmed: booleanFrom(promptOptions.pieceTypeConfirmed, false),
+    contentGoal: stringFrom(promptOptions.contentGoal),
+    targetAudience: stringFrom(promptOptions.targetAudience),
+    educationalTopic: stringFrom(promptOptions.educationalTopic),
+    mainMessage: stringFrom(promptOptions.mainMessage),
+    infoBlocksText: stringFrom(promptOptions.infoBlocksText),
+    campaignType: stringFrom(promptOptions.campaignType),
+    campaignStartDate: stringFrom(promptOptions.campaignStartDate),
+    campaignEndDate: stringFrom(promptOptions.campaignEndDate),
+    campaignValidity: firstString(promptOptions.campaignValidity, buildCampaignValidityText(promptOptions)),
+    campaignConditions: stringFrom(promptOptions.campaignConditions),
+    campaignCallToAction: stringFrom(promptOptions.campaignCallToAction),
+    legalEthicalNote: stringFrom(promptOptions.legalEthicalNote),
     finalAlternativesCount: numberFrom(promptOptions.finalAlternativesCount, 1),
     requireSeparateImages: booleanFrom(promptOptions.requireSeparateImages, true),
     preventCollage: booleanFrom(promptOptions.preventCollage, true),
@@ -255,6 +269,15 @@ function sanitizePromptOptions(promptOptions) {
     highlightData: stringFrom(promptOptions.highlightData),
     smallData: stringFrom(promptOptions.smallData)
   };
+}
+
+function buildCampaignValidityText(promptOptions = {}) {
+  const start = stringFrom(promptOptions.campaignStartDate);
+  const end = stringFrom(promptOptions.campaignEndDate);
+  if (start && end) return `Desde ${start} hasta ${end}`;
+  if (start) return `Desde ${start}`;
+  if (end) return `Hasta ${end}`;
+  return '';
 }
 
 function sanitizeValidationState(validationState) {
