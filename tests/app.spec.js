@@ -289,6 +289,9 @@ test.describe('Etapa 10T - diseño y resultado', () => {
 
     await clickCurrentNext(page);
     await expectCurrentStep(page, 'diseno');
+    await page.locator('#designFields [data-design-guided="next"]').click();
+    await page.locator('#designFields [data-design-guided="next"]').click();
+    await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'style');
 
     await selectPath(page, 'design.visualStyle', 'infantil');
     await goResult(page);
@@ -320,6 +323,8 @@ test.describe('Etapa 10T - diseño y resultado', () => {
 
     await clickCurrentNext(page);
     await expectCurrentStep(page, 'diseno');
+    await page.locator('#designFields [data-design-guided="next"]').click();
+    await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'colors');
 
     const institutionalToggle = page.locator('[data-path="design.useInstitutionalColors"]').first();
     const primaryColor = page.locator('[data-path="design.primaryColor"]').first();
@@ -378,6 +383,7 @@ test.describe('Etapa 11A - adjuntos por selector local', () => {
 
     await clickCurrentNext(page);
     await expectCurrentStep(page, 'diseno');
+    await page.locator('#designFields [data-design-mode="full"]').click();
     await page.locator('#addCustomAttachmentButton').click();
     await page.locator('[data-attachment-file]').last().setInputFiles({
       name: 'referencia_visual.webp',
@@ -491,3 +497,165 @@ test.describe('Etapa 11C - UX de institución y navegación', () => {
     expect(errors).toEqual([]);
   });
 });
+
+test.describe('Etapa 11D.2 - contenido guiado', () => {
+  const guidedCases = [
+    {
+      pieceType: 'professionalFlyer',
+      card: 'professional',
+      expectedText: /Profesional/i,
+      fullField: 'professional.fullName'
+    },
+    {
+      pieceType: 'clinicalInfographic',
+      card: 'topic',
+      expectedText: /Tema de la infografía/i,
+      fullField: 'promptOptions.educationalTopic'
+    },
+    {
+      pieceType: 'informativeFlyer',
+      card: 'info-type',
+      expectedText: /Tipo de información/i,
+      fullField: 'promptOptions.contentGoal'
+    },
+    {
+      pieceType: 'promotionCampaign',
+      card: 'campaign-type',
+      expectedText: /Tipo de campaña/i,
+      fullField: 'promptOptions.campaignType'
+    }
+  ];
+
+  for (const item of guidedCases) {
+    test(`${PIECES[item.pieceType]} muestra contenido guiado y respaldo de formulario completo`, async ({ page }) => {
+      const errors = watchBrowserErrors(page);
+      await openCleanApp(page);
+      await startWithPiece(page, item.pieceType);
+
+      const contentCard = page.locator('#serviceFields .content-guided-card');
+      await expect(contentCard).toBeVisible();
+      await expect(contentCard).toHaveAttribute('data-content-guided-key', item.card);
+      await expect(contentCard).toContainText(item.expectedText);
+      await expect(page.locator('#serviceFields [data-content-mode="full"]')).toBeVisible();
+
+      await page.locator('#serviceFields [data-content-mode="full"]').click();
+      await expect(page.locator('#serviceFields .content-mode-panel')).toBeVisible();
+      await expect(page.locator(`[data-path="${item.fullField}"]`).first()).toBeVisible();
+
+      await page.locator('#serviceFields [data-content-mode="guided"]').click();
+      await expect(page.locator('#serviceFields .content-guided-card')).toBeVisible();
+      await expect(errors).toEqual([]);
+    });
+  }
+
+  test('las tarjetas guiadas de contenido avanzan sin cambiar de paso principal', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+
+    await expectCurrentStep(page, 'prestaciones');
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'professional');
+
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await expectCurrentStep(page, 'prestaciones');
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'specialty');
+
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'services');
+    await expect(page.locator('#serviceFields')).toContainText(/Prestaciones sugeridas/i);
+
+    await expect(errors).toEqual([]);
+  });
+});
+
+test.describe('Etapa 11D.3 - diseño guiado', () => {
+  test('muestra diseño guiado y mantiene Formulario completo como respaldo', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+
+    await clickCurrentNext(page);
+    await expectCurrentStep(page, 'diseno');
+
+    const designCard = page.locator('#designFields .design-guided-card');
+    await expect(designCard).toBeVisible();
+    await expect(designCard).toHaveAttribute('data-design-guided-key', 'format');
+    await expect(designCard).toContainText(/Formato/i);
+    await expect(page.locator('select[data-path="design.format"]').first()).toBeVisible();
+    await expect(page.locator('#designFields [data-design-mode="full"]')).toBeVisible();
+
+    await page.locator('#designFields [data-design-mode="full"]').click();
+    await expect(page.locator('#designFields .design-mode-panel')).toBeVisible();
+    await expect(page.locator('select[data-path="design.visualStyle"]').first()).toBeVisible();
+
+    await page.locator('#designFields [data-design-mode="guided"]').click();
+    await expect(page.locator('#designFields .design-guided-card')).toBeVisible();
+    await expect(errors).toEqual([]);
+  });
+
+  test('las tarjetas de diseño cubren formato, colores, estilo, tipografía, densidad, recursos, animación e imágenes', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'informativeFlyer');
+
+    await clickCurrentNext(page);
+    await expectCurrentStep(page, 'diseno');
+
+    const expectedCards = [
+      ['format', /Formato/i],
+      ['colors', /Colores/i],
+      ['style', /Estilo visual/i],
+      ['typography-density', /Tipografía y densidad/i],
+      ['resources', /Iconos, fondo y recursos/i],
+      ['animation', /Modo animado/i],
+      ['images', /Imágenes personalizadas/i]
+    ];
+
+    for (let index = 0; index < expectedCards.length; index += 1) {
+      const [key, text] = expectedCards[index];
+      await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', key);
+      await expect(page.locator('#designFields .design-guided-card')).toContainText(text);
+      if (index < expectedCards.length - 1) {
+        await page.locator('#designFields [data-design-guided="next"]').click();
+      }
+    }
+
+    await expect(page.locator('#addCustomAttachmentButton')).toBeVisible();
+    await page.locator('#addCustomAttachmentButton').click();
+    await page.locator('[data-attachment-file]').last().setInputFiles({
+      name: 'referencia_diseno.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('referencia')
+    });
+
+    await goResult(page);
+    const prompt = await getPrompt(page);
+    expect(prompt).toContain('Imagen temática: referencia_diseno.png');
+    await expect(errors).toEqual([]);
+  });
+
+  test('modo animado desde diseño guiado actualiza el prompt final', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'clinicalInfographic');
+
+    await clickCurrentNext(page);
+    await expectCurrentStep(page, 'diseno');
+
+    for (let i = 0; i < 5; i += 1) {
+      await page.locator('#designFields [data-design-guided="next"]').click();
+    }
+
+    await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'animation');
+    const animationToggle = page.locator('[data-path="promptOptions.requestAnimation"]').first();
+    await expect(animationToggle).toBeVisible();
+    await animationToggle.check();
+
+    await goResult(page);
+    const prompt = await getPrompt(page);
+    expect(prompt).toContain('MODO ANIMADO');
+    expect(prompt).toMatch(/pieza animada|video corto|clip animado/i);
+    await expect(errors).toEqual([]);
+  });
+});
+
