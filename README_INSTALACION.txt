@@ -1,3 +1,37 @@
+# Instalación y uso - Corrección post-Codex
+
+## Qué corrige este parche
+
+- Repara textos e iconos rotos por codificación en la interfaz.
+- Corrige el botón `Inicio`.
+- Mantiene el resumen lateral retirado durante el asistente.
+- Deja resumen y acciones principales disponibles en `Resultado`.
+- Evita perder funciones al ocultar el panel lateral.
+
+## Ejecución local
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+py -m http.server 8000
+```
+
+Abrir:
+`http://127.0.0.1:8000/`
+
+## Checklist visual
+
+- Home sin caracteres rotos.
+- Tarjetas de tipo de pieza con iconos correctos.
+- Botón Inicio visible y claro.
+- Sin panel lateral durante el asistente.
+- Resultado con resumen y acciones.
+- Sin scroll horizontal.
+
+---
+
 # Instalación y uso - Etapa campos vacíos y desplegables
 
 ## Qué agrega este parche
@@ -408,3 +442,99 @@ Comando:
 Resultado esperado:
 Deben pasar los 2 tests de campaña. Verificar visualmente que `Desde` y `Hasta` estén bajo el título `Período de campaña`, lado a lado en escritorio y sin botones inferiores duplicados en modo guiado.
 
+# Instalacion y uso - Etapa modernizacion visual segura
+
+## Que agrega este parche
+
+- Moderniza la interfaz sin cambiar la logica central del generador.
+- Mejora Home, boton de inicio y boton para volver al inicio.
+- Unifica cards, botones, encabezados, paneles guiados y resultado asistido.
+- Ajusta responsive movil para que las acciones y tarjetas sean mas claras.
+- Mantiene modo demo, adjuntos multiples, logo institucional, foto profesional, orden manual y resultado asistido.
+
+## Validacion sintactica
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comandos:
+```powershell
+node --check src/app.js
+node --check src/ui/formRenderer.js
+node --check src/prompt/promptBuilder.js
+```
+
+## Pruebas puntuales recomendadas
+
+Desktop:
+```powershell
+npx playwright test tests/app.spec.js --project=chromium-desktop -g "la app abre|formulario completo|muestra diseño guiado|resultado muestra revisión final|captura varios archivos personalizados|permite ordenar prestaciones visibles"
+```
+
+Mobile:
+```powershell
+npx playwright test tests/app.spec.js --project=mobile-chrome -g "la app abre|formulario completo|muestra diseño guiado|resultado muestra revisión final|captura varios archivos personalizados|permite ordenar prestaciones visibles"
+```
+
+## Prueba visual
+
+- Confirmar que Home se entiende sin instrucciones tecnicas.
+- Confirmar que hay una accion principal clara por pantalla.
+- Confirmar que el boton Inicio vuelve al inicio y se ve profesional.
+- Confirmar que adjuntos multiples, orden manual, formulario completo y resultado asistido siguen funcionando.
+
+## Prueba completa antes de commit
+
+```powershell
+npm test
+```
+
+---
+# Instalacion y uso - Layout sin resumen lateral
+
+## Que agrega este parche
+
+- Retira el panel lateral `Resumen / Vista rapida` durante el asistente.
+- Integra el resumen dentro de la pantalla `Resultado`.
+- Da mas ancho util a formularios, tarjetas guiadas, adjuntos y resultado.
+- Reduce riesgo de scroll horizontal en desktop, tablet y movil.
+- Mantiene intacta la logica de prompts, adjuntos, logo, foto profesional, orden manual y campos editables.
+
+## Validacion sintactica
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comandos:
+```powershell
+node --check src/app.js
+node --check src/ui/formRenderer.js
+node --check src/prompt/promptBuilder.js
+```
+
+## Pruebas puntuales recomendadas
+
+Desktop:
+```powershell
+npx playwright test tests/app.spec.js --project=chromium-desktop -g "la app abre|formulario completo|muestra diseño guiado|resultado muestra revisión final|captura varios archivos personalizados|permite ordenar prestaciones visibles|campos manuales"
+```
+
+Mobile:
+```powershell
+npx playwright test tests/app.spec.js --project=mobile-chrome -g "la app abre|formulario completo|muestra diseño guiado|resultado muestra revisión final|captura varios archivos personalizados|permite ordenar prestaciones visibles|campos manuales"
+```
+
+## Prueba visual
+
+- Confirmar que el panel lateral no aparece en los pasos del asistente.
+- Confirmar que el resumen aparece dentro de Resultado.
+- Confirmar que no hay scroll horizontal.
+- Confirmar que formularios, tarjetas guiadas, adjuntos multiples y orden manual mantienen ancho suficiente.
+
+## Prueba completa antes de commit
+
+```powershell
+npm test
+```
+
+---

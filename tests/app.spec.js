@@ -34,6 +34,15 @@ async function expectCurrentStep(page, id) {
   await expect(page.locator('.form-section.is-current')).toHaveAttribute('id', id);
 }
 
+async function expectNoHorizontalOverflow(page) {
+  const overflow = await page.evaluate(() => ({
+    documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    bodyOverflow: document.body.scrollWidth - document.body.clientWidth
+  }));
+  expect(overflow.documentOverflow).toBeLessThanOrEqual(1);
+  expect(overflow.bodyOverflow).toBeLessThanOrEqual(1);
+}
+
 async function clickCurrentNext(page) {
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const guidedNext = page.locator('.form-section.is-current [data-content-guided="next"], .form-section.is-current [data-design-guided="next"]').last();
@@ -181,8 +190,11 @@ test.describe('Etapa 10T - flujo principal', () => {
 
     expect(visibleSteps).toEqual(['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado']);
     await expect(page.locator('#pieceHome .piece-card')).toHaveCount(0);
+    await expect(page.locator('.side-panel')).toBeHidden();
+    await expect(page.locator('#summaryPanel')).toBeHidden();
     await expect(page.locator('#clinica .step-header-controls [data-wizard-action="home"]')).toBeVisible();
     await expect(page.locator('#clinica .section-heading [data-wizard-action="next"]')).toHaveCount(0);
+    await expectNoHorizontalOverflow(page);
     await expect(errors).toEqual([]);
   });
 
@@ -940,9 +952,14 @@ test.describe('Etapa 11D.4 - resultado asistido', () => {
     await goResult(page);
 
     await expect(page.locator('#finalReview')).toBeVisible();
-    await expect(page.locator('#finalReview')).toContainText(/Revisión final/i);
-    await expect(page.locator('#finalReviewSteps')).toContainText(/Datos mínimos/i);
+    await expect(page.locator('.side-panel')).toBeHidden();
+    await expect(page.locator('#resultado #summaryPanel')).toBeVisible();
+    await expect(page.locator('#resultado #summaryPanel')).toContainText(/Tipo de pieza/i);
+    await expect(page.locator('#finalReview')).toContainText(/Revisi.+n final/i);
+    await expect(page.locator('#finalReviewSteps')).toContainText(/Datos m.+nimos/i);
     await expect(page.locator('#finalReviewSteps')).toContainText(/Copiar y generar/i);
+
+    await expectNoHorizontalOverflow(page);
 
     const resultCopyButton = page.locator('#resultado [data-copy-prompt-action]');
     await expect(resultCopyButton).toBeVisible();

@@ -1,5 +1,40 @@
 # Roadmap
 
+## Pendientes futuros
+
+### PWA instalable
+
+- Agregar `manifest.webmanifest`.
+- Agregar iconos de app.
+- Registrar `service-worker.js` simple.
+- Permitir instalación en Android y escritorio desde navegador.
+- Documentar instalación en Chrome/Edge/Android.
+- Mantener compatibilidad con GitHub Pages.
+
+### Prompts para animaciones y videos
+
+- Mejorar prompts especificos para Gemini/video.
+- Sugerir duracion de 15 a 25 segundos segun la cantidad de contenido.
+- Preparar salidas listas para Instagram y WhatsApp.
+- No implementar en esta etapa de modernizacion visual.
+
+## Cambios UX recientes
+
+
+### Corrección post-Codex de layout e iconos
+
+- Se repararon textos e iconos rotos por codificación en la interfaz.
+- Se corrigió el botón Inicio para que sea claro y accesible.
+- Se mantuvo el resumen lateral retirado durante el asistente.
+- Se recuperaron acciones importantes en la pantalla Resultado.
+
+### Resumen lateral retirado
+
+- Se retiro el panel lateral de resumen durante el asistente para ganar ancho util.
+- El asistente usa una sola columna principal en pasos intermedios.
+- El resumen queda concentrado en la pantalla Resultado, junto con la revision final, checklist, adjuntos y advertencias.
+- Mantener este criterio en futuras pantallas para evitar scroll horizontal en desktop, tablet y movil.
+
 ## Principios
 
 - Mantener la app gratuita, estatica y compatible con GitHub Pages.

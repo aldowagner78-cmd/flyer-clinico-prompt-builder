@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8">
@@ -76,6 +76,7 @@
           </div>
           <button class="secondary-button compact-action wizard-close-button" type="button" id="closeAssistantButton">Cerrar asistente</button>
         </div>
+        <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
         <nav class="step-nav" aria-label="Secciones del formulario">
           <button class="step-button is-active" type="button" data-step-target="clinica">Institución</button>
           <button class="step-button" type="button" data-step-target="tipo">Tipo</button>
@@ -107,7 +108,7 @@
                 <p>Elegí si querés crear un flyer profesional, una infografía, un flyer informativo o una campaña/promoción.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
-                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
               </div>
             </div>
             <div class="piece-step-grid" aria-label="Elegir tipo de pieza">
@@ -144,7 +145,7 @@
                 <p>Datos del centro, contacto, logo e identidad institucional.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
-                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
               </div>
             </div>
             <div id="institutionManager" class="institution-manager"></div>
@@ -160,7 +161,7 @@
                 <p>Identidad profesional y datos visibles.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
-                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
               </div>
             </div>
             <div id="doctorFields" class="field-grid"></div>
@@ -174,7 +175,7 @@
                 <p>Servicios principales, sugerencias prudentes y alcance autorizado.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
-                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
               </div>
             </div>
             <div id="serviceFields" class="field-grid"></div>
@@ -199,7 +200,7 @@
                 <p>Dias, horarios, cobertura y modalidad de atencion.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
-                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
               </div>
             </div>
             <div id="careFields" class="field-grid"></div>
@@ -214,7 +215,7 @@
                 <p>Formato, colores, estilo y recursos graficos esperados.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
-                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
               </div>
             </div>
             <div id="designFields" class="field-grid"></div>
@@ -228,7 +229,7 @@
                 <p>Seleccion local para recordar que archivos enviar manualmente a ChatGPT.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
-                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
               </div>
             </div>
             <div id="imageFields" class="field-grid"></div>
@@ -244,7 +245,7 @@
                 <p>Preferencias finas, frases a evitar e instrucciones libres.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
-                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
               </div>
             </div>
             <div id="advancedFields" class="field-grid"></div>
@@ -258,7 +259,7 @@
                 <p>Revisión asistida, checklist de adjuntos y prompt listo para copiar.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
-                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio">⌂</button>
+                <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
               </div>
             </div>
 
@@ -269,6 +270,14 @@
                 <p id="finalReviewSummary">Confirmá datos, adjuntos y advertencias antes de pegar el prompt en ChatGPT.</p>
               </div>
               <ol id="finalReviewSteps" class="final-review-steps"></ol>
+            </article>
+
+            <article class="result-summary-panel" aria-label="Resumen de la pieza">
+              <div class="panel-title-row">
+                <h3>Resumen</h3>
+                <span>Vista rapida</span>
+              </div>
+              <div id="summaryPanel" class="summary-panel"></div>
             </article>
 
             <div class="result-grid result-grid-assisted">
@@ -318,56 +327,48 @@
                 <textarea id="promptOutput" class="prompt-output" readonly></textarea>
               </div>
             </div>
+
+            <article class="result-actions-panel panel-block action-block" aria-label="Acciones del resultado">
+                      <div class="panel-title-row">
+                        <h2>Acciones</h2>
+                        <span>Producción</span>
+                      </div>
+                      <div class="action-grid action-grid-v2">
+                        <div class="action-group primary-actions">
+                          <span class="action-group-title" id="primaryActionTitle">Acción principal</span>
+                          <button class="primary-button copy-prompt-primary" type="button" id="copyPromptButton" data-copy-prompt-action>Copiar prompt revisado</button>
+                        </div>
+            
+                        <div class="action-group secondary-actions">
+                          <span class="action-group-title" id="secondaryActionTitle">Enviar a ChatGPT</span>
+                          <button class="secondary-button" type="button" id="copyAttachmentsButton">Copiar checklist de adjuntos</button>
+                          <button class="secondary-button" type="button" id="downloadPromptButton">Descargar TXT</button>
+                        </div>
+            
+                        <details class="more-actions">
+                          <summary>Más opciones</summary>
+                          <div class="more-actions-grid">
+                            <button class="secondary-button demo-button" type="button" id="loadDemoButton">Cargar ejemplo de este tipo</button>
+                            <button class="secondary-button" type="button" id="saveTemplateButton">Guardar plantilla</button>
+                            <button class="secondary-button" type="button" id="loadTemplateButton">Cargar plantilla</button>
+                            <button class="secondary-button" type="button" id="exportJsonButton">Exportar JSON</button>
+                            <label class="file-action">
+                              Importar JSON
+                              <input type="file" id="importJsonInput" accept="application/json,.json">
+                            </label>
+                            <button class="danger-button" type="button" id="clearButton">Limpiar</button>
+                          </div>
+                        </details>
+                      </div>
+                    </article>
           </section>
         </form>
 
       </section>
-
-      <aside class="side-panel" aria-label="Resumen y acciones">
-        <div class="panel-block summary-block">
-          <div class="panel-title-row">
-            <h2>Resumen</h2>
-            <span>Vista rapida</span>
-          </div>
-          <div id="summaryPanel" class="summary-panel"></div>
-        </div>
-        <div class="panel-block action-block">
-          <div class="panel-title-row">
-            <h2>Acciones</h2>
-            <span>Produccion</span>
-          </div>
-          <div class="action-grid action-grid-v2">
-            <div class="action-group primary-actions">
-              <span class="action-group-title" id="primaryActionTitle">Acción principal</span>
-              <button class="primary-button copy-prompt-primary" type="button" id="copyPromptButton" data-copy-prompt-action>Copiar prompt revisado</button>
-            </div>
-
-            <div class="action-group secondary-actions">
-              <span class="action-group-title" id="secondaryActionTitle">Enviar a ChatGPT</span>
-              <button class="secondary-button" type="button" id="copyAttachmentsButton">Copiar checklist de adjuntos</button>
-              <button class="secondary-button" type="button" id="downloadPromptButton">Descargar TXT</button>
-            </div>
-
-            <details class="more-actions">
-              <summary>Más opciones</summary>
-              <div class="more-actions-grid">
-                <button class="secondary-button demo-button" type="button" id="loadDemoButton">Cargar ejemplo de este tipo</button>
-                <button class="secondary-button" type="button" id="saveTemplateButton">Guardar plantilla</button>
-                <button class="secondary-button" type="button" id="loadTemplateButton">Cargar plantilla</button>
-                <button class="secondary-button" type="button" id="exportJsonButton">Exportar JSON</button>
-                <label class="file-action">
-                  Importar JSON
-                  <input type="file" id="importJsonInput" accept="application/json,.json">
-                </label>
-                <button class="danger-button" type="button" id="clearButton">Limpiar</button>
-              </div>
-            </details>
-          </div>
-          <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
-        </div>
-      </aside>
+      <aside class="side-panel" aria-label="Resumen y acciones" hidden></aside>
     </main>
 
     <script type="module" src="src/app.js"></script>
   </body>
 </html>
+
