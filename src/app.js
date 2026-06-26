@@ -64,6 +64,25 @@ const handlers = {
     state.services.visibleServices.splice(index, 1);
     update(true);
   },
+  onMoveService(index, direction) {
+    const from = Number(index);
+    const offset = Number(direction);
+    const to = from + offset;
+    if (!Number.isInteger(from) || !Number.isInteger(to)) return;
+    if (from < 0 || to < 0 || from >= state.services.visibleServices.length || to >= state.services.visibleServices.length) return;
+    const [item] = state.services.visibleServices.splice(from, 1);
+    state.services.visibleServices.splice(to, 0, item);
+    update(true);
+  },
+  onReorderServices(fromIndex, toIndex) {
+    const from = Number(fromIndex);
+    const to = Number(toIndex);
+    if (!Number.isInteger(from) || !Number.isInteger(to)) return;
+    if (from < 0 || to < 0 || from >= state.services.visibleServices.length || to >= state.services.visibleServices.length || from === to) return;
+    const [item] = state.services.visibleServices.splice(from, 1);
+    state.services.visibleServices.splice(to, 0, item);
+    update(true);
+  },
   onToggleServiceOption(value, checked) {
     const item = String(value || '').trim();
     if (!item) return;

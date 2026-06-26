@@ -1,5 +1,31 @@
 # Changelog
 
+## [Fix orden prestaciones y título profesional] - 2026-06-26
+
+### Modificado
+- Prueba de orden de prestaciones optimizada para evitar timeout en escritorio.
+- Agregada opción `Odont.` en el selector de título profesional.
+
+### Pruebas
+- Prueba puntual recomendada: `npx playwright test tests/app.spec.js -g "permite ordenar prestaciones visibles" --project=chromium-desktop --project=mobile-chrome`.
+- Antes de commit, ejecutar `npm test`.
+
+---
+
+## [Etapa orden prestaciones] - 2026-06-26
+
+### Agregado
+- Prestaciones, datos visibles y puntos visibles ahora pueden reordenarse manualmente.
+- Se agregan botones `Subir` y `Bajar` como alternativa accesible al arrastre.
+- Las listas visibles aceptan arrastrar y soltar para ordenar.
+- El prompt final respeta exactamente el orden definido por el usuario.
+
+### Pruebas
+- Prueba puntual recomendada: `npx playwright test tests/app.spec.js -g "permite ordenar prestaciones visibles" --project=chromium-desktop --project=mobile-chrome`.
+- Antes de commit, ejecutar `npm test`.
+
+
+
 ## [Fix texto de navegación guiada] - 2026-06-26
 
 ### Modificado

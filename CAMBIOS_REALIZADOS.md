@@ -1,5 +1,66 @@
 # Cambios realizados
 
+## Fix orden prestaciones y título Odont. - 2026-06-26
+
+### Archivos modificados
+- `src/ui/formRenderer.js`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se optimizó la prueba de orden de prestaciones para validar el orden de los ítems agregados sin borrar toda la lista previa.
+- Se agregó `Odont.` como opción de título profesional en Flyer profesional.
+- No se modificó la lógica de adjuntos múltiples.
+
+### Por qué se cambió
+- El test de escritorio podía superar el timeout de 30 segundos aunque la función pasara en móvil.
+- Se necesitaba una opción de título adecuada para odontólogos.
+
+### Cómo probar
+- Ejecutar:
+  `npx playwright test tests/app.spec.js -g "permite ordenar prestaciones visibles" --project=chromium-desktop --project=mobile-chrome`
+- Confirmar visualmente que `Odont.` aparece en `Flyer profesional > Profesional > Título`.
+
+### Cómo revertir
+- Revertir estos archivos desde Git o aplicar el backup previo al parche.
+
+---
+
+## Etapa orden prestaciones - 2026-06-26
+
+### Archivos modificados
+- `src/app.js`
+- `src/ui/formRenderer.js`
+- `assets/css/styles.css`
+- `tests/app.spec.js`
+- `docs/ROADMAP.md`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se agregó orden manual para prestaciones/datos/puntos visibles.
+- Se agregaron botones `Subir`, `Bajar` y `Quitar` en cada ítem visible.
+- Se agregó soporte de arrastrar y soltar para ordenar.
+- Se agregó prueba automática para verificar que el prompt respeta el orden.
+
+### Por qué se cambió
+- El usuario debe controlar el orden exacto en que los datos aparecen en el prompt final y, por extensión, en la pieza solicitada.
+
+### Cómo probar
+- Ejecutar el test puntual:
+  `npx playwright test tests/app.spec.js -g "permite ordenar prestaciones visibles" --project=chromium-desktop --project=mobile-chrome`
+- Confirmar visualmente que las prestaciones se pueden subir/bajar y arrastrar.
+- Confirmar que el prompt final respeta el orden definido.
+
+### Cómo revertir
+- Restaurar los archivos listados desde el commit anterior o desde el ZIP backup previo.
+
+---
+
+
 ## Fix texto de navegación guiada - 2026-06-26
 
 ### Archivos modificados

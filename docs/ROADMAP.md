@@ -30,6 +30,14 @@
 - El prompt incluye la regla: si algún archivo listado no fue adjuntado en ChatGPT, la IA debe pedirlo por nombre exacto antes de generar y no debe crear la pieza hasta recibirlo.
 
 
+### Resuelto en parche Orden prestaciones
+
+- Prestaciones visibles, datos visibles y puntos visibles pueden ordenarse manualmente.
+- Se agregan botones `Subir` / `Bajar` para accesibilidad.
+- Se agrega soporte de arrastrar y soltar.
+- El prompt final respeta el orden exacto elegido por el usuario.
+
+
 ### Pendiente
 
 - Revisar si otros flujos futuros piden períodos y aplicar el mismo patrón `Desde` / `Hasta` donde corresponda.
