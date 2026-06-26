@@ -34,7 +34,7 @@ export function createDefaultState() {
       primaryProfessionalSpecialty: 'Clinica medica',
       additionalSpecialties: [],
       communicationFocus: 'Control clinico y prevencion',
-      visibleSpecialtyText: 'Clinica medica'
+      visibleSpecialtyText: ''
     },
     services: {
       mainHighlightedService: '',

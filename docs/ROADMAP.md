@@ -38,6 +38,14 @@
 - El prompt final respeta el orden exacto elegido por el usuario.
 
 
+### Resuelto en parche Campos vacíos y desplegables
+
+- Campos manuales de profesional, matrícula, especialidad visible y observaciones quedan vacíos por defecto.
+- Los valores sugeridos se mantienen en desplegables, no como texto libre precargado.
+- `Título` profesional y `Texto para turnos` permiten `Otro / Personalizar`.
+- El campo manual de personalización solo se muestra cuando se elige esa opción.
+
+
 ### Pendiente
 
 - Revisar si otros flujos futuros piden períodos y aplicar el mismo patrón `Desde` / `Hasta` donde corresponda.

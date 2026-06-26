@@ -1,5 +1,39 @@
 # Cambios realizados
 
+## Etapa campos vacíos y desplegables - 2026-06-26
+
+### Archivos modificados
+- `src/ui/formRenderer.js`
+- `tests/app.spec.js`
+- `docs/ROADMAP.md`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se evitó autocompletar campos manuales de profesional y especialidad visible.
+- Se agregó placeholder orientativo en lugar de texto precargado para la especialidad visible.
+- Se transformó `Texto para turnos` en desplegable con opciones frecuentes y opción `Otro / Personalizar`.
+- Se transformó `Título` profesional en desplegable editable, manteniendo `Odont.`.
+- Se normalizaron opciones editables para usar `Otro / Personalizar`.
+
+### Por qué se cambió
+- Los campos libres no deben aparecer completados artificialmente.
+- Los valores sugeridos deben vivir en desplegables, no en campos manuales.
+- El usuario solo debe ver un campo manual adicional cuando quiere personalizar.
+
+### Cómo probar
+- Ejecutar:
+  `npx playwright test tests/app.spec.js -g "campos manuales|texto visible y observaciones" --project=chromium-desktop --project=mobile-chrome`
+- Confirmar visualmente que nombre, matrícula, especialidad visible y observaciones empiezan vacíos.
+- Confirmar que `Título` y `Texto para turnos` muestran `Otro / Personalizar` y despliegan campo manual solo al elegirlo.
+
+### Cómo revertir
+- Restaurar los archivos listados desde el commit anterior o desde el ZIP backup previo.
+
+---
+
+
 ## Fix orden prestaciones y título Odont. - 2026-06-26
 
 ### Archivos modificados
@@ -454,3 +488,25 @@ npx playwright test tests/app.spec.js -g "completa nombres de logo, foto profesi
 ### Cómo revertir
 - Quitar el input oculto `attachment-file-input-hidden` de `renderAttachmentRow`.
 - Quitar la regla CSS `.attachment-file-input-hidden`.
+
+## Fix campos vacíos - 2026-06-26
+
+### Archivos modificados
+- `src/app.js`
+- `src/state/defaultState.js`
+- `CAMBIOS_REALIZADOS.md`
+- `CHANGELOG.md`
+
+### Qué se cambió
+- Se corrigió el autocompletado de `specialty.visibleSpecialtyText` al seleccionar tipo de pieza o especialidad.
+- El campo manual `Cómo se verá la especialidad` queda vacío; la especialidad elegida queda solo como desplegable y fallback del prompt.
+
+### Por qué se cambió
+- Para cumplir la regla de campos manuales vacíos por defecto.
+
+### Cómo probar
+- Ejecutar los tests de `campos manuales|texto visible y observaciones`.
+
+### Cómo revertir
+- Restaurar este parche desde Git con `git checkout -- src/app.js src/state/defaultState.js` antes de commitear.
+
