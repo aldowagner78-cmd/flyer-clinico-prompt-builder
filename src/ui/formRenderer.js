@@ -37,6 +37,11 @@ const institutionalPhraseOptions = [
 
 let institutionViewMode = 'choice';
 let institutionGuidedIndex = 0;
+let contentViewMode = 'guided';
+let contentGuidedIndex = 0;
+let lastContentPieceType = '';
+let designViewMode = 'guided';
+let designGuidedIndex = 0;
 
 if (typeof window !== 'undefined') {
   window.__setInstitutionViewMode = mode => {
@@ -87,6 +92,10 @@ export function renderForm(state, handlers) {
   const specialtyNames = specialties.map(item => item.name);
   const colorKeys = Object.keys(colorPresets).filter(key => !['naranja', 'gris', 'personalizado'].includes(key));
   const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
+  if (lastContentPieceType !== pieceType) {
+    contentGuidedIndex = 0;
+    lastContentPieceType = pieceType;
+  }
 
   renderPieceStep(pieceType, handlers, Boolean(state.promptOptions.pieceTypeConfirmed));
   renderInstitutionStep(state, handlers, colorKeys);
@@ -411,22 +420,452 @@ function renderContentStep(state, handlers, specialtyNames) {
   const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
   const preset = getSpecialtyPreset(state.specialty.primaryProfessionalSpecialty);
 
+  if (contentViewMode === 'full') {
+    renderFullContentStep(state, handlers, specialtyNames, preset, pieceType);
+    return;
+  }
+
+  renderGuidedContentStep(state, handlers, specialtyNames, preset, pieceType);
+}
+
+function renderFullContentStep(state, handlers, specialtyNames, preset, pieceType) {
   if (pieceType === PIECE_TYPES.professionalFlyer) {
     renderProfessionalContent(state, handlers, specialtyNames, preset);
-    return;
-  }
-
-  if (pieceType === PIECE_TYPES.clinicalInfographic) {
+  } else if (pieceType === PIECE_TYPES.clinicalInfographic) {
     renderInfographicContent(state, handlers, specialtyNames, preset);
-    return;
-  }
-
-  if (pieceType === PIECE_TYPES.informativeFlyer) {
+  } else if (pieceType === PIECE_TYPES.informativeFlyer) {
     renderInformativeContent(state, handlers, specialtyNames, preset);
-    return;
+  } else {
+    renderCampaignContent(state, handlers, specialtyNames, preset);
   }
 
-  renderCampaignContent(state, handlers, specialtyNames, preset);
+  const target = document.querySelector('#serviceFields');
+  if (!target) return;
+  target.insertAdjacentHTML('afterbegin', renderContentModeBanner(pieceType));
+  bindContentModeControls(target, state, handlers, specialtyNames, preset, pieceType);
+}
+
+function renderGuidedContentStep(state, handlers, specialtyNames, preset, pieceType) {
+  const target = document.querySelector('#serviceFields');
+  const secondaryTarget = document.querySelector('#additionalSpecialtiesEditor');
+  if (!target) return;
+  if (secondaryTarget) secondaryTarget.innerHTML = '';
+
+  const steps = contentGuidedSteps(state, specialtyNames, preset, pieceType);
+  contentGuidedIndex = Math.max(0, Math.min(contentGuidedIndex, steps.length - 1));
+
+  const step = steps[contentGuidedIndex] || steps[0];
+  const current = contentGuidedIndex + 1;
+  const progress = Math.round((current / steps.length) * 100);
+  const isLast = contentGuidedIndex >= steps.length - 1;
+
+  target.innerHTML = `
+    <div class="guided-card content-guided-card" data-content-guided-key="${escapeHtml(step.key)}">
+      <div class="guided-card-head">
+        <div>
+          <span class="guided-kicker">Contenido guiado · Tarjeta ${current} de ${steps.length}</span>
+          <h3>${escapeHtml(step.title)}</h3>
+          <p>${escapeHtml(step.help)}</p>
+        </div>
+        <div class="guided-progress" aria-label="Progreso dentro de contenido">
+          <span>${progress}%</span>
+          <div><i style="width:${progress}%"></i></div>
+        </div>
+      </div>
+      <div class="guided-card-body">
+        ${renderContentGuidedBody(state, step, handlers)}
+      </div>
+      <div class="guided-card-actions">
+        <button class="secondary-button" type="button" data-content-guided="previous">← Anterior</button>
+        <button class="secondary-button" type="button" data-content-mode="full">Formulario completo</button>
+        ${isLast ? '<span class="helper-text content-guided-finish-note">Listo. Tocá Siguiente → para pasar a Diseño.</span>' : '<button class="primary-button" type="button" data-content-guided="next">Siguiente tarjeta →</button>'}
+      </div>
+    </div>
+  `;
+
+  bindFieldControls(target, handlers);
+  bindContentModeControls(target, state, handlers, specialtyNames, preset, pieceType);
+  bindContentGuidedControls(target, state, handlers, specialtyNames, preset, pieceType);
+  bindInlineServiceSelector(target, state, handlers);
+  bindInlineBlockSelector(target, state, handlers);
+  bindInlineScheduleControls(target, handlers);
+}
+
+function renderContentModeBanner(pieceType) {
+  return `
+    <div class="smart-panel content-mode-panel">
+      <div class="list-title">
+        <label>Formulario completo</label>
+        <small>${escapeHtml(labelPieceType(pieceType))}. Editá todos los campos en una sola pantalla.</small>
+      </div>
+      <p class="helper-text">También podés volver al flujo guiado por tarjetas para completar el contenido paso a paso.</p>
+      <div class="institution-method-actions">
+        <button class="secondary-button" type="button" data-content-mode="guided">Volver a contenido guiado</button>
+      </div>
+    </div>
+  `;
+}
+
+function contentGuidedSteps(state, specialtyNames, preset, pieceType) {
+  const builders = {
+    [PIECE_TYPES.professionalFlyer]: professionalContentSteps,
+    [PIECE_TYPES.clinicalInfographic]: infographicContentSteps,
+    [PIECE_TYPES.informativeFlyer]: informativeContentSteps,
+    [PIECE_TYPES.promotionCampaign]: campaignContentSteps
+  };
+  const builder = builders[pieceType] || builders[PIECE_TYPES.professionalFlyer];
+  return builder(state, specialtyNames, preset);
+}
+
+function professionalContentSteps(state, specialtyNames, preset) {
+  return [
+    {
+      key: 'professional',
+      title: 'Profesional',
+      help: 'Completá nombre, matrícula y foto solo si debe aparecer en el flyer.',
+      fields: [
+        select('Título', 'professional.title', state.professional.title, titles),
+        text('Nombre completo del profesional', 'professional.fullName', state.professional.fullName, true),
+        text('Matrícula', 'professional.license', state.professional.license),
+        select('Especialidad o área', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
+        toggle('Mostrar foto profesional', 'professional.showPhoto', state.professional.showPhoto),
+        fileText('Foto profesional esperada', 'professional.photoFileName', state.professional.photoFileName || '', 'image/*', false, !state.professional.showPhoto, 'Elegí la foto para completar el nombre. Luego adjuntala manualmente en ChatGPT.')
+      ]
+    },
+    {
+      key: 'specialty',
+      title: 'Especialidad visible y frase',
+      help: 'Definí cómo se verá la especialidad y una frase breve opcional.',
+      fields: [
+        text('Cómo se verá la especialidad', 'specialty.visibleSpecialtyText', state.specialty.visibleSpecialtyText || smartSpecialtyText(state)),
+        text('Frase breve opcional', 'promptOptions.suggestedPhrase', state.promptOptions.suggestedPhrase)
+      ]
+    },
+    {
+      key: 'services',
+      title: 'Prestaciones visibles',
+      help: 'Elegí 3 a 5 prestaciones o datos visibles. El orden actual se respeta en el prompt.',
+      html: () => renderInlineServiceSelectorHtml(state, preset, 'Prestaciones sugeridas por especialidad', 'Marcá lo esencial y agregá datos personalizados debajo si hace falta.')
+    },
+    {
+      key: 'care',
+      title: 'Atención',
+      help: 'Completá turnos, modalidad, horarios y cobertura visible para pacientes.',
+      fields: careFields(state),
+      html: () => renderInlineSchedulesHtml(state)
+    },
+    {
+      key: 'summary',
+      title: 'Revisión del contenido',
+      help: 'Revisá los datos principales antes de pasar al diseño.',
+      html: () => renderContentSummaryHtml(state, PIECE_TYPES.professionalFlyer)
+    }
+  ];
+}
+
+function infographicContentSteps(state, specialtyNames, preset) {
+  return [
+    {
+      key: 'topic',
+      title: 'Tema de la infografía',
+      help: 'Elegí el área sanitaria y el tema educativo principal.',
+      fields: [
+        select('Especialidad / área sanitaria', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
+        selectWithCustom('Tema educativo', 'promptOptions.educationalTopic', state.promptOptions.educationalTopic, preset.infographicTopics || preset.topics || [], true)
+      ]
+    },
+    {
+      key: 'audience-message',
+      title: 'Público y mensaje',
+      help: 'Indicá a quién va dirigida y cuál es la idea central que debe quedar clara.',
+      fields: [
+        selectWithCustom('Público objetivo', 'promptOptions.targetAudience', state.promptOptions.targetAudience, preset.audiences || defaultAudiences(), true),
+        selectWithCustom('Mensaje principal', 'promptOptions.mainMessage', state.promptOptions.mainMessage, preset.messages || [], true),
+        selectWithCustom('Nota sanitaria', 'promptOptions.legalEthicalNote', state.promptOptions.legalEthicalNote, noteOptions, false)
+      ]
+    },
+    {
+      key: 'blocks',
+      title: 'Bloques de contenido',
+      help: 'Armá los bloques de la infografía con poco texto y enfoque prudente.',
+      html: () => renderInlineBlockSelectorHtml(state, preset, 'Bloques sugeridos', 'Marcá 3 a 5 bloques. La infografía debe ser visual y fácil de leer.')
+    },
+    {
+      key: 'summary',
+      title: 'Revisión de infografía',
+      help: 'Confirmá tema, público, mensaje y bloques antes de diseñar.',
+      html: () => renderContentSummaryHtml(state, PIECE_TYPES.clinicalInfographic)
+    }
+  ];
+}
+
+function informativeContentSteps(state, specialtyNames, preset) {
+  return [
+    {
+      key: 'info-type',
+      title: 'Tipo de información',
+      help: 'Definí qué información se comunica y el título visible.',
+      fields: [
+        select('Área / servicio relacionado', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
+        selectWithCustom('Tipo de información', 'promptOptions.contentGoal', state.promptOptions.contentGoal, preset.informativeTypes || informationTypes, true),
+        selectWithCustom('Título visible', 'promptOptions.educationalTopic', state.promptOptions.educationalTopic, preset.informativeTitles || preset.topics || [], true)
+      ]
+    },
+    {
+      key: 'message-cta',
+      title: 'Mensaje y llamada a la acción',
+      help: 'Completá el mensaje central y qué debe hacer el paciente.',
+      fields: [
+        selectWithCustom('Mensaje principal', 'promptOptions.mainMessage', state.promptOptions.mainMessage, preset.informativeMessages || preset.messages || [], true),
+        selectWithCustom('Llamada a la acción', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false)
+      ]
+    },
+    {
+      key: 'visible-data',
+      title: 'Datos visibles',
+      help: 'Elegí solo lo esencial para no sobrecargar el flyer.',
+      html: () => renderInlineServiceSelectorHtml(state, preset, 'Datos visibles sugeridos', 'Marcá pocos datos para que el flyer sea claro en redes.')
+    },
+    {
+      key: 'summary',
+      title: 'Revisión del flyer informativo',
+      help: 'Confirmá tipo de información, título, datos visibles y CTA.',
+      html: () => renderContentSummaryHtml(state, PIECE_TYPES.informativeFlyer)
+    }
+  ];
+}
+
+function campaignContentSteps(state, specialtyNames, preset) {
+  return [
+    {
+      key: 'campaign-type',
+      title: 'Tipo de campaña',
+      help: 'Elegí el área, tipo de campaña y fecha o período visible.',
+      fields: [
+        select('Área / especialidad', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
+        selectWithCustom('Tipo de campaña', 'promptOptions.campaignType', state.promptOptions.campaignType, preset.campaignTypes || campaignTypes, true),
+        text('Fecha o período', 'promptOptions.campaignValidity', state.promptOptions.campaignValidity)
+      ]
+    },
+    {
+      key: 'campaign-message',
+      title: 'Público y mensaje',
+      help: 'Definí a quién se dirige y qué mensaje principal debe comunicar.',
+      fields: [
+        selectWithCustom('Público objetivo', 'promptOptions.targetAudience', state.promptOptions.targetAudience, preset.audiences || defaultAudiences(), false),
+        selectWithCustom('Mensaje principal', 'promptOptions.mainMessage', state.promptOptions.mainMessage, preset.campaignMessages || preset.messages || [], true)
+      ]
+    },
+    {
+      key: 'conditions-cta',
+      title: 'Condiciones y CTA',
+      help: 'Aclaración breve, llamado a la acción y nota prudente para evitar promesas.',
+      fields: [
+        textarea('Condiciones o aclaración breve', 'promptOptions.campaignConditions', state.promptOptions.campaignConditions),
+        selectWithCustom('Llamada a la acción', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false),
+        selectWithCustom('Nota prudente', 'promptOptions.legalEthicalNote', state.promptOptions.legalEthicalNote, noteOptions, false)
+      ]
+    },
+    {
+      key: 'campaign-points',
+      title: 'Puntos visibles',
+      help: 'Elegí pocos puntos concretos. Evitá urgencia falsa o lenguaje engañoso.',
+      html: () => renderInlineServiceSelectorHtml(state, preset, 'Puntos visibles de la campaña', 'Marcá pocos puntos para mantener una pieza clara y prudente.')
+    },
+    {
+      key: 'summary',
+      title: 'Revisión de campaña',
+      help: 'Confirmá campaña, fecha, condiciones, puntos visibles y CTA.',
+      html: () => renderContentSummaryHtml(state, PIECE_TYPES.promotionCampaign)
+    }
+  ];
+}
+
+function renderContentGuidedBody(state, step) {
+  const fields = step.fields || [];
+  const fieldsHtml = fields.length
+    ? `<div class="guided-field-grid">${fields.map(field => renderField(field)).join('')}</div>`
+    : '';
+
+  const customHtml = typeof step.html === 'function' ? step.html(state) : '';
+  return fieldsHtml || customHtml
+    ? `${fieldsHtml}${customHtml}`
+    : '<p class="institution-empty-state">No hay campos para completar en esta tarjeta.</p>';
+}
+
+function careFields(state) {
+  return [
+    toggle('Requiere turno previo', 'schedule.requiresAppointment', state.schedule.requiresAppointment),
+    text('Texto para turnos', 'schedule.appointmentText', state.schedule.appointmentText),
+    select('Modalidad', 'schedule.modality', state.schedule.modality, modalities),
+    toggle('Obras sociales', 'coverage.insurance', state.coverage.insurance),
+    toggle('Particulares', 'coverage.privatePatients', state.coverage.privatePatients),
+    textarea('Observación administrativa', 'schedule.administrativeNote', state.schedule.administrativeNote)
+  ];
+}
+
+function renderInlineServiceSelectorHtml(state, preset, title, help) {
+  const suggestions = (preset.services || []).slice(0, 8);
+  return `
+    <div class="smart-panel content-inline-panel">
+      <div class="list-title">
+        <label>${escapeHtml(title)}</label>
+        <small>${escapeHtml(help)}</small>
+      </div>
+      ${suggestions.length ? `
+        <div class="chip-grid">
+          ${suggestions.map(item => `
+            <label class="chip-check">
+              <input type="checkbox" value="${escapeHtml(item)}" ${state.services.visibleServices.includes(item) ? 'checked' : ''} data-content-service-suggestion>
+              <span>${escapeHtml(item)}</span>
+            </label>
+          `).join('')}
+        </div>
+      ` : '<p class="helper-text">No hay sugerencias automáticas para esta especialidad. Agregá datos visibles personalizados debajo.</p>'}
+      <p class="helper-text">${state.services.visibleServices.length > 5 ? 'Hay muchos datos visibles. Para redes conviene mostrar hasta 5.' : 'Sugerencia: 3 a 5 opciones visibles.'}</p>
+    </div>
+  `;
+}
+
+function renderInlineBlockSelectorHtml(state, preset, title, help) {
+  const suggestions = (preset.blocks || preset.services || []).slice(0, 8);
+  const selected = parseLines(state.promptOptions.infoBlocksText);
+  return `
+    <div class="smart-panel content-inline-panel">
+      <div class="list-title">
+        <label>${escapeHtml(title)}</label>
+        <small>${escapeHtml(help)}</small>
+      </div>
+      ${suggestions.length ? `
+        <div class="chip-grid">
+          ${suggestions.map(item => `
+            <label class="chip-check">
+              <input type="checkbox" value="${escapeHtml(item)}" ${selected.includes(item) ? 'checked' : ''} data-content-block-suggestion>
+              <span>${escapeHtml(item)}</span>
+            </label>
+          `).join('')}
+        </div>
+      ` : '<p class="helper-text">No hay bloques sugeridos para esta especialidad. Escribilos manualmente.</p>'}
+      <label class="field full-width">
+        <span>Bloques elegidos / personalizados</span>
+        <textarea data-path="promptOptions.infoBlocksText" rows="4">${escapeHtml(state.promptOptions.infoBlocksText)}</textarea>
+      </label>
+    </div>
+  `;
+}
+
+function renderInlineSchedulesHtml(state) {
+  return `
+    <div class="smart-panel content-inline-panel">
+      <div class="list-title">
+        <label>Horarios de atención</label>
+        <button class="secondary-button" type="button" id="addScheduleButtonContent">Agregar horario</button>
+      </div>
+      <div class="repeatable-list">
+        ${state.schedule.items.length ? state.schedule.items.map((item, index) => `
+          <div class="repeatable-row schedule-row" data-warning-path="schedule.items.${index}">
+            <label class="field"><span>Día o días</span><input type="text" value="${escapeHtml(item.days)}" data-content-schedule-index="${index}" data-content-schedule-key="days"></label>
+            <label class="field"><span>Desde</span><input type="time" value="${escapeHtml(item.from)}" data-content-schedule-index="${index}" data-content-schedule-key="from"></label>
+            <label class="field"><span>Hasta</span><input type="time" value="${escapeHtml(item.to)}" data-content-schedule-index="${index}" data-content-schedule-key="to"></label>
+            <label class="field"><span>Observación</span><input type="text" value="${escapeHtml(item.note)}" data-content-schedule-index="${index}" data-content-schedule-key="note"></label>
+            <button type="button" class="icon-button" data-content-remove-schedule="${index}">Quitar</button>
+          </div>
+        `).join('') : '<p class="institution-empty-state">No hay horarios cargados. Agregá uno si debe verse en el flyer.</p>'}
+      </div>
+    </div>
+  `;
+}
+
+function renderContentSummaryHtml(state, pieceType) {
+  const visibleServices = state.services.visibleServices.filter(Boolean).join(', ') || 'Sin datos visibles cargados';
+  const blocks = parseLines(state.promptOptions.infoBlocksText).join(', ') || 'Sin bloques cargados';
+  const common = `
+    <div><dt>Área</dt><dd>${escapeHtml(state.specialty.primaryProfessionalSpecialty || 'Sin completar')}</dd></div>
+    <div><dt>Mensaje</dt><dd>${escapeHtml(state.promptOptions.mainMessage || state.promptOptions.suggestedPhrase || 'Sin completar')}</dd></div>
+  `;
+
+  const byPiece = {
+    [PIECE_TYPES.professionalFlyer]: `
+      <div><dt>Profesional</dt><dd>${escapeHtml([state.professional.title, state.professional.fullName].filter(Boolean).join(' ') || 'Sin completar')}</dd></div>
+      <div><dt>Especialidad visible</dt><dd>${escapeHtml(state.specialty.visibleSpecialtyText || 'Sin completar')}</dd></div>
+      <div><dt>Prestaciones</dt><dd>${escapeHtml(visibleServices)}</dd></div>
+      <div><dt>Atención</dt><dd>${escapeHtml(state.schedule.appointmentText || state.schedule.modality || 'Sin completar')}</dd></div>
+    `,
+    [PIECE_TYPES.clinicalInfographic]: `
+      <div><dt>Tema</dt><dd>${escapeHtml(state.promptOptions.educationalTopic || 'Sin completar')}</dd></div>
+      <div><dt>Público</dt><dd>${escapeHtml(state.promptOptions.targetAudience || 'Sin completar')}</dd></div>
+      ${common}
+      <div><dt>Bloques</dt><dd>${escapeHtml(blocks)}</dd></div>
+    `,
+    [PIECE_TYPES.informativeFlyer]: `
+      <div><dt>Tipo</dt><dd>${escapeHtml(state.promptOptions.contentGoal || 'Sin completar')}</dd></div>
+      <div><dt>Título</dt><dd>${escapeHtml(state.promptOptions.educationalTopic || 'Sin completar')}</dd></div>
+      ${common}
+      <div><dt>CTA</dt><dd>${escapeHtml(state.promptOptions.campaignCallToAction || 'Sin completar')}</dd></div>
+      <div><dt>Datos visibles</dt><dd>${escapeHtml(visibleServices)}</dd></div>
+    `,
+    [PIECE_TYPES.promotionCampaign]: `
+      <div><dt>Tipo</dt><dd>${escapeHtml(state.promptOptions.campaignType || 'Sin completar')}</dd></div>
+      <div><dt>Fecha</dt><dd>${escapeHtml(state.promptOptions.campaignValidity || 'Sin completar')}</dd></div>
+      ${common}
+      <div><dt>CTA</dt><dd>${escapeHtml(state.promptOptions.campaignCallToAction || 'Sin completar')}</dd></div>
+      <div><dt>Puntos visibles</dt><dd>${escapeHtml(visibleServices)}</dd></div>
+    `
+  };
+
+  return `<div class="guided-summary"><dl>${byPiece[pieceType] || byPiece[PIECE_TYPES.professionalFlyer]}</dl><p class="helper-text">Usá Formulario completo si necesitás revisar todos los campos juntos.</p></div>`;
+}
+
+function bindContentModeControls(target, state, handlers, specialtyNames, preset, pieceType) {
+  target.querySelectorAll('[data-content-mode]').forEach(button => {
+    button.addEventListener('click', () => {
+      contentViewMode = button.dataset.contentMode === 'full' ? 'full' : 'guided';
+      if (contentViewMode === 'guided') contentGuidedIndex = Math.min(contentGuidedIndex, contentGuidedSteps(state, specialtyNames, preset, pieceType).length - 1);
+      renderContentStep(state, handlers, specialtyNames);
+    });
+  });
+}
+
+function bindContentGuidedControls(target, state, handlers, specialtyNames, preset, pieceType) {
+  target.querySelectorAll('[data-content-guided]').forEach(button => {
+    button.addEventListener('click', () => {
+      const steps = contentGuidedSteps(state, specialtyNames, preset, pieceType);
+      if (button.dataset.contentGuided === 'previous') contentGuidedIndex = Math.max(0, contentGuidedIndex - 1);
+      if (button.dataset.contentGuided === 'next') contentGuidedIndex = Math.min(steps.length - 1, contentGuidedIndex + 1);
+      renderContentStep(state, handlers, specialtyNames);
+    });
+  });
+}
+
+function bindInlineServiceSelector(target, state, handlers) {
+  target.querySelectorAll('[data-content-service-suggestion]').forEach(input => {
+    input.addEventListener('change', () => handlers.onToggleServiceOption(input.value, input.checked));
+  });
+}
+
+function bindInlineBlockSelector(target, state, handlers) {
+  target.querySelectorAll('[data-content-block-suggestion]').forEach(input => {
+    input.addEventListener('change', () => {
+      const current = parseLines(state.promptOptions.infoBlocksText);
+      const value = input.value;
+      const next = input.checked
+        ? [...new Set([...current, value])]
+        : current.filter(item => item !== value);
+      handlers.onFieldChange('promptOptions.infoBlocksText', next.join('\n'));
+    });
+  });
+}
+
+function bindInlineScheduleControls(target, handlers) {
+  target.querySelector('#addScheduleButtonContent')?.addEventListener('click', handlers.onAddSchedule);
+  target.querySelectorAll('[data-content-remove-schedule]').forEach(button => {
+    button.addEventListener('click', () => handlers.onRemoveSchedule(Number(button.dataset.contentRemoveSchedule)));
+  });
+  target.querySelectorAll('[data-content-schedule-index]').forEach(input => {
+    const updateSchedule = () => handlers.onUpdateSchedule(Number(input.dataset.contentScheduleIndex), input.dataset.contentScheduleKey, input.value);
+    input.addEventListener('input', updateSchedule);
+    input.addEventListener('change', updateSchedule);
+  });
 }
 
 function renderProfessionalContent(state, handlers, specialtyNames, preset) {
@@ -599,8 +1038,19 @@ function renderCareInsideContent(state, handlers, showCoverage = false) {
 }
 
 function renderDesignStep(state, handlers, colorKeys) {
+  const fields = designFields(state, colorKeys);
+
+  if (designViewMode === 'full') {
+    renderFullDesignStep(state, handlers, fields);
+    return;
+  }
+
+  renderGuidedDesignStep(state, handlers, fields);
+}
+
+function designFields(state, colorKeys) {
   const useInstitutionalColors = Boolean(state.design.useInstitutionalColors);
-  const fields = [
+  return [
     toggle('Usar colores institucionales', 'design.useInstitutionalColors', useInstitutionalColors),
     ...(!useInstitutionalColors ? [
       select('Color principal', 'design.primaryColor', state.design.primaryColor, colorKeys, true, key => colorPresets[key].label),
@@ -614,13 +1064,160 @@ function renderDesignStep(state, handlers, colorKeys) {
     select('Nivel de impacto visual', 'design.visualImpact', state.design.visualImpact, impactLevels),
     selectWithCustom('Tipografía sugerida', 'design.typography', state.design.typography, typographyOptions),
     toggle('Solicitar pieza animada', 'promptOptions.requestAnimation', state.promptOptions.requestAnimation),
-    toggle('Incluir iconos medicos', 'design.includeMedicalIcons', state.design.includeMedicalIcons),
-    toggle('Incluir fondo tematico', 'design.includeThematicBackground', state.design.includeThematicBackground),
-    toggle('Usar recursos segun especialidad', 'design.useAutomaticTheme', state.design.useAutomaticTheme)
+    toggle('Incluir iconos médicos', 'design.includeMedicalIcons', state.design.includeMedicalIcons),
+    toggle('Incluir fondo temático', 'design.includeThematicBackground', state.design.includeThematicBackground),
+    toggle('Usar recursos según especialidad', 'design.useAutomaticTheme', state.design.useAutomaticTheme)
   ];
+}
 
+function renderFullDesignStep(state, handlers, fields) {
   renderFields('#designFields', fields, handlers);
+
+  const target = document.querySelector('#designFields');
+  if (!target) return;
+  target.insertAdjacentHTML('afterbegin', renderDesignModeBanner());
+  bindDesignModeControls(target, state, handlers, fields);
   renderCustomImageAttachments(state, handlers);
+}
+
+function renderGuidedDesignStep(state, handlers, fields) {
+  const target = document.querySelector('#designFields');
+  if (!target) return;
+
+  const steps = designGuidedSteps(state, fields);
+  designGuidedIndex = Math.max(0, Math.min(designGuidedIndex, steps.length - 1));
+
+  const step = steps[designGuidedIndex] || steps[0];
+  const current = designGuidedIndex + 1;
+  const progress = Math.round((current / steps.length) * 100);
+  const isLast = designGuidedIndex >= steps.length - 1;
+
+  target.innerHTML = `
+    <div class="guided-card design-guided-card" data-design-guided-key="${escapeHtml(step.key)}">
+      <div class="guided-card-head">
+        <div>
+          <span class="guided-kicker">Diseño guiado · Tarjeta ${current} de ${steps.length}</span>
+          <h3>${escapeHtml(step.title)}</h3>
+          <p>${escapeHtml(step.help)}</p>
+        </div>
+        <div class="guided-progress" aria-label="Progreso dentro de diseño">
+          <span>${progress}%</span>
+          <div><i style="width:${progress}%"></i></div>
+        </div>
+      </div>
+      <div class="guided-card-body">
+        ${renderDesignGuidedBody(state, step)}
+      </div>
+      <div class="guided-card-actions">
+        <button class="secondary-button" type="button" data-design-guided="previous">← Anterior</button>
+        <button class="secondary-button" type="button" data-design-mode="full">Formulario completo</button>
+        ${isLast ? '<span class="helper-text design-guided-finish-note">Listo. Tocá Siguiente → para revisar el resultado.</span>' : '<button class="primary-button" type="button" data-design-guided="next">Siguiente tarjeta →</button>'}
+      </div>
+    </div>
+  `;
+
+  bindFieldControls(target, handlers);
+  bindDesignModeControls(target, state, handlers, fields);
+  bindDesignGuidedControls(target, state, handlers, fields);
+  bindCustomImageAttachmentControls(target, handlers);
+}
+
+function renderDesignModeBanner() {
+  return `
+    <div class="smart-panel design-mode-panel">
+      <div class="list-title">
+        <label>Formulario completo</label>
+        <small>Editá formato, colores, estilo, tipografía, densidad, recursos visuales, animación e imágenes en una sola pantalla.</small>
+      </div>
+      <p class="helper-text">También podés volver al flujo guiado por tarjetas para revisar el diseño paso a paso.</p>
+      <div class="institution-method-actions">
+        <button class="secondary-button" type="button" data-design-mode="guided">Volver a diseño guiado</button>
+      </div>
+    </div>
+  `;
+}
+
+function designGuidedSteps(state, fields) {
+  const byPath = new Map(fields.map(field => [field.path, field]));
+  const visible = (...paths) => paths.map(path => byPath.get(path)).filter(field => field && !field.hidden);
+
+  return [
+    {
+      key: 'format',
+      title: 'Formato',
+      help: 'Elegí el tamaño de salida según dónde se va a publicar.',
+      fields: visible('design.format')
+    },
+    {
+      key: 'colors',
+      title: 'Colores',
+      help: 'Usá colores institucionales o personalizá una paleta sobria y legible.',
+      fields: visible('design.useInstitutionalColors', 'design.primaryColor', 'design.customPrimaryColor', 'design.secondaryColor', 'design.customSecondaryColor')
+    },
+    {
+      key: 'style',
+      title: 'Estilo visual',
+      help: 'Definí el estilo y el nivel de impacto visual de la pieza.',
+      fields: visible('design.visualStyle', 'design.visualImpact')
+    },
+    {
+      key: 'typography-density',
+      title: 'Tipografía y densidad',
+      help: 'Elegí una tipografía sugerida y cuánto texto debe verse en la imagen.',
+      fields: visible('design.typography', 'design.contentDensity')
+    },
+    {
+      key: 'resources',
+      title: 'Iconos, fondo y recursos',
+      help: 'Indicá si debe usar iconos médicos, fondo temático y recursos relacionados con la especialidad.',
+      fields: visible('design.includeMedicalIcons', 'design.includeThematicBackground', 'design.useAutomaticTheme')
+    },
+    {
+      key: 'animation',
+      title: 'Modo animado',
+      help: 'Activá esta opción solo si querés pedir un video corto o clip animado en vez de imagen estática.',
+      fields: visible('promptOptions.requestAnimation')
+    },
+    {
+      key: 'images',
+      title: 'Imágenes personalizadas',
+      help: 'Agregá nombres de fotos, referencias o imágenes temáticas. Después adjuntalas manualmente en ChatGPT.',
+      html: () => renderCustomImageAttachmentsHtml(state)
+    }
+  ];
+}
+
+function renderDesignGuidedBody(state, step) {
+  const fields = step.fields || [];
+  const fieldsHtml = fields.length
+    ? `<div class="guided-field-grid">${fields.map(field => renderField(field)).join('')}</div>`
+    : '';
+
+  const customHtml = typeof step.html === 'function' ? step.html(state) : '';
+  return fieldsHtml || customHtml
+    ? `${fieldsHtml}${customHtml}`
+    : '<p class="institution-empty-state">No hay campos para completar en esta tarjeta.</p>';
+}
+
+function bindDesignModeControls(target, state, handlers, fields) {
+  target.querySelectorAll('[data-design-mode]').forEach(button => {
+    button.addEventListener('click', () => {
+      designViewMode = button.dataset.designMode === 'full' ? 'full' : 'guided';
+      if (designViewMode === 'guided') designGuidedIndex = Math.min(designGuidedIndex, designGuidedSteps(state, fields).length - 1);
+      renderDesignStep(state, handlers, Object.keys(colorPresets).filter(key => !['naranja', 'gris', 'personalizado'].includes(key)));
+    });
+  });
+}
+
+function bindDesignGuidedControls(target, state, handlers, fields) {
+  target.querySelectorAll('[data-design-guided]').forEach(button => {
+    button.addEventListener('click', () => {
+      const steps = designGuidedSteps(state, fields);
+      if (button.dataset.designGuided === 'previous') designGuidedIndex = Math.max(0, designGuidedIndex - 1);
+      if (button.dataset.designGuided === 'next') designGuidedIndex = Math.min(steps.length - 1, designGuidedIndex + 1);
+      renderDesignStep(state, handlers, Object.keys(colorPresets).filter(key => !['naranja', 'gris', 'personalizado'].includes(key)));
+    });
+  });
 }
 
 
@@ -765,11 +1362,16 @@ function renderVisibleServices(state, handlers) {
 function renderCustomImageAttachments(state, handlers) {
   const target = document.querySelector('#designFields');
   if (!target) return;
+  target.insertAdjacentHTML('beforeend', renderCustomImageAttachmentsHtml(state));
+  bindCustomImageAttachmentControls(target, handlers);
+}
+
+function renderCustomImageAttachmentsHtml(state) {
   const customIndexes = state.attachments.items
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => ![ATTACHMENT_ROLES.clinicLogo, ATTACHMENT_ROLES.professionalPhoto].includes(item.role));
 
-  target.insertAdjacentHTML('beforeend', `
+  return `
     <div class="list-editor attachment-panel full-width">
       <div class="list-title">
         <label>Imágenes personalizadas para GPT</label>
@@ -780,7 +1382,10 @@ function renderCustomImageAttachments(state, handlers) {
         ${customIndexes.length ? customIndexes.map(({ item, index }) => renderAttachmentRow(item, index, customAttachmentRoles)).join('') : '<p class="institution-empty-state">No hay imágenes personalizadas seleccionadas.</p>'}
       </div>
     </div>
-  `);
+  `;
+}
+
+function bindCustomImageAttachmentControls(target, handlers) {
   bindAttachmentControls(target, handlers);
   target.querySelector('#addCustomAttachmentButton')?.addEventListener('click', () => {
     if (handlers.onAddAttachmentWithRole) handlers.onAddAttachmentWithRole(ATTACHMENT_ROLES.thematicImage);
