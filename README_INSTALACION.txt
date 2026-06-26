@@ -1,3 +1,69 @@
+# Instalación y uso - Fix orden prestaciones y título Odont.
+
+## Qué corrige este parche
+
+- Corrige el timeout del test de orden de prestaciones en escritorio.
+- Mantiene la validación de que el prompt respeta el orden definido.
+- Agrega `Odont.` como opción de título en Flyer profesional.
+- No toca la lógica de adjuntos múltiples.
+
+## Prueba puntual recomendada
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+npx playwright test tests/app.spec.js -g "permite ordenar prestaciones visibles" --project=chromium-desktop --project=mobile-chrome
+```
+
+Resultado esperado:
+`2 passed`
+
+## Prueba visual
+
+- Ir a `Flyer profesional > Profesional > Título`.
+- Confirmar que aparece `Odont.`.
+
+## Prueba completa antes de commit
+
+```powershell
+npm test
+```
+
+---
+
+# Instalación y uso - Etapa orden prestaciones
+
+## Qué agrega este parche
+
+- Permite ordenar manualmente prestaciones, datos visibles y puntos visibles.
+- Agrega botones `Subir` y `Bajar` para accesibilidad.
+- Mantiene botón `Quitar`.
+- Permite arrastrar y soltar los ítems visibles cuando el navegador lo soporte.
+- El prompt final respeta exactamente el orden definido por el usuario.
+
+## Prueba puntual recomendada
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+npx playwright test tests/app.spec.js -g "permite ordenar prestaciones visibles" --project=chromium-desktop --project=mobile-chrome
+```
+
+Resultado esperado:
+`2 passed`
+
+## Prueba completa antes de commit
+
+```powershell
+npm test
+```
+
+---
+
 # Instalación y uso - Fix texto de navegación guiada
 
 ## Qué corrige este parche

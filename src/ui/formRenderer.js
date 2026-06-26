@@ -2,7 +2,7 @@ import { colorPresets, formats, impactLevels, typographyOptions, visualStyles } 
 import { specialties } from '../data/specialties.js';
 import { ATTACHMENT_ROLES, CONTENT_DENSITIES, PIECE_TYPES } from '../state/schema.js';
 
-const titles = ['Dr.', 'Dra.', 'Lic.', 'Prof.', 'Equipo', 'Otro'];
+const titles = ['Dr.', 'Dra.', 'Odont.', 'Lic.', 'Prof.', 'Equipo', 'Otro'];
 const modalities = ['presencial', 'virtual', 'ambas'];
 const institutionTypes = ['Centro médico', 'Clínica', 'Consultorio', 'Sanatorio', 'Laboratorio', 'Instituto', 'Centro odontológico', 'Centro de diagnóstico', 'Otro'];
 const socialTypes = ['Instagram', 'Facebook', 'TikTok', 'LinkedIn', 'YouTube', 'Sitio web', 'Email', 'WhatsApp', 'Otra'];
@@ -768,13 +768,8 @@ function renderInlineServiceSelectorHtml(state, preset, title, help) {
         <div class="inline-entry">
           <input id="newServiceGuided" type="text" data-content-new-service placeholder="Agregar dato visible personalizado">
         </div>
-        <ul class="editable-list inline-visible-services-list">
-          ${state.services.visibleServices.length ? state.services.visibleServices.map((item, index) => `
-            <li>
-              <span>${escapeHtml(item)}</span>
-              <button type="button" class="icon-button" data-content-remove-service="${index}" aria-label="Eliminar ${escapeHtml(item)}">Quitar</button>
-            </li>
-          `).join('') : '<li class="empty-inline-item">Todavía no seleccionaste datos visibles.</li>'}
+        <ul class="editable-list inline-visible-services-list service-order-list" data-service-order-list="content">
+          ${renderVisibleServicesListHtml(state.services.visibleServices, 'content')}
         </ul>
       </div>
       <p class="helper-text">${state.services.visibleServices.length > 5 ? 'Hay muchos datos visibles. Para redes conviene mostrar hasta 5.' : 'Sugerencia: 3 a 5 opciones visibles.'}</p>
@@ -919,6 +914,7 @@ function bindInlineServiceSelector(target, state, handlers) {
   target.querySelectorAll('[data-content-remove-service]').forEach(button => {
     button.addEventListener('click', () => handlers.onRemoveService(Number(button.dataset.contentRemoveService)));
   });
+  bindServiceOrderControls(target, handlers, 'content');
 }
 
 function bindInlineBlockSelector(target, state, handlers) {
@@ -1435,6 +1431,82 @@ function renderSchedulesInTarget(targetSelector, state, handlers) {
   });
 }
 
+
+function renderVisibleServicesListHtml(items = [], mode = 'content') {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (!list.length) return '<li class="empty-inline-item">Todavía no seleccionaste datos visibles.</li>';
+
+  const isContent = mode === 'content';
+  const dragAttr = isContent ? 'data-content-drag-service' : 'data-drag-service';
+  const dropAttr = isContent ? 'data-content-drop-service' : 'data-drop-service';
+  const removeAttr = isContent ? 'data-content-remove-service' : 'data-remove-service';
+  const moveAttr = isContent ? 'data-content-move-service' : 'data-move-service';
+
+  return list.map((item, index) => {
+    const escapedItem = escapeHtml(item);
+    const disableUp = index === 0 ? 'disabled' : '';
+    const disableDown = index === list.length - 1 ? 'disabled' : '';
+    return `
+      <li class="service-order-item" draggable="true" ${dragAttr}="${index}" ${dropAttr}="${index}">
+        <span class="service-order-handle" aria-hidden="true">↕</span>
+        <span class="service-order-text">${escapedItem}</span>
+        <div class="service-order-actions">
+          <button type="button" class="secondary-button compact-action" ${moveAttr}="${index}" data-move-direction="-1" ${disableUp} aria-label="Subir ${escapedItem}">Subir</button>
+          <button type="button" class="secondary-button compact-action" ${moveAttr}="${index}" data-move-direction="1" ${disableDown} aria-label="Bajar ${escapedItem}">Bajar</button>
+          <button type="button" class="icon-button" ${removeAttr}="${index}" aria-label="Eliminar ${escapedItem}">Quitar</button>
+        </div>
+      </li>
+    `;
+  }).join('');
+}
+
+function bindServiceOrderControls(target, handlers, mode = 'content') {
+  if (!target) return;
+  const moveSelector = mode === 'content' ? '[data-content-move-service]' : '[data-move-service]';
+  const dragSelector = mode === 'content' ? '[data-content-drag-service]' : '[data-drag-service]';
+  const dropSelector = mode === 'content' ? '[data-content-drop-service]' : '[data-drop-service]';
+
+  target.querySelectorAll(moveSelector).forEach(button => {
+    button.addEventListener('click', () => {
+      const from = Number(mode === 'content' ? button.dataset.contentMoveService : button.dataset.moveService);
+      const direction = Number(button.dataset.moveDirection);
+      if (handlers.onMoveService) handlers.onMoveService(from, direction);
+    });
+  });
+
+  target.querySelectorAll(dragSelector).forEach(item => {
+    item.addEventListener('dragstart', event => {
+      const index = mode === 'content' ? item.dataset.contentDragService : item.dataset.dragService;
+      event.dataTransfer?.setData('text/plain', index);
+      event.dataTransfer?.setData('application/x-visible-service-index', index);
+      item.classList.add('is-dragging');
+    });
+
+    item.addEventListener('dragend', () => {
+      item.classList.remove('is-dragging');
+    });
+  });
+
+  target.querySelectorAll(dropSelector).forEach(item => {
+    item.addEventListener('dragover', event => {
+      event.preventDefault();
+      item.classList.add('is-drag-over');
+    });
+
+    item.addEventListener('dragleave', () => {
+      item.classList.remove('is-drag-over');
+    });
+
+    item.addEventListener('drop', event => {
+      event.preventDefault();
+      item.classList.remove('is-drag-over');
+      const from = Number(event.dataTransfer?.getData('application/x-visible-service-index') || event.dataTransfer?.getData('text/plain'));
+      const to = Number(mode === 'content' ? item.dataset.contentDropService : item.dataset.dropService);
+      if (handlers.onReorderServices) handlers.onReorderServices(from, to);
+    });
+  });
+}
+
 function renderVisibleServices(state, handlers) {
   const editor = document.querySelector('[data-visible-services-editor]');
   if (editor) editor.hidden = contentViewMode === 'guided';
@@ -1442,15 +1514,13 @@ function renderVisibleServices(state, handlers) {
   const list = document.querySelector('#servicesList');
   if (!list) return;
 
-  list.innerHTML = state.services.visibleServices.map((item, index) => `
-    <li>
-      <span>${escapeHtml(item)}</span>
-      <button type="button" class="icon-button" data-remove-service="${index}" aria-label="Eliminar ${escapeHtml(item)}">Quitar</button>
-    </li>
-  `).join('');
+  list.classList.add('service-order-list');
+  list.dataset.serviceOrderList = 'main';
+  list.innerHTML = renderVisibleServicesListHtml(state.services.visibleServices, 'main');
   list.querySelectorAll('[data-remove-service]').forEach(button => {
     button.addEventListener('click', () => handlers.onRemoveService(Number(button.dataset.removeService)));
   });
+  bindServiceOrderControls(list, handlers, 'main');
   const addButton = document.querySelector('#addServiceButton');
   const input = document.querySelector('#newService');
   if (addButton) addButton.textContent = 'Agregar dato';

@@ -4398,3 +4398,82 @@ body.is-institution-editor-open .institution-panel-focused {
     width: 100%;
   }
 }
+
+
+/* Orden manual de prestaciones / datos visibles */
+.service-order-list {
+  gap: 10px;
+}
+
+.service-order-item {
+  align-items: center;
+  cursor: grab;
+}
+
+.service-order-item:active {
+  cursor: grabbing;
+}
+
+.service-order-item.is-dragging {
+  opacity: 0.68;
+}
+
+.service-order-item.is-drag-over {
+  outline: 2px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 3px;
+}
+
+.service-order-handle {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-pale) 70%, var(--surface-solid) 30%);
+  color: var(--accent-strong);
+  font-weight: 900;
+}
+
+.service-order-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 800;
+}
+
+.service-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.service-order-actions .compact-action {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.service-order-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .service-order-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .service-order-text {
+    flex-basis: calc(100% - 40px);
+  }
+
+  .service-order-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .service-order-actions button {
+    flex: 1 1 30%;
+  }
+}

@@ -681,6 +681,43 @@ test.describe('Etapa 11D.2 - contenido guiado', () => {
   });
 
 
+  test('permite ordenar prestaciones visibles y el prompt respeta ese orden', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+
+    await expectCurrentStep(page, 'prestaciones');
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'services');
+
+    const customItems = ['Primer dato visible', 'Segundo dato visible', 'Tercer dato visible'];
+    for (const item of customItems) {
+      await page.locator('[data-content-new-service]').fill(item);
+      await page.locator('[data-content-add-service]').click();
+      await expect(page.locator('#serviceFields .service-order-item', { hasText: item })).toBeVisible();
+    }
+
+    const thirdRow = page.locator('#serviceFields .service-order-item', { hasText: 'Tercer dato visible' });
+    await thirdRow.getByRole('button', { name: /Subir/i }).click();
+    await page.locator('#serviceFields .service-order-item', { hasText: 'Tercer dato visible' }).getByRole('button', { name: /Subir/i }).click();
+
+    const orderedItems = await page.locator('#serviceFields .service-order-text').evaluateAll(items => items.map(item => item.textContent.trim()));
+    const customOrder = orderedItems.filter(item => customItems.includes(item));
+    expect(customOrder).toEqual(['Tercer dato visible', 'Primer dato visible', 'Segundo dato visible']);
+
+    await goResult(page);
+    const prompt = await getPrompt(page);
+    const thirdIndex = prompt.indexOf('Tercer dato visible');
+    const firstIndex = prompt.indexOf('Primer dato visible');
+    const secondIndex = prompt.indexOf('Segundo dato visible');
+    expect(thirdIndex).toBeGreaterThanOrEqual(0);
+    expect(thirdIndex).toBeLessThan(firstIndex);
+    expect(firstIndex).toBeLessThan(secondIndex);
+    await expect(errors).toEqual([]);
+  });
+
+
   test('promoción usa fechas desde y hasta con selectores de fecha', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
