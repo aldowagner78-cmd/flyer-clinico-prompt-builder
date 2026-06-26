@@ -1,4 +1,4 @@
-# Instalación y uso - Parche fix Promoción / campaña
+# Instalación y uso - Parche fix 3 problemas
 
 ## Requisitos
 
@@ -9,18 +9,14 @@
 
 ## Qué contiene este parche
 
-Corrige el flujo guiado de **Promoción / campaña**:
+Corrige 3 problemas detectados en prueba visual:
 
-- Oculta el bloque externo "Prestaciones visibles en el flyer" mientras se usa el contenido guiado.
-- Muestra los puntos/datos visibles solamente dentro de la tarjeta correspondiente del wizard.
-- Permite agregar y quitar datos visibles personalizados dentro de esa tarjeta.
-- Evita que el usuario vea un bloque fuera de contexto debajo de "Condiciones y CTA".
-- Mantiene el "Formulario completo" como respaldo.
-- Agrega una prueba automatizada específica para validar que no aparezca el bloque externo en promoción/campaña.
-
-También deja agendada una mejora funcional pendiente:
-
-- Reemplazar campos de "Fecha o período" por dos selectores: "Desde" y "Hasta".
+- Oculta de forma robusta el bloque externo "Prestaciones visibles en el flyer" mientras se usa el contenido guiado.
+- Mantiene los puntos/datos visibles solamente dentro de la tarjeta correspondiente del wizard.
+- Reemplaza "Fecha o período" en Promoción / campaña por dos selectores de fecha: "Desde" y "Hasta".
+- El prompt final expresa el rango como `Período de campaña: desde AAAA-MM-DD hasta AAAA-MM-DD`.
+- Corrige el guardado/resumen de la frase institucional cuando se elige una frase predefinida.
+- Agrega pruebas automatizadas para rango de fechas y frase institucional guardada.
 
 Conserva lo ya incorporado:
 
@@ -81,7 +77,7 @@ http://127.0.0.1:4173
 2. Cargá o creá una institución.
 3. Elegí el tipo de pieza.
 4. Completá Contenido guiado.
-5. En Promoción / campaña, verificá que los puntos visibles aparezcan solo en su tarjeta.
+5. En Promoción / campaña, cargá el período con los campos Desde y Hasta y verificá que los puntos visibles aparezcan solo en su tarjeta.
 6. Completá Diseño guiado.
 7. Revisá el panel "Revisión final".
 8. Si hay adjuntos, subilos manualmente en ChatGPT.
@@ -147,3 +143,15 @@ zip -r flyer-clinico-prompt-builder_fix_promocion_prestaciones_ok.zip . \
 - El botón de copiar está destacado.
 - Las advertencias se muestran antes de copiar.
 - `npm test` pasa.
+
+## Prueba rápida de fix de fechas de campaña
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+`npx playwright test tests/app.spec.js -g "promoción usa fechas desde y hasta con selectores de fecha" --project=chromium-desktop --project=mobile-chrome`
+
+Resultado esperado:
+Deben pasar solo los 2 tests de fechas de campaña. Antes de commit, ejecutar `npm test`.
+

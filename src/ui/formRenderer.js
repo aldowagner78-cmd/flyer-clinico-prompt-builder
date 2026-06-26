@@ -640,11 +640,12 @@ function campaignContentSteps(state, specialtyNames, preset) {
     {
       key: 'campaign-type',
       title: 'Tipo de campaña',
-      help: 'Elegí el área, tipo de campaña y fecha o período visible.',
+      help: 'Elegí el área, tipo de campaña y rango visible con fecha desde y hasta.',
       fields: [
         select('Área / especialidad', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
         selectWithCustom('Tipo de campaña', 'promptOptions.campaignType', state.promptOptions.campaignType, preset.campaignTypes || campaignTypes, true),
-        text('Fecha o período', 'promptOptions.campaignValidity', state.promptOptions.campaignValidity)
+        date('Desde', 'promptOptions.campaignStartDate', state.promptOptions.campaignStartDate),
+        date('Hasta', 'promptOptions.campaignEndDate', state.promptOptions.campaignEndDate)
       ]
     },
     {
@@ -823,7 +824,7 @@ function renderContentSummaryHtml(state, pieceType) {
     `,
     [PIECE_TYPES.promotionCampaign]: `
       <div><dt>Tipo</dt><dd>${escapeHtml(state.promptOptions.campaignType || 'Sin completar')}</dd></div>
-      <div><dt>Fecha</dt><dd>${escapeHtml(state.promptOptions.campaignValidity || 'Sin completar')}</dd></div>
+      <div><dt>Período</dt><dd>${escapeHtml(campaignValidityText(state.promptOptions) || 'Sin completar')}</dd></div>
       ${common}
       <div><dt>CTA</dt><dd>${escapeHtml(state.promptOptions.campaignCallToAction || 'Sin completar')}</dd></div>
       <div><dt>Puntos visibles</dt><dd>${escapeHtml(visibleServices)}</dd></div>
@@ -973,7 +974,8 @@ function renderCampaignContent(state, handlers, specialtyNames, preset) {
     selectWithCustom('Tipo de campaña', 'promptOptions.campaignType', state.promptOptions.campaignType, preset.campaignTypes || campaignTypes, true),
     selectWithCustom('Público objetivo', 'promptOptions.targetAudience', state.promptOptions.targetAudience, preset.audiences || defaultAudiences(), false),
     selectWithCustom('Mensaje principal', 'promptOptions.mainMessage', state.promptOptions.mainMessage, preset.campaignMessages || preset.messages || [], true),
-    text('Fecha o período', 'promptOptions.campaignValidity', state.promptOptions.campaignValidity),
+    date('Desde', 'promptOptions.campaignStartDate', state.promptOptions.campaignStartDate),
+    date('Hasta', 'promptOptions.campaignEndDate', state.promptOptions.campaignEndDate),
     textarea('Condiciones o aclaración breve', 'promptOptions.campaignConditions', state.promptOptions.campaignConditions),
     selectWithCustom('Llamada a la acción', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false),
     selectWithCustom('Nota prudente', 'promptOptions.legalEthicalNote', state.promptOptions.legalEthicalNote, noteOptions, false)
@@ -1308,6 +1310,9 @@ function renderField(field) {
   if (field.type === 'textarea') {
     return `<label class="field${hidden}"><span>${field.label}${required}</span><textarea data-path="${field.path}" rows="3">${escapeHtml(field.value)}</textarea></label>`;
   }
+  if (field.type === 'date') {
+    return `<label class="field${hidden}"><span>${field.label}${required}</span><input type="date" data-path="${field.path}" value="${escapeHtml(field.value)}"></label>`;
+  }
   if (field.type === 'selectCustom') {
     const selected = field.options.includes(field.value) ? field.value : field.value ? field.value : 'Otro / Personalizar';
     const customValue = field.options.includes(field.value) ? '' : field.value;
@@ -1500,6 +1505,15 @@ function selectWithCustom(label, path, value, options, recommended = false) {
   return { type: 'selectCustom', label, path, value: value || choices[0] || '', options: choices.length ? choices : ['Otro / Personalizar'], recommended, customActive: hasCurrent || value === 'Otro / Personalizar' };
 }
 
+function campaignValidityText(options = {}) {
+  const start = String(options.campaignStartDate || '').trim();
+  const end = String(options.campaignEndDate || '').trim();
+  if (start && end) return `Desde ${start} hasta ${end}`;
+  if (start) return `Desde ${start}`;
+  if (end) return `Hasta ${end}`;
+  return String(options.campaignValidity || '').trim();
+}
+
 function parseLines(value = '') {
   return String(value || '').split(/\n|;/).map(item => item.trim()).filter(Boolean);
 }
@@ -1530,6 +1544,10 @@ function fileText(label, path, value, accept = 'image/*', recommended = false, h
 
 function textarea(label, path, value, recommended = false, hidden = false) {
   return { type: 'textarea', label, path, value, recommended, hidden };
+}
+
+function date(label, path, value, recommended = false, hidden = false) {
+  return { type: 'date', label, path, value, recommended, hidden };
 }
 
 function select(label, path, value, options, recommended = false, labeler = null) {

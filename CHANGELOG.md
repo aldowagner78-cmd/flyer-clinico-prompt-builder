@@ -1,5 +1,48 @@
 # Changelog
 
+
+## 2026-06-26 - Fix test fecha campaña
+
+### Corregido
+- Ajuste de texto en la tarjeta guiada de Promoción / campaña para eliminar la frase residual "fecha o período".
+- Se mantiene el rango con selectores `Desde` y `Hasta`.
+
+### Pruebas sugeridas
+- Ejecutar solo el test fallido: `npx playwright test tests/app.spec.js -g "promoción usa fechas desde y hasta con selectores de fecha" --project=chromium-desktop --project=mobile-chrome`.
+- Antes de commit, ejecutar batería completa con `npm test`.
+
+## [fix-3-problemas-promocion-institucion] - 2026-06-26
+
+### Agregado
+- Campos `Desde` y `Hasta` con selector de fecha para Promoción / campaña.
+- Pruebas automatizadas para validar el rango de fechas en el prompt final.
+- Prueba automatizada para confirmar que la frase institucional guardada aparece en el resumen.
+
+### Modificado
+- `src/ui/formRenderer.js` reemplaza el campo libre "Fecha o período" por selectores de fecha.
+- `src/prompt/promptBuilder.js` genera el texto del período desde las fechas elegidas.
+- `src/app.js` sincroniza el rango de campaña y evita que inputs ocultos sobrescriban valores de select personalizados.
+- `assets/css/styles.css` refuerza el ocultamiento de elementos con atributo `hidden`.
+- `src/state/defaultState.js` y `src/state/migrations.js` agregan compatibilidad para `campaignStartDate` y `campaignEndDate`.
+
+### Corregido
+- El bloque externo "Prestaciones visibles en el flyer" queda oculto de forma robusta durante el contenido guiado.
+- El resumen de institución ya no muestra "Sin frase institucional" cuando la frase se eligió desde opciones predefinidas.
+- El prompt final ya no usa "Fecha o período" para campañas, sino un rango claro de campaña.
+
+### Pendiente
+- Adjuntos múltiples.
+- Regla para archivos faltantes antes de generar.
+- Orden manual de prestaciones visibles.
+- Campos manuales vacíos por defecto y revisión de desplegables.
+
+### Compatibilidad
+- App web estática.
+- Sin backend.
+- Compatible con GitHub Pages.
+- Sin dependencias nuevas.
+
+
 ## [fix-promocion-prestaciones] - 2026-06-26
 
 ### Agregado

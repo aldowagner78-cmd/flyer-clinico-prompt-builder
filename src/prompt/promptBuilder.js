@@ -186,7 +186,7 @@ CONTENIDO DE LA PROMOCIÓN / CAMPAÑA:
 - Tipo de campaña: ${valueOrEmpty(options.campaignType)}
 - Público objetivo: ${valueOrEmpty(options.targetAudience)}
 - Mensaje principal: ${valueOrEmpty(options.mainMessage)}
-- Fecha o período: ${valueOrEmpty(options.campaignValidity)}
+- Período de campaña: ${valueOrEmpty(campaignValidityText(options))}
 - Condiciones o aclaración breve: ${valueOrEmpty(options.campaignConditions)}
 - Puntos visibles sugeridos:
 ${buildList(services.visibleServices, '- No se cargaron puntos visibles.')}
@@ -323,6 +323,15 @@ function labelAttachmentRole(value) {
     thematicImage: 'Imagen temática',
     other: 'Otro archivo'
   }[value] || valueOrEmpty(value);
+}
+
+function campaignValidityText(options = {}) {
+  const start = String(options.campaignStartDate || '').trim();
+  const end = String(options.campaignEndDate || '').trim();
+  if (start && end) return `desde ${start} hasta ${end}`;
+  if (start) return `desde ${start}`;
+  if (end) return `hasta ${end}`;
+  return options.campaignValidity || '';
 }
 
 function valueOrEmpty(value) {

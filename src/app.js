@@ -35,6 +35,7 @@ const GENERIC_SPECIALTY_WORDS = new Set(['consulta', 'control', 'controles', 'se
 const handlers = {
   onFieldChange(path, value) {
     setByPath(state, path, value);
+    if (path === 'promptOptions.campaignStartDate' || path === 'promptOptions.campaignEndDate') syncCampaignValidity();
     if (path === 'clinic.logoFileName') syncSingleAttachment(ATTACHMENT_ROLES.clinicLogo, value, state.clinic.logoInstruction || 'Usar como logo institucional, respetando proporciones.');
     if (path === 'clinic.logoInstruction') syncAttachmentInstruction(ATTACHMENT_ROLES.clinicLogo, value);
     if (path === 'professional.photoFileName') syncSingleAttachment(ATTACHMENT_ROLES.professionalPhoto, value, 'Usar como foto profesional, sin deformar rostro ni alterar identidad.');
@@ -925,10 +926,19 @@ function runInstitutionPanelAction(actionId) {
 }
 
 
+function syncCampaignValidity() {
+  const start = String(state?.promptOptions?.campaignStartDate || '').trim();
+  const end = String(state?.promptOptions?.campaignEndDate || '').trim();
+  if (start && end) state.promptOptions.campaignValidity = `Desde ${start} hasta ${end}`;
+  else if (start) state.promptOptions.campaignValidity = `Desde ${start}`;
+  else if (end) state.promptOptions.campaignValidity = `Hasta ${end}`;
+  else state.promptOptions.campaignValidity = '';
+}
+
 function syncCurrentClinicFieldsFromDom() {
   document.querySelectorAll('[data-path^="clinic."]').forEach(field => {
     const path = field.dataset.path;
-    if (!path || field.type === 'file') return;
+    if (!path || field.type === 'file' || field.hidden) return;
     if (field.type === 'checkbox') {
       setByPath(state, path, field.checked);
       return;

@@ -168,6 +168,7 @@ test.describe('Etapa 10T - flujo principal', () => {
     await startAssistant(page);
     await fillBasicInstitution(page);
     await fillPath(page, 'clinic.logoFileName', 'logo_rincon.png');
+    await selectPath(page, 'clinic.institutionalPhrase', 'Tu salud, cerca de vos');
 
     await page.locator('#saveInstitutionAndContinueButton').click();
     await expect(page.locator('#statusMessage')).toContainText(/Institución guardada/i);
@@ -182,6 +183,8 @@ test.describe('Etapa 10T - flujo principal', () => {
     await page.locator('#savedInstitutionSelect').selectOption(savedValue);
     await expect(page.locator('#savedInstitutionSummary')).toBeVisible();
     await expect(page.locator('#savedInstitutionSummary')).toContainText('logo_rincon.png');
+    await expect(page.locator('#savedInstitutionSummary')).toContainText('Tu salud, cerca de vos');
+    await expect(page.locator('#savedInstitutionSummary')).not.toContainText('Sin frase institucional');
     await expect(page.locator('#loadInstitutionButton')).toBeVisible();
 
     await page.locator('#loadInstitutionButton').click();
@@ -593,6 +596,31 @@ test.describe('Etapa 11D.2 - contenido guiado', () => {
     await page.locator('[data-content-new-service]').fill('Consulta de control');
     await page.locator('[data-content-add-service]').click();
     await expect(page.locator('#serviceFields .content-guided-card')).toContainText('Consulta de control');
+    await expect(errors).toEqual([]);
+  });
+
+
+  test('promoción usa fechas desde y hasta con selectores de fecha', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'promotionCampaign');
+
+    const contentCard = page.locator('#serviceFields .content-guided-card');
+    await expect(contentCard).toHaveAttribute('data-content-guided-key', 'campaign-type');
+    await expect(contentCard).not.toContainText(/Fecha o período/i);
+
+    const startDate = page.locator('input[type="date"][data-path="promptOptions.campaignStartDate"]').first();
+    const endDate = page.locator('input[type="date"][data-path="promptOptions.campaignEndDate"]').first();
+    await expect(startDate).toBeVisible();
+    await expect(endDate).toBeVisible();
+
+    await startDate.fill('2026-03-01');
+    await endDate.fill('2026-03-15');
+    await goResult(page);
+
+    const prompt = await getPrompt(page);
+    expect(prompt).toContain('Período de campaña: desde 2026-03-01 hasta 2026-03-15');
+    expect(prompt).not.toMatch(/Fecha o período/i);
     await expect(errors).toEqual([]);
   });
 });

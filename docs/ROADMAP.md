@@ -9,14 +9,21 @@
 - Evolucionar sin romper configuraciones JSON existentes cuando sea posible.
 
 
-## Mejoras funcionales pendientes detectadas en prueba visual
+## Mejoras funcionales detectadas en prueba visual
 
-- Cambiar los campos "Fecha o período" por dos campos separados:
+### Resuelto en parche fix 3 problemas
+
+- Promoción / campaña ahora usa dos campos separados:
   - `Desde`: selector de fecha.
   - `Hasta`: selector de fecha.
-- Aplicar el cambio en Promoción / campaña y en cualquier otro flujo que pida período.
-- El prompt final debe expresar el rango de forma clara, por ejemplo: `Período: desde AAAA-MM-DD hasta AAAA-MM-DD`.
-- Mantener compatibilidad con datos anteriores que usen `promptOptions.campaignValidity`.
+- El prompt final expresa el rango como: `Período de campaña: desde AAAA-MM-DD hasta AAAA-MM-DD`.
+- Se mantiene compatibilidad con datos anteriores que usen `promptOptions.campaignValidity`.
+- El bloque externo de prestaciones visibles queda oculto durante el modo guiado.
+- El resumen de institución muestra la frase institucional guardada.
+
+### Pendiente
+
+- Revisar si otros flujos futuros piden períodos y aplicar el mismo patrón `Desde` / `Hasta` donde corresponda.
 
 ## Fase 0: Documentacion
 
