@@ -429,6 +429,15 @@ function renderContentStep(state, handlers, specialtyNames) {
 }
 
 function renderFullContentStep(state, handlers, specialtyNames, preset, pieceType) {
+  const section = document.querySelector('#prestaciones');
+  section?.classList.remove('has-guided-card-navigation');
+
+  const secondaryTarget = document.querySelector('#additionalSpecialtiesEditor');
+  if (secondaryTarget) {
+    secondaryTarget.hidden = false;
+    secondaryTarget.innerHTML = '';
+  }
+
   if (pieceType === PIECE_TYPES.professionalFlyer) {
     renderProfessionalContent(state, handlers, specialtyNames, preset);
   } else if (pieceType === PIECE_TYPES.clinicalInfographic) {
@@ -447,9 +456,15 @@ function renderFullContentStep(state, handlers, specialtyNames, preset, pieceTyp
 
 function renderGuidedContentStep(state, handlers, specialtyNames, preset, pieceType) {
   const target = document.querySelector('#serviceFields');
+  const section = target?.closest('.form-section');
   const secondaryTarget = document.querySelector('#additionalSpecialtiesEditor');
   if (!target) return;
-  if (secondaryTarget) secondaryTarget.innerHTML = '';
+  section?.classList.add('has-guided-card-navigation');
+  section?.querySelector(':scope > .step-footer-controls')?.remove();
+  if (secondaryTarget) {
+    secondaryTarget.innerHTML = '';
+    secondaryTarget.hidden = true;
+  }
 
   const steps = contentGuidedSteps(state, specialtyNames, preset, pieceType);
   contentGuidedIndex = Math.max(0, Math.min(contentGuidedIndex, steps.length - 1));
@@ -476,9 +491,9 @@ function renderGuidedContentStep(state, handlers, specialtyNames, preset, pieceT
         ${renderContentGuidedBody(state, step, handlers)}
       </div>
       <div class="guided-card-actions">
-        <button class="secondary-button" type="button" data-content-guided="previous">← Anterior</button>
+        <button class="secondary-button" type="button" ${contentGuidedIndex <= 0 ? 'data-wizard-action="previous"' : 'data-content-guided="previous"'}>← Anterior</button>
         <button class="secondary-button" type="button" data-content-mode="full">Formulario completo</button>
-        ${isLast ? '<span class="helper-text content-guided-finish-note">Listo. Tocá Siguiente → para pasar a Diseño.</span>' : '<button class="primary-button" type="button" data-content-guided="next">Siguiente tarjeta →</button>'}
+        ${isLast ? '<button class="primary-button" type="button" data-wizard-action="next">Siguiente →</button>' : '<button class="primary-button" type="button" data-content-guided="next">Siguiente tarjeta →</button>'}
       </div>
     </div>
   `;
@@ -644,8 +659,10 @@ function campaignContentSteps(state, specialtyNames, preset) {
       fields: [
         select('Área / especialidad', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
         selectWithCustom('Tipo de campaña', 'promptOptions.campaignType', state.promptOptions.campaignType, preset.campaignTypes || campaignTypes, true),
-        date('Desde', 'promptOptions.campaignStartDate', state.promptOptions.campaignStartDate),
-        date('Hasta', 'promptOptions.campaignEndDate', state.promptOptions.campaignEndDate)
+        fieldGroup('Período de campaña', 'Elegí el rango visible de la campaña o promoción.', [
+          date('Desde', 'promptOptions.campaignStartDate', state.promptOptions.campaignStartDate),
+          date('Hasta', 'promptOptions.campaignEndDate', state.promptOptions.campaignEndDate)
+        ], 'date-range-group')
       ]
     },
     {
@@ -972,10 +989,12 @@ function renderCampaignContent(state, handlers, specialtyNames, preset) {
   renderFields('#serviceFields', [
     select('Área / especialidad', 'specialty.primaryProfessionalSpecialty', state.specialty.primaryProfessionalSpecialty, specialtyNames, true),
     selectWithCustom('Tipo de campaña', 'promptOptions.campaignType', state.promptOptions.campaignType, preset.campaignTypes || campaignTypes, true),
+    fieldGroup('Período de campaña', 'Usá Desde y Hasta para indicar el rango visible de la campaña.', [
+      date('Desde', 'promptOptions.campaignStartDate', state.promptOptions.campaignStartDate),
+      date('Hasta', 'promptOptions.campaignEndDate', state.promptOptions.campaignEndDate)
+    ], 'date-range-group'),
     selectWithCustom('Público objetivo', 'promptOptions.targetAudience', state.promptOptions.targetAudience, preset.audiences || defaultAudiences(), false),
     selectWithCustom('Mensaje principal', 'promptOptions.mainMessage', state.promptOptions.mainMessage, preset.campaignMessages || preset.messages || [], true),
-    date('Desde', 'promptOptions.campaignStartDate', state.promptOptions.campaignStartDate),
-    date('Hasta', 'promptOptions.campaignEndDate', state.promptOptions.campaignEndDate),
     textarea('Condiciones o aclaración breve', 'promptOptions.campaignConditions', state.promptOptions.campaignConditions),
     selectWithCustom('Llamada a la acción', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false),
     selectWithCustom('Nota prudente', 'promptOptions.legalEthicalNote', state.promptOptions.legalEthicalNote, noteOptions, false)
@@ -992,6 +1011,8 @@ function renderCampaignContent(state, handlers, specialtyNames, preset) {
 
 function renderSmartServiceSelector({ state, handlers, preset, title, help }) {
   const target = document.querySelector('#additionalSpecialtiesEditor');
+  if (!target) return;
+  target.hidden = false;
   const suggestions = (preset.services || []).slice(0, 8);
   target.innerHTML = `
     <div class="smart-panel">
@@ -1018,6 +1039,8 @@ function renderSmartServiceSelector({ state, handlers, preset, title, help }) {
 
 function renderSmartBlockSelector({ state, handlers, preset, title, help }) {
   const target = document.querySelector('#additionalSpecialtiesEditor');
+  if (!target) return;
+  target.hidden = false;
   const suggestions = (preset.blocks || preset.services || []).slice(0, 8);
   const selected = parseLines(state.promptOptions.infoBlocksText);
   target.innerHTML = `
@@ -1056,6 +1079,7 @@ function renderSmartBlockSelector({ state, handlers, preset, title, help }) {
 function renderCareInsideContent(state, handlers, showCoverage = false) {
   const target = document.querySelector('#additionalSpecialtiesEditor');
   if (!target) return;
+  target.hidden = false;
   target.insertAdjacentHTML('beforeend', `
     <div class="smart-panel care-inline-panel">
       <div class="list-title">
@@ -1151,9 +1175,9 @@ function renderGuidedDesignStep(state, handlers, fields) {
         ${renderDesignGuidedBody(state, step)}
       </div>
       <div class="guided-card-actions">
-        <button class="secondary-button" type="button" data-design-guided="previous">← Anterior</button>
+        <button class="secondary-button" type="button" ${designGuidedIndex <= 0 ? 'data-wizard-action="previous"' : 'data-design-guided="previous"'}>← Anterior</button>
         <button class="secondary-button" type="button" data-design-mode="full">Formulario completo</button>
-        ${isLast ? '<span class="helper-text design-guided-finish-note">Listo. Tocá Siguiente → para revisar el resultado.</span>' : '<button class="primary-button" type="button" data-design-guided="next">Siguiente tarjeta →</button>'}
+        ${isLast ? '<button class="primary-button" type="button" data-wizard-action="next">Ver resultado →</button>' : '<button class="primary-button" type="button" data-design-guided="next">Siguiente tarjeta →</button>'}
       </div>
     </div>
   `;
@@ -1304,6 +1328,11 @@ function bindFieldControls(node, handlers) {
 function renderField(field) {
   const hidden = field.hidden ? ' hidden' : '';
   const required = field.recommended ? '<span class="recommended">Recomendado</span>' : '';
+  if (field.type === 'group') {
+    const groupClass = field.className ? ` ${field.className}` : '';
+    const help = field.help ? `<p class="field-group-help">${escapeHtml(field.help)}</p>` : '';
+    return `<fieldset class="field-group${groupClass}${hidden}"><legend>${escapeHtml(field.label)}</legend>${help}<div class="field-group-grid">${field.fields.map(child => renderField(child)).join('')}</div></fieldset>`;
+  }
   if (field.type === 'toggle') {
     return `<label class="field toggle-field${hidden}"><input type="checkbox" data-path="${field.path}" ${field.value ? 'checked' : ''}><span>${field.label}</span></label>`;
   }
@@ -1311,7 +1340,7 @@ function renderField(field) {
     return `<label class="field${hidden}"><span>${field.label}${required}</span><textarea data-path="${field.path}" rows="3">${escapeHtml(field.value)}</textarea></label>`;
   }
   if (field.type === 'date') {
-    return `<label class="field${hidden}"><span>${field.label}${required}</span><input type="date" data-path="${field.path}" value="${escapeHtml(field.value)}"></label>`;
+    return `<label class="field date-field${hidden}"><span>${field.label}${required}</span><input type="date" data-path="${field.path}" value="${escapeHtml(field.value)}"></label>`;
   }
   if (field.type === 'selectCustom') {
     const selected = field.options.includes(field.value) ? field.value : field.value ? field.value : 'Otro / Personalizar';
@@ -1548,6 +1577,10 @@ function textarea(label, path, value, recommended = false, hidden = false) {
 
 function date(label, path, value, recommended = false, hidden = false) {
   return { type: 'date', label, path, value, recommended, hidden };
+}
+
+function fieldGroup(label, help, fields, className = '', hidden = false) {
+  return { type: 'group', label, help, fields, className, hidden };
 }
 
 function select(label, path, value, options, recommended = false, labeler = null) {

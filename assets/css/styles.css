@@ -488,6 +488,7 @@ h3 {
 
 input[type="text"],
 input[type="time"],
+input[type="date"],
 select,
 textarea {
   width: 100%;
@@ -2015,6 +2016,7 @@ body::before {
 .prompt-output,
 input[type="text"],
 input[type="time"],
+input[type="date"],
 select,
 textarea {
   border-color: color-mix(in srgb, var(--accent) 18%, transparent) !important;
@@ -3272,6 +3274,16 @@ body.is-wizard-open .side-panel {
   }
 }
 
+@media (max-width: 720px) {
+  .content-guided-card[data-content-guided-key="campaign-type"] .guided-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .content-guided-card[data-content-guided-key="campaign-type"] .guided-field-grid .date-field {
+    max-width: none;
+  }
+}
+
 /* Etapa 11C piloto: institución guiada */
 .institution-mode-panel,
 .guided-card {
@@ -3380,6 +3392,35 @@ body.is-wizard-open .side-panel {
 .guided-social-note {
   grid-column: 1 / -1;
 }
+
+.guided-field-grid .field.date-field {
+  grid-column: auto;
+}
+
+.content-guided-card[data-content-guided-key="campaign-type"] .guided-field-grid {
+  grid-template-columns: repeat(2, minmax(180px, 280px));
+  justify-content: start;
+  align-items: end;
+}
+
+.content-guided-card[data-content-guided-key="campaign-type"] .guided-field-grid .field:not(.date-field) {
+  grid-column: 1 / -1;
+  max-width: min(100%, 1180px);
+}
+
+.content-guided-card[data-content-guided-key="campaign-type"] .guided-field-grid .date-field {
+  width: 100%;
+}
+
+.field.date-field input[type="date"] {
+  font: inherit;
+  line-height: 1.2;
+}
+
+#additionalSpecialtiesEditor:empty {
+  display: none;
+}
+
 
 .guided-summary dl {
   display: grid;
@@ -4169,5 +4210,73 @@ body.is-institution-editor-open .institution-panel-focused {
 
   .copy-prompt-result-button {
     width: 100%;
+  }
+}
+
+
+/* Fix UX: período de campaña agrupado y navegación guiada limpia */
+.field-group {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.field-group legend {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  color: #334155;
+  font-weight: 900;
+}
+
+.field-group-help {
+  margin: -0.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.field-group-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 280px));
+  gap: 1rem;
+  align-items: end;
+  justify-content: start;
+}
+
+.field-group-grid .field {
+  min-width: 0;
+}
+
+.date-range-group input[type="date"] {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+  padding: 11px 13px;
+  font: inherit;
+  line-height: 1.2;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+#prestaciones.has-guided-card-navigation > .step-footer-controls {
+  display: none !important;
+}
+
+#prestaciones.has-guided-card-navigation #additionalSpecialtiesEditor,
+#prestaciones.has-guided-card-navigation [data-visible-services-editor] {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .field-group-grid {
+    grid-template-columns: 1fr;
   }
 }

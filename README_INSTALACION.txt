@@ -25,6 +25,24 @@ Conserva lo ya incorporado:
 - 11D.4: Resultado final más claro y asistido.
 - Modo demo con datos ficticios.
 
+
+## Parche visual posterior
+
+Este parche corrige el acabado visual de Promoción / campaña:
+
+- `Desde` y `Hasta` usan selectores de fecha con estilo consistente.
+- En escritorio aparecen lado a lado y con ancho reducido.
+- En móvil se apilan para mantener usabilidad táctil.
+- Se eliminan los botones de navegación duplicados debajo del wizard.
+- Se oculta el contenedor vacío que quedaba como residuo visual bajo la tarjeta.
+
+Prueba puntual recomendada antes de la batería completa:
+
+```powershell
+npx playwright test tests/app.spec.js -g "promoción usa fechas desde y hasta con selectores de fecha|muestra diseño guiado y mantiene Formulario completo como respaldo" --project=chromium-desktop --project=mobile-chrome
+```
+
+
 ## Instalación
 
 Ruta Windows PowerShell:
@@ -154,4 +172,15 @@ Comando:
 
 Resultado esperado:
 Deben pasar solo los 2 tests de fechas de campaña. Antes de commit, ejecutar `npm test`.
+
+## Prueba rápida de fix visual de período y navegación guiada
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+`npx playwright test tests/app.spec.js -g "promoción usa fechas desde y hasta con selectores de fecha" --project=chromium-desktop --project=mobile-chrome`
+
+Resultado esperado:
+Deben pasar los 2 tests de campaña. Verificar visualmente que `Desde` y `Hasta` estén bajo el título `Período de campaña`, lado a lado en escritorio y sin botones inferiores duplicados en modo guiado.
 

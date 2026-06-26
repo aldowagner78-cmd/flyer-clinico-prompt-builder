@@ -1,5 +1,33 @@
 # Changelog
 
+## [Fix visual período campaña y navegación guiada] - 2026-06-26
+
+### Corregido
+- Agrupado de campos `Desde` y `Hasta` bajo el título visible `Período de campaña`.
+- Alineación de `Desde` y `Hasta` lado a lado en escritorio y apilados en móvil.
+- Estilo de los selectores de fecha para que mantengan altura, bordes y forma coherente con el resto de campos.
+- Refuerzo para eliminar botones inferiores duplicados cuando el wizard guiado ya muestra navegación propia.
+- Ocultamiento defensivo de editores externos en modo contenido guiado.
+
+### Pruebas
+- Prueba puntual recomendada para el caso de campaña en desktop y mobile.
+- Ejecutar `npm test` antes de commit.
+
+
+## 2026-06-26 - Fix visual de fechas y navegación guiada
+
+### Corregido
+- Los inputs `Desde` y `Hasta` de Promoción / campaña adoptan el mismo estilo visual que el resto de campos.
+- En escritorio se muestran lado a lado con ancho reducido.
+- Se eliminan botones de navegación duplicados debajo de tarjetas guiadas.
+- Se oculta el contenedor vacío `additionalSpecialtiesEditor` en modo guiado.
+
+### Pruebas sugeridas
+- Ejecutar test puntual:
+  `npx playwright test tests/app.spec.js -g "promoción usa fechas desde y hasta con selectores de fecha|muestra diseño guiado y mantiene Formulario completo como respaldo" --project=chromium-desktop --project=mobile-chrome`
+- Antes de commit, ejecutar `npm test`.
+
+
 
 ## 2026-06-26 - Fix test fecha campaña
 
