@@ -566,6 +566,35 @@ test.describe('Etapa 11D.2 - contenido guiado', () => {
 
     await expect(errors).toEqual([]);
   });
+
+  test('promoción muestra puntos visibles solo dentro de su tarjeta guiada', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'promotionCampaign');
+
+    await expectCurrentStep(page, 'prestaciones');
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'campaign-type');
+    await expect(page.locator('[data-visible-services-editor]')).toBeHidden();
+
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'campaign-message');
+    await expect(page.locator('[data-visible-services-editor]')).toBeHidden();
+
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'conditions-cta');
+    await expect(page.locator('#serviceFields .content-guided-card')).not.toContainText(/Datos visibles elegidos/i);
+    await expect(page.locator('[data-visible-services-editor]')).toBeHidden();
+
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await expect(page.locator('#serviceFields .content-guided-card')).toHaveAttribute('data-content-guided-key', 'campaign-points');
+    await expect(page.locator('#serviceFields .content-guided-card')).toContainText(/Datos visibles elegidos/i);
+    await expect(page.locator('[data-visible-services-editor]')).toBeHidden();
+
+    await page.locator('[data-content-new-service]').fill('Consulta de control');
+    await page.locator('[data-content-add-service]').click();
+    await expect(page.locator('#serviceFields .content-guided-card')).toContainText('Consulta de control');
+    await expect(errors).toEqual([]);
+  });
 });
 
 test.describe('Etapa 11D.3 - diseño guiado', () => {

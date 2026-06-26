@@ -3,13 +3,12 @@
 ## Archivos modificados
 
 - `index.html`
-- `assets/css/styles.css`
-- `src/app.js`
-- `src/ui/previewRenderer.js`
+- `src/ui/formRenderer.js`
 - `tests/app.spec.js`
 - `README_INSTALACION.txt`
 - `CHANGELOG.md`
 - `CAMBIOS_REALIZADOS.md`
+- `docs/ROADMAP.md`
 
 ## Archivos agregados
 
@@ -17,29 +16,20 @@
 
 ## Qué se cambió
 
-- Se implementó la Etapa 11D.4: Resultado más claro y asistido.
-- Se agregó un panel de "Revisión final" antes de copiar.
-- Se reorganizó el resultado en tarjetas:
-  - Checklist de datos.
-  - Adjuntos antes de enviar.
-  - Advertencias y sugerencias.
-- Se destacó el botón "Copiar prompt revisado" en el resultado y en el panel lateral.
-- Se mejoró el checklist de adjuntos para indicar que los archivos deben subirse manualmente en ChatGPT.
-- Se agregaron pruebas automatizadas para:
-  - Revisión final visible.
-  - Botón de copiar destacado.
-  - Checklist de adjuntos visible y enumerado.
-  - Advertencias agrupadas antes de copiar.
+- Se corrigió el flujo guiado de **Promoción / campaña**.
+- El bloque externo "Prestaciones visibles en el flyer" queda oculto mientras se usa el modo guiado.
+- Los puntos/datos visibles ahora aparecen dentro de la tarjeta guiada correspondiente.
+- Se puede agregar un dato visible personalizado desde esa misma tarjeta.
+- Se puede quitar un dato visible desde esa misma tarjeta.
+- Se agregó prueba automatizada para confirmar que el bloque externo no aparece en tarjetas anteriores como "Condiciones y CTA".
+- Se dejó agendada la mejora pendiente para cambiar "Fecha o período" por campos "Desde" y "Hasta" con selectores de fecha.
 
 ## Por qué se cambió
 
-- El roadmap pendiente pedía completar la Etapa 11D.4:
-  - Resultado más claro y más asistido.
-  - Checklist de adjuntos más visible.
-  - Botón Copiar prompt más destacado.
-  - Advertencias finales y revisión antes de copiar/generar.
-- El cambio ayuda a usuarios no técnicos a saber qué revisar antes de pegar el prompt en ChatGPT.
-- No modifica la lógica del prompt final ni elimina funciones existentes.
+- En Promoción / campaña, las prestaciones visibles aparecían antes de tiempo y fuera de contexto.
+- Ese bloque externo generaba sensación de navegación duplicada.
+- La corrección mantiene una sola acción principal por tarjeta y respeta el flujo guiado.
+- No modifica el contenido final del prompt salvo por los datos visibles que el usuario agregue o quite.
 
 ## Cómo probar
 
@@ -61,34 +51,40 @@ Prueba manual mínima:
 
 1. Abrir la app.
 2. Comenzar asistente.
-3. Crear o completar institución.
-4. Elegir un tipo de pieza.
-5. Completar Contenido guiado.
-6. Completar Diseño guiado.
-7. Ir a Resultado.
-8. Confirmar que aparece el panel "Revisión final".
-9. Confirmar que se ven tarjetas de checklist, adjuntos y advertencias.
-10. Confirmar que el botón dice "Copiar prompt revisado".
-11. Si hay logo, foto o imagen de referencia, confirmar que aparece en "Adjuntos antes de enviar".
-12. Copiar el prompt y confirmar que aparece mensaje de estado.
+3. Crear o cargar una institución.
+4. Elegir **Promoción / campaña**.
+5. Avanzar por Contenido guiado.
+6. En "Condiciones y CTA", confirmar que no aparece el bloque externo "Prestaciones visibles en el flyer" debajo de la tarjeta.
+7. Avanzar a "Puntos visibles".
+8. Confirmar que los datos visibles aparecen dentro de la tarjeta.
+9. Agregar un dato visible personalizado.
+10. Quitar un dato visible.
+11. Avanzar a Diseño y Resultado sin errores.
 
 ## Resultado esperado
 
 - La app inicia sin errores.
 - El flujo principal mantiene 5 pasos visibles.
-- El resultado es más claro.
-- El checklist de adjuntos es visible.
-- El botón de copiar está destacado.
-- Las advertencias aparecen antes de copiar.
+- Promoción / campaña no muestra prestaciones visibles fuera de contexto.
+- La tarjeta "Puntos visibles" permite elegir, agregar y quitar datos visibles.
+- No hay navegación duplicada visual en el contenido guiado.
 - Las pruebas automatizadas pasan.
 - No aparecen ZIPs, reportes ni temporales en `git status`.
 
 ## Cómo revertir
 
-Revertir el commit de la Etapa 11D.4:
+Revertir el commit de este parche:
 
 ```bash
 git revert <hash-del-commit>
 ```
 
-O restaurar los archivos modificados desde el backup previo al parche.
+O restaurar estos archivos desde el backup previo al parche:
+
+- `index.html`
+- `src/ui/formRenderer.js`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+- `docs/ROADMAP.md`

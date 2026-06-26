@@ -1,4 +1,4 @@
-# Instalación y uso - Parche Etapa 11D.4
+# Instalación y uso - Parche fix Promoción / campaña
 
 ## Requisitos
 
@@ -9,21 +9,24 @@
 
 ## Qué contiene este parche
 
-Implementa la Etapa 11D.4:
+Corrige el flujo guiado de **Promoción / campaña**:
 
-- Resultado final más claro y asistido.
-- Panel de revisión final antes de copiar.
-- Checklist de datos mínimos agrupado en tarjeta.
-- Checklist de adjuntos más visible y destacado.
-- Botón "Copiar prompt revisado" más destacado en el panel lateral y dentro del resultado.
-- Advertencias y sugerencias agrupadas antes de copiar/generar.
-- Pruebas automatizadas nuevas para validar el resultado asistido, adjuntos visibles y advertencias finales.
+- Oculta el bloque externo "Prestaciones visibles en el flyer" mientras se usa el contenido guiado.
+- Muestra los puntos/datos visibles solamente dentro de la tarjeta correspondiente del wizard.
+- Permite agregar y quitar datos visibles personalizados dentro de esa tarjeta.
+- Evita que el usuario vea un bloque fuera de contexto debajo de "Condiciones y CTA".
+- Mantiene el "Formulario completo" como respaldo.
+- Agrega una prueba automatizada específica para validar que no aparezca el bloque externo en promoción/campaña.
 
-También conserva lo ya incorporado:
+También deja agendada una mejora funcional pendiente:
+
+- Reemplazar campos de "Fecha o período" por dos selectores: "Desde" y "Hasta".
+
+Conserva lo ya incorporado:
 
 - 11D.2: Contenido guiado por tarjetas según tipo de pieza.
 - 11D.3: Diseño guiado por tarjetas.
-- Formulario completo como respaldo.
+- 11D.4: Resultado final más claro y asistido.
 - Modo demo con datos ficticios.
 
 ## Instalación
@@ -78,11 +81,12 @@ http://127.0.0.1:4173
 2. Cargá o creá una institución.
 3. Elegí el tipo de pieza.
 4. Completá Contenido guiado.
-5. Completá Diseño guiado.
-6. Revisá el panel "Revisión final".
-7. Si hay adjuntos, subilos manualmente en ChatGPT.
-8. Tocá "Copiar prompt revisado".
-9. Pegá el prompt en ChatGPT después de adjuntar los archivos indicados.
+5. En Promoción / campaña, verificá que los puntos visibles aparezcan solo en su tarjeta.
+6. Completá Diseño guiado.
+7. Revisá el panel "Revisión final".
+8. Si hay adjuntos, subilos manualmente en ChatGPT.
+9. Tocá "Copiar prompt revisado".
+10. Pegá el prompt en ChatGPT después de adjuntar los archivos indicados.
 
 ## Modo demo
 
@@ -114,13 +118,13 @@ npm test
 Windows PowerShell, desde la raíz del proyecto:
 
 ```powershell
-tar -a -c -f .\flyer-clinico-prompt-builder_11D4_ok.zip --exclude="./node_modules" --exclude="./.git" --exclude="./dist" --exclude="./build" --exclude="./coverage" --exclude="./playwright-report" --exclude="./test-results" --exclude="./.venv" --exclude="./venv" --exclude="./__pycache__" --exclude="*.pyc" --exclude="*.zip" .
+tar -a -c -f .\flyer-clinico-prompt-builder_fix_promocion_prestaciones_ok.zip --exclude="./node_modules" --exclude="./.git" --exclude="./dist" --exclude="./build" --exclude="./coverage" --exclude="./playwright-report" --exclude="./test-results" --exclude="./.venv" --exclude="./venv" --exclude="./__pycache__" --exclude="*.pyc" --exclude="*.zip" .
 ```
 
 Linux, desde la raíz del proyecto:
 
 ```bash
-zip -r flyer-clinico-prompt-builder_11D4_ok.zip . \
+zip -r flyer-clinico-prompt-builder_fix_promocion_prestaciones_ok.zip . \
   -x "*/node_modules/*" "*/.git/*" "*/dist/*" "*/build/*" \
      "*/coverage/*" "*/playwright-report/*" "*/test-results/*" \
      "*/.venv/*" "*/venv/*" "*/__pycache__/*" "*.pyc" "*.zip"
