@@ -1,4 +1,4 @@
-# Instalación y uso - Parche Etapa 11D.3
+# Instalación y uso - Parche Etapa 11D.4
 
 ## Requisitos
 
@@ -9,24 +9,22 @@
 
 ## Qué contiene este parche
 
-Implementa la Etapa 11D.3:
+Implementa la Etapa 11D.4:
 
-- Diseño guiado por tarjetas.
-- Tarjeta de formato.
-- Tarjeta de colores institucionales o personalizados.
-- Tarjeta de estilo visual e impacto.
-- Tarjeta de tipografía y densidad.
-- Tarjeta de iconos, fondo y recursos según especialidad.
-- Tarjeta de modo animado.
-- Tarjeta de imágenes personalizadas para GPT.
-- Botón de respaldo "Formulario completo".
-- Pruebas automatizadas nuevas para el flujo de diseño guiado.
+- Resultado final más claro y asistido.
+- Panel de revisión final antes de copiar.
+- Checklist de datos mínimos agrupado en tarjeta.
+- Checklist de adjuntos más visible y destacado.
+- Botón "Copiar prompt revisado" más destacado en el panel lateral y dentro del resultado.
+- Advertencias y sugerencias agrupadas antes de copiar/generar.
+- Pruebas automatizadas nuevas para validar el resultado asistido, adjuntos visibles y advertencias finales.
 
-También conserva lo ya incorporado en 11D.2:
+También conserva lo ya incorporado:
 
-- Contenido guiado por tarjetas según tipo de pieza.
-- Formulario completo como respaldo en Contenido.
-- Modo demo con datos ficticios por tipo de pieza.
+- 11D.2: Contenido guiado por tarjetas según tipo de pieza.
+- 11D.3: Diseño guiado por tarjetas.
+- Formulario completo como respaldo.
+- Modo demo con datos ficticios.
 
 ## Instalación
 
@@ -79,10 +77,12 @@ http://127.0.0.1:4173
 1. Tocá "Comenzar asistente".
 2. Cargá o creá una institución.
 3. Elegí el tipo de pieza.
-4. En "Contenido", completá las tarjetas guiadas.
-5. En "Diseño", completá las tarjetas guiadas.
-6. Si necesitás ver todo junto, tocá "Formulario completo".
-7. Revisá "Resultado" y copiá el prompt.
+4. Completá Contenido guiado.
+5. Completá Diseño guiado.
+6. Revisá el panel "Revisión final".
+7. Si hay adjuntos, subilos manualmente en ChatGPT.
+8. Tocá "Copiar prompt revisado".
+9. Pegá el prompt en ChatGPT después de adjuntar los archivos indicados.
 
 ## Modo demo
 
@@ -114,13 +114,13 @@ npm test
 Windows PowerShell, desde la raíz del proyecto:
 
 ```powershell
-tar -a -c -f .\flyer-clinico-prompt-builder.zip --exclude="./node_modules" --exclude="./.git" --exclude="./dist" --exclude="./build" --exclude="./coverage" --exclude="./playwright-report" --exclude="./test-results" --exclude="./.venv" --exclude="./venv" --exclude="./__pycache__" --exclude="*.pyc" --exclude="*.zip" .
+tar -a -c -f .\flyer-clinico-prompt-builder_11D4_ok.zip --exclude="./node_modules" --exclude="./.git" --exclude="./dist" --exclude="./build" --exclude="./coverage" --exclude="./playwright-report" --exclude="./test-results" --exclude="./.venv" --exclude="./venv" --exclude="./__pycache__" --exclude="*.pyc" --exclude="*.zip" .
 ```
 
 Linux, desde la raíz del proyecto:
 
 ```bash
-zip -r flyer-clinico-prompt-builder.zip . \
+zip -r flyer-clinico-prompt-builder_11D4_ok.zip . \
   -x "*/node_modules/*" "*/.git/*" "*/dist/*" "*/build/*" \
      "*/coverage/*" "*/playwright-report/*" "*/test-results/*" \
      "*/.venv/*" "*/venv/*" "*/__pycache__/*" "*.pyc" "*.zip"
@@ -128,7 +128,18 @@ zip -r flyer-clinico-prompt-builder.zip . \
 
 ## Problemas frecuentes
 
-- Si `npm test` falla por navegadores faltantes, ejecutá `npx playwright install`.
-- Si el formulario no muestra cambios, recargá con Ctrl+F5.
-- Si hay datos viejos guardados, usá "Limpiar" o abrí una ventana privada.
-- No subas `node_modules`, `.git`, `playwright-report`, `test-results` ni ZIPs al repositorio.
+- Si `npm test` falla porque faltan navegadores, ejecutar `npx playwright install`.
+- Si GitHub Pages tarda en mostrar cambios, esperar 1 a 3 minutos y recargar con `Ctrl + F5`.
+- Si el resultado indica adjuntos, ChatGPT no los recibirá automáticamente: hay que subirlos manualmente antes de pegar el prompt.
+
+## Checklist manual
+
+- La app inicia sin errores.
+- El asistente mantiene 5 pasos visibles.
+- Contenido guiado funciona.
+- Diseño guiado funciona.
+- Resultado muestra revisión final.
+- El checklist de adjuntos queda visible.
+- El botón de copiar está destacado.
+- Las advertencias se muestran antes de copiar.
+- `npm test` pasa.
