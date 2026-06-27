@@ -1,3 +1,28 @@
+# Demo visual prompt Gemini video - 2026-06-27
+
+## Archivos agregados
+- `tests/demo-video-gemini.spec.js`
+
+## Archivos modificados
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Que se cambio
+- Se agrego una demo Playwright independiente para completar un prompt de video desde cero con datos ficticios.
+- La demo usa modo visible desde el comando, pausas cortas y selectores por `data-path`, rol o texto visible.
+- El prompt generado se valida y se guarda en `test-results/prompt-video-gemini-demo.txt`.
+
+## Como probar
+```powershell
+npx playwright test tests/demo-video-gemini.spec.js --project=chromium-desktop --headed --workers=1
+```
+
+## Como revertir
+- Eliminar `tests/demo-video-gemini.spec.js` y quitar estas notas de documentacion.
+
+---
+
 # Etapa videos animados base - 2026-06-27
 
 ## Archivos modificados

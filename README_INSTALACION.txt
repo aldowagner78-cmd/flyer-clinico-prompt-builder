@@ -1,3 +1,23 @@
+# Demo visual para generar prompt de video
+
+Esta demo no reemplaza los tests existentes. Sirve para ver Playwright completar en pantalla un flujo de `Promocion / campana` con video `Desde cero` y guardar el prompt final para probarlo en Gemini.
+
+Comando desde la raiz del proyecto:
+```powershell
+npx playwright test tests/demo-video-gemini.spec.js --project=chromium-desktop --headed --workers=1
+```
+
+Resultado esperado:
+- El navegador se abre en modo visible.
+- Se cargan datos ficticios de una campana de Diabetologia.
+- Se activa `Solicitar pieza animada / video`.
+- Se configura video vertical para Instagram / WhatsApp.
+- El prompt queda guardado en `test-results/prompt-video-gemini-demo.txt`.
+
+Revisar visualmente que el flujo llegue a `Resultado`, que el prompt incluya escenas temporizadas y que no muestre `CTA` como texto visible.
+
+---
+
 # Instalación PWA - Chrome Android y escritorio
 
 ## Qué agrega esta etapa

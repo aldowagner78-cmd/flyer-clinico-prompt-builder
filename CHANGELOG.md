@@ -1,3 +1,16 @@
+## 2026-06-27 - Demo visual prompt Gemini video
+
+### Agregado
+- `tests/demo-video-gemini.spec.js` como demo visual/manual asistida separada de la bateria principal.
+- La demo completa un flujo ficticio de `Promocion / campana`, activa video `Desde cero`, valida el prompt final y lo guarda en `test-results/prompt-video-gemini-demo.txt`.
+
+### Documentacion
+- Se agrego en `README_INSTALACION.txt` el comando para ejecutar la demo headed.
+
+### Pruebas
+- Ejecutar solo: `npx playwright test tests/demo-video-gemini.spec.js --project=chromium-desktop --headed --workers=1`.
+- No reemplaza `npm test` ni modifica la configuracion global de Playwright.
+
 ## 2026-06-27 - Etapa videos animados base
 
 ### Agregado
