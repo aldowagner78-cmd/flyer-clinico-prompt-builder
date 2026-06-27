@@ -102,3 +102,14 @@ En Resultado, tocar `Corregir`, editar el campo indicado y luego usar `Volver al
 - Jingles con referencias de audio o melodías base.
 - Variantes por temporada/campaña.
 - Exportar prompts de audio por plataforma.
+
+## Recomendación para jingles/canciones
+
+Para obtener mejores resultados:
+- elegí una duración corta y concreta, por ejemplo 15 segundos;
+- escribí una idea breve, no una letra larga;
+- evitá incluir números en la letra;
+- usá el nombre de la institución tal como debe pronunciarse;
+- verificá que Gemini respete el estilo elegido.
+
+La app incluye en el prompt reglas para español argentino, pronunciación clara, duración estricta y para no cantar teléfonos, direcciones, emails, redes ni otros datos administrativos.

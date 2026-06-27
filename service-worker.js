@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flyer-clinico-prompt-builder-v5';
+const CACHE_NAME = 'flyer-clinico-prompt-builder-v6';
 const APP_SHELL = [
   './',
   './index.html',

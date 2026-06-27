@@ -832,3 +832,13 @@ Para validar rápidamente video, plataformas y sugerencias:
 npx playwright test tests/app.spec.js -g "video animado|resultado muestra revisión final|botones de plataforma|sugerencias del resultado" --project=chromium-desktop --project=mobile-chrome
 ```
 
+
+### Ajuste de jingles/canciones
+
+El generador de jingle usa un prompt breve y estricto para mejorar resultados en Gemini:
+- duración exacta;
+- límite de líneas y palabras cantadas;
+- español argentino;
+- pronunciación exacta de nombres propios;
+- no cantar teléfonos, direcciones, emails, redes, matrículas ni números;
+- respetar estrictamente el estilo musical elegido.
