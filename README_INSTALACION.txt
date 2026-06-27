@@ -1,3 +1,32 @@
+# Accesos rápidos a plataformas
+
+En `Resultado`, además de `Copiar prompt revisado`, la app muestra botones para copiar el prompt y abrir una plataforma externa:
+
+- ChatGPT
+- Gemini
+- CapCut
+- Canva
+
+La app no pega el prompt automáticamente por seguridad del navegador. Después de abrir la plataforma, el usuario debe pegarlo manualmente con `Ctrl + V` o la opción `Pegar`.
+
+## Prueba dirigida
+
+Desde la raíz del proyecto:
+
+```powershell
+npx playwright test tests/app.spec.js -g "botones de plataforma" --project=chromium-desktop
+```
+
+## Prueba manual
+
+1. Abrir la app.
+2. Llegar a `Resultado`.
+3. Hacer clic en `Gemini`, `ChatGPT`, `CapCut` o `Canva`.
+4. Confirmar que aparece el aviso de prompt copiado.
+5. Confirmar que se abre una nueva pestaña.
+
+---
+
 # Demo visual para generar prompt de video
 
 Esta demo no reemplaza los tests existentes. Sirve para ver Playwright completar en pantalla un flujo de `Promocion / campana` con video `Desde cero` y guardar el prompt final para probarlo en Gemini.
@@ -700,3 +729,8 @@ npx playwright test tests/app.spec.js -g "video animado|video basado en material
 
 En modo video/animación, la app usa el término `Mensaje final` en lugar de `CTA`.
 Si el usuario agrega referencias para video, la app solo copia nombres de archivos; esos archivos deben adjuntarse manualmente en Gemini o ChatGPT según corresponda.
+
+## Accesos rápidos a plataformas
+
+En la pantalla Resultado, el botón `Copiar prompt` copia el prompt actual.
+Los botones `ChatGPT`, `Gemini`, `CapCut` y `Canva` copian el prompt y abren la plataforma en una pestaña nueva. Después hay que pegar manualmente con `Ctrl+V` o desde el menú `Pegar`.

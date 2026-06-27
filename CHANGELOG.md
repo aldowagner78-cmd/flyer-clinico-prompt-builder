@@ -1,3 +1,16 @@
+## 2026-06-27 - Accesos rápidos a plataformas
+
+### Agregado
+- Botones compactos en Resultado para copiar el prompt y abrir ChatGPT, Gemini, CapCut o Canva en una pestaña nueva.
+- Test dirigido para validar botones de plataforma, copia del prompt y URL abierta.
+
+### Modificado
+- Se mantiene `Copiar prompt revisado` como acción principal.
+- Las plataformas externas quedan como accesos rápidos secundarios.
+
+### Pruebas
+- Ejecutar: `npx playwright test tests/app.spec.js -g "botones de plataforma" --project=chromium-desktop`.
+
 ## 2026-06-27 - Demo visual prompt Gemini video
 
 ### Agregado
@@ -468,3 +481,10 @@
 - Se reemplazó la etiqueta visible `CTA` por `Mensaje final` en flujos, resumen y prompt.
 - Se corrigió `Diseno visual` por `Diseño visual` y textos con acentos en la pantalla de diseño.
 - En modo video, el bloque de adjuntos visuales ahora se identifica como `Imágenes/videos personalizados para Gemini`.
+
+## 2026-06-27 - Fix accesos rápidos
+
+### Corregido
+- Se compactó el botón principal del resultado como “Copiar prompt”.
+- Los botones ChatGPT/Gemini/CapCut/Canva ahora copian el prompt antes de abrir la plataforma.
+- Se mejoró la alineación de acciones rápidas en la pantalla Resultado.
