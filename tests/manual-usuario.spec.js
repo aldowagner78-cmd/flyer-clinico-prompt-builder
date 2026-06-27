@@ -37,8 +37,8 @@ test.describe('Manual de usuario interactivo', () => {
     await expect(manualPage.locator('#video')).toContainText(/Video o animación/i);
     await expect(manualPage.locator('#resultado')).toContainText(/ChatGPT/i);
     await expect(manualPage.locator('#resultado')).toContainText(/Gemini/i);
-    await expect(manualPage.locator('#resultado')).toContainText(/CapCut/i);
-    await expect(manualPage.locator('#resultado')).toContainText(/Canva/i);
+    await expect(manualPage.locator('#resultado')).not.toContainText(/CapCut/i);
+    await expect(manualPage.locator('#resultado')).not.toContainText(/Canva/i);
 
     await manualPage.locator('a[href="#adjuntos"]').click();
     await expect(manualPage.locator('#adjuntos')).toBeVisible();

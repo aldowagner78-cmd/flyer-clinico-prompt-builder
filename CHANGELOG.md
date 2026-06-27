@@ -1,3 +1,17 @@
+## 2026-06-27 - Reset seguro, Ir a y video desde flyer
+
+### Agregado
+- Modal de confirmación para `Inicio`.
+- Selector `Ir a...` para saltar entre pasos del asistente.
+- Modo de video `Desde flyer / imagen estática`.
+- Tests dirigidos para reset, recarga limpia, navegación rápida, plataformas y prompt de video desde flyer.
+
+### Modificado
+- El estado persistido al recargar conserva solo base institucional, logo y configuración visual externa.
+- Resultado conserva ChatGPT y Gemini; se quitaron CapCut y Canva.
+- Manual y roadmap documentan el pendiente futuro de canciones/jingles.
+- `service-worker.js` actualiza versión de cache para refrescar la PWA.
+
 ## 2026-06-27 - Manual sincronizado con tema de color
 
 ### Modificado

@@ -6,6 +6,7 @@ export const ATTACHMENT_ROLES = {
   referenceFlyer: 'referenceFlyer',
   thematicImage: 'thematicImage',
   videoBase: 'videoBase',
+  videoStaticFlyer: 'videoStaticFlyer',
   videoProfessionalPhoto: 'videoProfessionalPhoto',
   videoLogo: 'videoLogo',
   videoSupportImage: 'videoSupportImage',

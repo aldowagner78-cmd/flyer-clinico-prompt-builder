@@ -2,9 +2,18 @@
 
 ### Accesos rápidos a plataformas - completado
 
-- Agregados botones para copiar prompt y abrir ChatGPT, Gemini, CapCut o Canva.
+- Botones activos: ChatGPT y Gemini.
 - Mantener como criterio futuro que la app no intente pegar automáticamente por restricciones del navegador.
 - Evaluar más adelante si conviene destacar una plataforma recomendada según imagen/video.
+
+### Reset seguro, navegación rápida y video desde flyer - completado
+
+- Inicio pide confirmación antes de limpiar el trabajo actual.
+- El reset conserva instituciones guardadas, institución seleccionada, logo institucional y tema visual de la app.
+- Al recargar la app no se recuperan datos viejos de flyers/campañas/profesionales; solo se recuerda la base institucional.
+- Se agregó selector `Ir a...` para saltar a Institución, Tipo de pieza, Contenido, Diseño o Resultado sin borrar datos.
+- Se agregó modo de video `Desde flyer / imagen estática` para animar una pieza existente sin rediseñarla.
+- Resultado mantiene ChatGPT y Gemini, sin CapCut ni Canva.
 
 ### PWA instalable - completado en etapa actual
 
@@ -49,6 +58,17 @@
 - Sugerir duracion de 15 a 25 segundos segun la cantidad de contenido.
 - Preparar salidas listas para Instagram y WhatsApp.
 - No implementar en esta etapa de modernizacion visual.
+
+### Generador de canciones/jingles promocionales
+
+- Pendiente futuro: generador de prompts para canciones/jingles promocionales con Gemini.
+- Incluir letra o idea base.
+- Incluir estilo musical.
+- Incluir voz femenina/masculina.
+- Incluir duración.
+- Incluir destino: promoción, flyer animado, video o redes.
+- Generar prompt optimizado para lograr una canción/jingle acorde a la marca.
+- No crear UI todavía.
 
 ## Cambios UX recientes
 

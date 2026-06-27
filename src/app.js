@@ -23,6 +23,7 @@ const pieceWorkflows = {
 const resultStep = 'resultado';
 const INSTITUTIONS_KEY = 'flyerClinicoPromptBuilder.institutions';
 const INSTITUTION_PHRASES_KEY = 'flyerClinicoPromptBuilder.institutionPhrases';
+const SELECTED_INSTITUTION_KEY = 'flyerClinicoPromptBuilder.selectedInstitutionId';
 const MAX_INSTITUTIONS = 10;
 const MAX_PHRASES = 10;
 let institutionActionsPanelOpen = false;
@@ -36,6 +37,7 @@ let institutionEditorOpen = false;
 let institutionEditorMode = 'create';
 const GENERIC_SPECIALTY_WORDS = new Set(['consulta', 'control', 'controles', 'seguimiento', 'evaluacion', 'estudios', 'profesional', 'profesionales', 'prevencion', 'pacientes', 'salud', 'turnos', 'cuidar', 'orientar', 'periodico', 'periodicos', 'informacion', 'cuando', 'habitos']);
 
+state = hydrateSelectedInstitutionOnStartup(state);
 
 const handlers = {
   onFieldChange(path, value) {
@@ -250,8 +252,13 @@ function bindStaticActions() {
     currentStep = currentStep || 'clinica';
     startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false, 'Trabajo guardado cargado.');
   });
-  document.querySelector('#backHomeButton')?.addEventListener('click', showHome);
+  document.querySelector('#backHomeButton')?.addEventListener('click', requestHomeReset);
   document.querySelector('#closeAssistantButton')?.addEventListener('click', showHome);
+  document.querySelector('#confirmHomeCancel')?.addEventListener('click', closeHomeResetModal);
+  document.querySelector('#confirmHomeAccept')?.addEventListener('click', confirmHomeReset);
+  document.querySelector('#homeResetModal')?.addEventListener('click', event => {
+    if (event.target?.id === 'homeResetModal') closeHomeResetModal();
+  });
   document.addEventListener('pointerdown', event => {
     const manageButton = event.target.closest?.('#manageInstitutionButton');
     if (!manageButton) return;
@@ -335,7 +342,7 @@ function bindStaticActions() {
         previousStep();
       }
     }
-    if (action === 'home') showHome();
+    if (action === 'home') requestHomeReset();
     if (action === 'result') showStep(resultStep);
     if (action === 'next') {
       if (currentStep === 'clinica' && institutionEditorOpen) {
@@ -356,6 +363,11 @@ function bindStaticActions() {
 
   document.querySelectorAll('[data-step-target]').forEach(button => {
     button.addEventListener('click', () => showStep(button.dataset.stepTarget));
+  });
+  document.querySelector('#quickStepSelect')?.addEventListener('change', event => {
+    if (!event.target.value) return;
+    showStep(event.target.value);
+    if (event.target.value === resultStep) update(false);
   });
 
   document.querySelectorAll('[data-copy-prompt-action]').forEach(button => {
@@ -383,7 +395,7 @@ function bindStaticActions() {
   document.querySelector('#clearButton').addEventListener('click', () => {
     if (!confirm('Limpiar el formulario actual?')) return;
     clearState();
-    state = createDefaultState();
+    state = createStatePreservingInstitution(false);
     currentStep = firstStepForPiece(state.promptOptions.pieceType);
     update(true);
     showHome();
@@ -1066,6 +1078,7 @@ function renderInstitutionManager() {
   const institutions = loadInstitutions();
   const phrases = loadInstitutionPhrases();
   const currentName = state?.clinic?.name || '';
+  const selectedInstitutionId = loadSelectedInstitutionId();
 
   document.body.classList.toggle('is-institution-editor-open', institutionEditorOpen);
 
@@ -1089,7 +1102,7 @@ function renderInstitutionManager() {
             <span>Institución guardada</span>
             <select id="savedInstitutionSelect">
               <option value="">Seleccionar institución...</option>
-              ${institutions.map(item => `<option value="${escapeHtmlAttr(item.id)}">${escapeHtml(item.clinic?.name || 'Sin nombre')}</option>`).join('')}
+              ${institutions.map(item => `<option value="${escapeHtmlAttr(item.id)}" ${item.id === selectedInstitutionId ? 'selected' : ''}>${escapeHtml(item.clinic?.name || 'Sin nombre')}</option>`).join('')}
             </select>
           </label>
 
@@ -1259,6 +1272,7 @@ function saveInstitutionAndContinue() {
   const id = `institution_${Date.now()}`;
   const next = [{ id, clinic: clinicSnapshot(), updatedAt: new Date().toISOString() }, ...institutions.filter(item => item.clinic?.name !== name)].slice(0, MAX_INSTITUTIONS);
   saveInstitutions(next);
+  saveSelectedInstitutionId(id);
   institutionEditorOpen = false;
   update(true);
   showStep('tipo');
@@ -1272,6 +1286,15 @@ function loadInstitutions() {
 
 function saveInstitutions(items) {
   localStorage.setItem(INSTITUTIONS_KEY, JSON.stringify(items.slice(0, MAX_INSTITUTIONS)));
+}
+
+function loadSelectedInstitutionId() {
+  return String(localStorage.getItem(SELECTED_INSTITUTION_KEY) || '');
+}
+
+function saveSelectedInstitutionId(id) {
+  if (id) localStorage.setItem(SELECTED_INSTITUTION_KEY, id);
+  else localStorage.removeItem(SELECTED_INSTITUTION_KEY);
 }
 
 function loadInstitutionPhrases() {
@@ -1290,6 +1313,7 @@ function saveCurrentInstitutionAsNew() {
   const id = `institution_${Date.now()}`;
   const next = [{ id, clinic: clinicSnapshot(), updatedAt: new Date().toISOString() }, ...institutions.filter(item => item.clinic?.name !== name)].slice(0, MAX_INSTITUTIONS);
   saveInstitutions(next);
+  saveSelectedInstitutionId(id);
   renderInstitutionManager();
   showStatus('Institución guardada.');
 }
@@ -1298,6 +1322,7 @@ function loadSelectedInstitution(id) {
   const institution = loadInstitutions().find(item => item.id === id);
   if (!institution) return showStatus('Seleccioná una institución guardada.');
   state.clinic = migrateState({ clinic: institution.clinic }).clinic;
+  saveSelectedInstitutionId(id);
   update(true);
   showStatus('Institución cargada.');
 }
@@ -1306,6 +1331,7 @@ function useSelectedInstitutionAndContinue(id) {
   const institution = loadInstitutions().find(item => item.id === id);
   if (!institution) return showStatus('Seleccioná una institución guardada.');
   state.clinic = migrateState({ clinic: institution.clinic }).clinic;
+  saveSelectedInstitutionId(id);
   institutionEditorOpen = false;
   update(true);
   showStep('tipo');
@@ -1320,6 +1346,7 @@ function updateSelectedInstitution(id) {
   if (index === -1) return saveCurrentInstitutionAsNew();
   institutions[index] = { id, clinic: clinicSnapshot(), updatedAt: new Date().toISOString() };
   saveInstitutions(institutions);
+  saveSelectedInstitutionId(id);
   renderInstitutionManager();
   showStatus('Institución actualizada.');
 }
@@ -1331,6 +1358,7 @@ function deleteSelectedInstitution(id) {
   if (!institution) return showStatus('No se encontró la institución.');
   if (!confirm(`Eliminar institución guardada "${institution.clinic?.name || 'sin nombre'}"?`)) return;
   saveInstitutions(institutions.filter(item => item.id !== id));
+  if (loadSelectedInstitutionId() === id) saveSelectedInstitutionId('');
   renderInstitutionManager();
   showStatus('Institución eliminada.');
 }
@@ -1581,6 +1609,21 @@ function escapeHtmlApp(value = '') {
     .replaceAll("'", '&#039;');
 }
 
+function cloneJson(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function hydrateSelectedInstitutionOnStartup(currentState) {
+  const selectedId = String(localStorage.getItem(SELECTED_INSTITUTION_KEY) || '');
+  if (!selectedId) return currentState;
+  const institution = readLocalJson(INSTITUTIONS_KEY, []).find(item => item.id === selectedId);
+  if (!institution?.clinic) return currentState;
+  const next = cloneJson(currentState);
+  next.clinic = migrateState({ clinic: institution.clinic }).clinic;
+  syncSingleLogoAttachment(next);
+  return next;
+}
+
 
 function startPieceFlow(pieceType, resetCurrentStep = true, statusMessage = '') {
   state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
@@ -1597,11 +1640,68 @@ function startPieceFlow(pieceType, resetCurrentStep = true, statusMessage = '') 
 
 function showHome() {
   institutionEditorOpen = false;
+  closeHomeResetModal();
   document.body.classList.add('is-home');
   document.body.classList.remove('is-wizard-open');
   document.body.classList.remove('is-institution-editor-open');
   document.querySelector('#pieceHome')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   showStatus('Inicio.');
+}
+
+function requestHomeReset() {
+  const modal = document.querySelector('#homeResetModal');
+  if (!modal) {
+    confirmHomeReset();
+    return;
+  }
+  modal.hidden = false;
+  document.body.classList.add('has-modal-open');
+  document.querySelector('#confirmHomeCancel')?.focus();
+}
+
+function closeHomeResetModal() {
+  const modal = document.querySelector('#homeResetModal');
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  document.body.classList.remove('has-modal-open');
+}
+
+function confirmHomeReset() {
+  state = createStatePreservingInstitution(true);
+  correctionReturnActive = false;
+  pendingCorrectionFocusPath = '';
+  correctionReturnMessage = '';
+  institutionEditorOpen = false;
+  currentStep = firstStepForPiece(state.promptOptions.pieceType);
+  clearState();
+  update(true);
+  showHome();
+  showStatus('Volviste al inicio. Se conservó la institución seleccionada.');
+}
+
+function createStatePreservingInstitution(preserveCurrentInstitution = true) {
+  const previousClinic = preserveCurrentInstitution ? cloneJson(state.clinic || {}) : {};
+  const next = createDefaultState();
+  if (preserveCurrentInstitution) {
+    next.clinic = migrateState({ clinic: previousClinic }).clinic;
+    syncSingleLogoAttachment(next);
+  }
+  return next;
+}
+
+function syncSingleLogoAttachment(targetState) {
+  const logoFileName = String(targetState?.clinic?.logoFileName || '').trim();
+  targetState.attachments = targetState.attachments && typeof targetState.attachments === 'object' ? targetState.attachments : { items: [] };
+  targetState.attachments.items = logoFileName
+    ? [{
+        id: 'attachment_clinicLogo',
+        role: ATTACHMENT_ROLES.clinicLogo,
+        fileName: logoFileName,
+        mimeType: '',
+        status: 'selected',
+        instruction: targetState.clinic.logoInstruction || 'Usar como logo institucional, respetando proporciones.'
+      }]
+    : [];
 }
 
 function showStep(step) {
@@ -1695,12 +1795,19 @@ function updateWorkflowChrome() {
 
   const title = document.querySelector('#workflowTitle');
   const subtitle = document.querySelector('#workflowSubtitle');
+  const quickStepSelect = document.querySelector('#quickStepSelect');
   const previousButtons = document.querySelectorAll('[data-wizard-action="previous"], #prevStepButton');
   const nextButtons = document.querySelectorAll('[data-wizard-action="next"], #nextStepButton');
   const resultButtons = document.querySelectorAll('[data-wizard-action="result"], #resultStepButton');
 
   if (title) title.textContent = `Paso ${index + 1} de ${steps.length} — ${labelStepForPiece(currentStep, pieceType)}`;
   if (subtitle) subtitle.textContent = workflowSubtitleForStep(currentStep);
+  if (quickStepSelect) {
+    quickStepSelect.value = currentStep;
+    Array.from(quickStepSelect.options).forEach(option => {
+      option.hidden = Boolean(option.value) && !steps.includes(option.value);
+    });
+  }
   previousButtons.forEach(button => {
     button.disabled = index <= 0;
   });
@@ -1750,16 +1857,19 @@ async function copyPromptAndOpenPlatform(event) {
   button.disabled = true;
 
   try {
-    await writePromptToClipboard(prompt);
-    showStatus(`Prompt copiado. Se abrirá ${platformName}; pegalo allí con Ctrl+V o desde el menú Pegar.`);
+    const copied = await writePromptToClipboard(prompt);
 
     const openedWindow = platformUrl ? window.open(platformUrl, '_blank', 'noopener,noreferrer') : null;
 
     if (!openedWindow) {
       showStatus(`Prompt copiado. ${platformName} no se abrió automáticamente; permití ventanas emergentes o abrilo manualmente.`);
+    } else if (copied) {
+      showStatus(`Prompt copiado. Se abrió ${platformName}; pegalo allí con Ctrl+V o desde el menú Pegar.`);
+    } else {
+      showStatus(`Se abrió ${platformName}. Si el prompt no quedó copiado por permisos del navegador, usá Copiar prompt y pegalo allí.`);
     }
   } catch {
-    showStatus('No se pudo copiar automáticamente. Usá el botón “Copiar prompt” y luego abrí la plataforma.');
+    showStatus('No se pudo copiar por permisos del navegador. Usá Copiar prompt y luego abrí la plataforma.');
   } finally {
     button.disabled = false;
   }
@@ -1895,6 +2005,7 @@ function labelAttachmentRole(value) {
     referenceFlyer: 'Flyer de referencia',
     thematicImage: 'Imagen tematica',
     videoBase: 'Video base',
+    videoStaticFlyer: 'Flyer / imagen estatica',
     videoProfessionalPhoto: 'Foto del profesional',
     videoLogo: 'Logo institucional',
     videoSupportImage: 'Imagen de apoyo',

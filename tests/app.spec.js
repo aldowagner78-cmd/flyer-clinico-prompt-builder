@@ -109,7 +109,9 @@ async function openInstitutionFullForm(page) {
   const nameField = page.locator('[data-path="clinic.name"]').first();
   if (await nameField.isVisible().catch(() => false)) return;
 
-  if (await page.locator('#createInstitutionButton').isVisible().catch(() => false)) {
+  if (await page.locator('#editCurrentInstitutionButton').isVisible().catch(() => false)) {
+    await page.locator('#editCurrentInstitutionButton').click();
+  } else if (await page.locator('#createInstitutionButton').isVisible().catch(() => false)) {
     await page.locator('#createInstitutionButton').click();
   }
 
@@ -497,6 +499,122 @@ test.describe('Mejora funcional - adjuntos múltiples', () => {
 });
 
 test.describe('Etapa 11C - UX de institución y navegación', () => {
+  test('Inicio abre confirmación, cancelar conserva datos y confirmar limpia el trabajo', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+
+    await fillPath(page, 'professional.fullName', 'Dra. Reset Seguro');
+    await fillPath(page, 'professional.license', 'MP 7788');
+
+    await page.locator('.form-section.is-current [data-wizard-action="home"]').first().click();
+    await expect(page.locator('#homeResetModal')).toBeVisible();
+    await expect(page.locator('#homeResetTitle')).toContainText('Volver al inicio');
+    await expect(page.locator('#homeResetDescription')).toContainText(/instituci.+n seleccionada se conservar/i);
+
+    await page.locator('#confirmHomeCancel').click();
+    await expect(page.locator('#homeResetModal')).toBeHidden();
+    await expectCurrentStep(page, 'prestaciones');
+    await expect(page.locator('[data-path="professional.fullName"]').first()).toHaveValue('Dra. Reset Seguro');
+
+    await page.locator('.form-section.is-current [data-wizard-action="home"]').first().click();
+    await page.locator('#confirmHomeAccept').click();
+    await expect(page.locator('body')).toHaveClass(/is-home/);
+
+    await startAssistant(page);
+    await openInstitutionFullForm(page);
+    await expect(page.locator('[data-path="clinic.name"]').first()).toHaveValue('Centro Médico Rincón');
+    await continueFromInstitution(page);
+    await choosePiece(page, 'professionalFlyer');
+    await expect(page.locator('[data-path="professional.fullName"]').first()).toHaveValue('');
+    await expect(page.locator('[data-path="professional.license"]').first()).toHaveValue('');
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('al recargar no reaparecen datos viejos de trabajo', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await page.goto('/');
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+    await page.reload();
+    await expect(page.locator('#startAssistantButton')).toBeVisible();
+    await startAssistant(page);
+    await fillBasicInstitution(page);
+    await page.locator('#saveInstitutionAndContinueButton').click();
+    await expectCurrentStep(page, 'tipo');
+    await choosePiece(page, 'professionalFlyer');
+
+    await fillPath(page, 'professional.fullName', 'Dr. Trabajo Viejo');
+    await fillPath(page, 'professional.license', 'MP 9999');
+    await page.reload();
+
+    await expect(page.locator('#startAssistantButton')).toBeVisible();
+    await startAssistant(page);
+    await openInstitutionFullForm(page);
+    await expect(page.locator('[data-path="clinic.name"]').first()).toHaveValue('Centro Médico Rincón');
+    await continueFromInstitution(page);
+    await choosePiece(page, 'professionalFlyer');
+    await expect(page.locator('[data-path="professional.fullName"]').first()).toHaveValue('');
+    await expect(page.locator('[data-path="professional.license"]').first()).toHaveValue('');
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('Ir a permite navegar entre pasos sin borrar datos y actualiza resultado', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+
+    await fillPath(page, 'professional.fullName', 'Dra. Navegación Rápida');
+    await page.locator('#quickStepSelect').selectOption('diseno');
+    await expectCurrentStep(page, 'diseno');
+    await page.locator('#quickStepSelect').selectOption('prestaciones');
+    await expectCurrentStep(page, 'prestaciones');
+    await expect(page.locator('[data-path="professional.fullName"]').first()).toHaveValue('Dra. Navegación Rápida');
+    await page.locator('#quickStepSelect').selectOption('resultado');
+    await expectCurrentStep(page, 'resultado');
+    await expect(page.locator('#promptOutput')).toContainText('Dra. Navegación Rápida');
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('video desde flyer / imagen estática exige animar sin rediseñar y lista archivo requerido', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'promotionCampaign');
+    await clickCurrentNext(page);
+    await expectCurrentStep(page, 'diseno');
+
+    for (let i = 0; i < 5; i += 1) {
+      await page.locator('#designFields [data-design-guided="next"]').click();
+    }
+
+    await page.locator('[data-path="promptOptions.requestAnimation"]').first().check();
+    await page.locator('[data-path="promptOptions.videoCreationMode"][value="Desde flyer / imagen estática"]').check();
+    await expect(page.locator('.video-material-panel')).toContainText('Flyer o imagen estática base');
+    await page.locator('.video-material-panel input[data-multiple-attachment-file="videoStaticFlyer"]').setInputFiles({
+      name: 'flyer-base-campania.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('flyer-base')
+    });
+    await expect(page.locator('.video-material-panel')).toContainText('flyer-base-campania.png');
+
+    await goResult(page);
+    const prompt = await getPrompt(page);
+    expect(prompt).toContain('VIDEO DESDE FLYER / IMAGEN ESTÁTICA');
+    expect(prompt).toContain('Animá la pieza sin rediseñarla');
+    expect(prompt).toContain('No cambies textos');
+    expect(prompt).toContain('No rehagas el diseño desde cero');
+    expect(prompt).toContain('flyer-base-campania.png');
+    expect(prompt).toContain('Para poder realizar la tarea necesito que subas los siguientes archivos:');
+    expect(prompt).toContain('No debe generar el video hasta recibir el archivo');
+
+    await expect(errors).toEqual([]);
+  });
+
   test('formulario completo muestra redes sociales antes de los botones finales', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
@@ -1066,12 +1184,15 @@ test.describe('Etapa 11D.4 - resultado asistido', () => {
     await goResult(page);
 
     await expect(page.locator('.platform-actions')).toBeVisible();
-    await expect(page.locator('[data-open-platform]')).toHaveCount(4);
+    await expect(page.locator('[data-open-platform]')).toHaveCount(2);
+    await expect(page.locator('[data-open-platform][data-platform-name="ChatGPT"]')).toBeVisible();
     await expect(page.locator('[data-open-platform][data-platform-name="Gemini"]')).toBeVisible();
+    await expect(page.locator('[data-open-platform][data-platform-name="CapCut"]')).toHaveCount(0);
+    await expect(page.locator('[data-open-platform][data-platform-name="Canva"]')).toHaveCount(0);
 
     await page.locator('[data-open-platform][data-platform-name="Gemini"]').click();
 
-    await expect(page.locator('#statusMessage')).toContainText(/Prompt copiado/i);
+    await expect(page.locator('#statusMessage')).toContainText(/Prompt copiado.+Se abri/i);
     const openedPlatformUrl = await page.evaluate(() => window.__openedPlatformUrl);
     const copiedPrompt = await page.evaluate(() => window.__clipboardText);
     expect(openedPlatformUrl).toContain('gemini.google.com');

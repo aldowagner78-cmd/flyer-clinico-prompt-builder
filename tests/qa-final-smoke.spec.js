@@ -205,6 +205,7 @@ test.describe('QA final smoke', () => {
     await expect(videoPanel).toContainText('Desde cero');
     await expect(videoPanel).toContainText('Basado en material');
     await expect(videoPanel).toContainText('Híbrido');
+    await expect(videoPanel).toContainText('Desde flyer / imagen estática');
     await expect(videoPanel).toContainText('Mensaje final');
 
     const visibleVideoText = await page.locator('body').innerText();
@@ -228,9 +229,11 @@ test.describe('QA final smoke', () => {
     await expectCurrentStep(page, 'resultado');
 
     await expect(page.locator('#copyPromptButton')).toContainText(/Copiar prompt/i);
-    for (const platform of ['ChatGPT', 'Gemini', 'CapCut', 'Canva']) {
+    for (const platform of ['ChatGPT', 'Gemini']) {
       await expect(page.locator(`[data-open-platform][data-platform-name="${platform}"]`)).toBeVisible();
     }
+    await expect(page.locator('[data-open-platform][data-platform-name="CapCut"]')).toHaveCount(0);
+    await expect(page.locator('[data-open-platform][data-platform-name="Canva"]')).toHaveCount(0);
 
     const moreActions = page.locator('#resultado .more-actions summary').first();
     await expect(moreActions).toBeVisible();
