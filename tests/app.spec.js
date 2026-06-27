@@ -1025,13 +1025,57 @@ test.describe('Etapa 11D.4 - resultado asistido', () => {
     const resultCopyButton = page.locator('#resultado [data-copy-prompt-action]');
     await expect(resultCopyButton).toBeVisible();
     await expect(resultCopyButton).toHaveClass(/copy-prompt-result-button/);
-    await expect(resultCopyButton).toContainText(/Copiar prompt revisado/i);
+    await expect(resultCopyButton).toContainText(/^\s*Copiar prompt\s*$/i);
 
     await expect(page.locator('#copyPromptButton')).toHaveClass(/copy-prompt-primary/);
     await expect(page.locator('#copyPromptButton')).toContainText(/revisado/i);
 
     await resultCopyButton.click();
     await expect(page.locator('#statusMessage')).toContainText(/Prompt revisado copiado/i);
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('botones de plataforma copian prompt y abren nueva pestaña', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await page.addInitScript(() => {
+      window.__clipboardText = '';
+      window.__openedPlatformUrl = '';
+      window.__platformActionOrder = [];
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: {
+          writeText: async text => {
+            window.__platformActionOrder.push('copiar');
+            window.__clipboardText = text;
+          }
+        }
+      });
+      window.open = url => {
+        window.__platformActionOrder.push('abrir');
+        window.__openedPlatformUrl = url;
+        return { closed: false, focus() {} };
+      };
+    });
+
+    await openCleanApp(page);
+    await startWithPiece(page, 'promotionCampaign');
+    await goResult(page);
+
+    await expect(page.locator('.platform-actions')).toBeVisible();
+    await expect(page.locator('[data-open-platform]')).toHaveCount(4);
+    await expect(page.locator('[data-open-platform][data-platform-name="Gemini"]')).toBeVisible();
+
+    await page.locator('[data-open-platform][data-platform-name="Gemini"]').click();
+
+    await expect(page.locator('#statusMessage')).toContainText(/Prompt copiado/i);
+    const openedPlatformUrl = await page.evaluate(() => window.__openedPlatformUrl);
+    const copiedPrompt = await page.evaluate(() => window.__clipboardText);
+    expect(openedPlatformUrl).toContain('gemini.google.com');
+    expect(copiedPrompt).toContain('TIPO DE PIEZA');
+    await expect(page.locator('#copyPromptButton')).toContainText(/Copiar prompt/i);
+    const platformActionOrder = await page.evaluate(() => window.__platformActionOrder);
+    expect(platformActionOrder).toEqual(['copiar', 'abrir']);
 
     await expect(errors).toEqual([]);
   });

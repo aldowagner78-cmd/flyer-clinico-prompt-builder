@@ -1,3 +1,61 @@
+# Accesos rápidos a plataformas - 2026-06-27
+
+## Archivos modificados
+- `index.html`
+- `src/app.js`
+- `assets/css/styles.css`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+- `docs/ROADMAP.md`
+
+## Qué se cambió
+- Se agregaron botones para copiar el prompt y abrir ChatGPT, Gemini, CapCut o Canva en una pestaña nueva.
+- Se muestra un aviso indicando que el prompt fue copiado y que debe pegarse en la plataforma abierta.
+- Se mantiene el botón principal `Copiar prompt revisado`.
+
+## Por qué se cambió
+- Para que el usuario pueda salir desde la app hacia la plataforma ideal sin pasos extra.
+
+## Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "botones de plataforma" --project=chromium-desktop
+```
+
+## Cómo revertir
+- Quitar los botones `data-open-platform` de `index.html`.
+- Quitar `copyPromptAndOpenPlatform` y su listener de `src/app.js`.
+- Quitar estilos `.platform-actions` / `.platform-button`.
+- Quitar el test asociado.
+
+---
+
+# Demo visual prompt Gemini video - 2026-06-27
+
+## Archivos agregados
+- `tests/demo-video-gemini.spec.js`
+
+## Archivos modificados
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Que se cambio
+- Se agrego una demo Playwright independiente para completar un prompt de video desde cero con datos ficticios.
+- La demo usa modo visible desde el comando, pausas cortas y selectores por `data-path`, rol o texto visible.
+- El prompt generado se valida y se guarda en `test-results/prompt-video-gemini-demo.txt`.
+
+## Como probar
+```powershell
+npx playwright test tests/demo-video-gemini.spec.js --project=chromium-desktop --headed --workers=1
+```
+
+## Como revertir
+- Eliminar `tests/demo-video-gemini.spec.js` y quitar estas notas de documentacion.
+
+---
+
 # Etapa videos animados base - 2026-06-27
 
 ## Archivos modificados
@@ -794,3 +852,24 @@ npx playwright test tests/app.spec.js -g "completa nombres de logo, foto profesi
 - Revisar que no aparezca `CTA` en la interfaz.
 - Revisar que Diseño muestre `Diseño visual`.
 - Ir a Resultado y confirmar que el prompt usa `Mensaje final`.
+
+## Fix accesos rápidos a plataformas
+
+### Archivos modificados
+- `index.html`
+- `assets/css/styles.css`
+- `src/app.js`
+- `tests/app.spec.js`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+- `README_INSTALACION.txt`
+
+### Qué se cambió
+- Se renombró el botón principal a “Copiar prompt”.
+- Se ordenaron los botones de plataformas en una línea compacta cuando hay espacio.
+- Se corrigió el flujo para copiar el prompt antes de abrir ChatGPT/Gemini/CapCut/Canva.
+
+### Cómo probar
+- Generar un resultado.
+- Usar un botón de plataforma.
+- Pegar en la plataforma abierta y verificar que se pegó el prompt actual.

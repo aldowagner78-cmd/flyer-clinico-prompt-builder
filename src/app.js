@@ -326,6 +326,9 @@ function bindStaticActions() {
   document.querySelectorAll('[data-copy-prompt-action]').forEach(button => {
     button.addEventListener('click', copyPrompt);
   });
+  document.querySelectorAll('[data-open-platform]').forEach(button => {
+    button.addEventListener('click', copyPromptAndOpenPlatform);
+  });
   document.querySelector('#copyAttachmentsButton')?.addEventListener('click', copyAttachmentsChecklist);
   document.querySelector('#loadDemoButton')?.addEventListener('click', () => loadDemoData(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer));
   document.querySelector('#downloadPromptButton')?.addEventListener('click', downloadPrompt);
@@ -1514,15 +1517,51 @@ function updateWorkflowChrome() {
   updateActionLabels(pieceType);
 }
 
-async function copyPrompt() {
-  const prompt = document.querySelector('#promptOutput').value;
+async function writePromptToClipboard(prompt) {
   try {
     await navigator.clipboard.writeText(prompt);
-    showStatus('Prompt revisado copiado. Ahora adjuntá los archivos indicados en ChatGPT si corresponde.');
+    return true;
   } catch {
-    document.querySelector('#promptOutput').select();
+    const promptOutput = document.querySelector('#promptOutput');
+    promptOutput.select();
     document.execCommand('copy');
-    showStatus('Prompt revisado copiado. Ahora adjuntá los archivos indicados en ChatGPT si corresponde.');
+    return false;
+  }
+}
+
+async function copyPrompt() {
+  const prompt = document.querySelector('#promptOutput').value;
+  await writePromptToClipboard(prompt);
+  showStatus('Prompt revisado copiado. Ahora adjuntá los archivos indicados en ChatGPT si corresponde.');
+}
+
+async function copyPromptAndOpenPlatform(event) {
+  const button = event.currentTarget;
+  const platformName = button.dataset.platformName || 'la plataforma';
+  const platformUrl = button.dataset.platformUrl || '';
+  const promptOutput = document.querySelector('#promptOutput');
+  const prompt = promptOutput?.value || '';
+
+  if (!prompt.trim()) {
+    showStatus('No hay prompt para copiar todavía. Revisá el resultado antes de abrir una plataforma.');
+    return;
+  }
+
+  button.disabled = true;
+
+  try {
+    await writePromptToClipboard(prompt);
+    showStatus(`Prompt copiado. Se abrirá ${platformName}; pegalo allí con Ctrl+V o desde el menú Pegar.`);
+
+    const openedWindow = platformUrl ? window.open(platformUrl, '_blank', 'noopener,noreferrer') : null;
+
+    if (!openedWindow) {
+      showStatus(`Prompt copiado. ${platformName} no se abrió automáticamente; permití ventanas emergentes o abrilo manualmente.`);
+    }
+  } catch {
+    showStatus('No se pudo copiar automáticamente. Usá el botón “Copiar prompt” y luego abrí la plataforma.');
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -1712,10 +1751,10 @@ function updateActionLabels(pieceType) {
   const demoButton = document.querySelector('#loadDemoButton');
 
   const labels = {
-    [PIECE_TYPES.professionalFlyer]: ['Acción principal', 'Copiar prompt revisado de flyer', 'Descargar prompt de flyer', 'Cargar ejemplo de flyer'],
-    [PIECE_TYPES.clinicalInfographic]: ['Acción principal', 'Copiar prompt revisado de infografía', 'Descargar prompt de infografía', 'Cargar ejemplo de infografía'],
+    [PIECE_TYPES.professionalFlyer]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de flyer', 'Cargar ejemplo de flyer'],
+    [PIECE_TYPES.clinicalInfographic]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de infografía', 'Cargar ejemplo de infografía'],
     [PIECE_TYPES.informativeFlyer]: ['Acción principal', 'Copiar prompt informativo revisado', 'Descargar prompt informativo', 'Cargar ejemplo informativo'],
-    [PIECE_TYPES.promotionCampaign]: ['Acción principal', 'Copiar prompt revisado de campaña', 'Descargar prompt de campaña', 'Cargar ejemplo de campaña']
+    [PIECE_TYPES.promotionCampaign]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de campaña', 'Cargar ejemplo de campaña']
   };
 
   const [, copyLabel, downloadLabel, demoLabel] = labels[pieceType] || labels[PIECE_TYPES.professionalFlyer];

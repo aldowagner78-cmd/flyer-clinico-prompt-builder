@@ -1,5 +1,11 @@
 # Roadmap
 
+### Accesos rápidos a plataformas - completado
+
+- Agregados botones para copiar prompt y abrir ChatGPT, Gemini, CapCut o Canva.
+- Mantener como criterio futuro que la app no intente pegar automáticamente por restricciones del navegador.
+- Evaluar más adelante si conviene destacar una plataforma recomendada según imagen/video.
+
 ### PWA instalable - completado en etapa actual
 
 - Agregado `manifest.webmanifest`.
