@@ -4,7 +4,7 @@ Versión interactiva: `docs/manual-usuario.html`
 
 ## Qué es la app
 
-La app genera prompts médicos promocionales para crear imágenes, flyers, infografías, campañas y videos/animaciones en plataformas externas como ChatGPT y Gemini.
+La app genera prompts médicos promocionales para crear imágenes, flyers, infografías, campañas, videos/animaciones y jingles/canciones promocionales en plataformas externas como ChatGPT y Gemini.
 
 La app no sube archivos reales. Solo copia nombres de archivos para incluirlos en el prompt.
 
@@ -34,6 +34,8 @@ En escritorio con Chrome o Edge:
 6. Ir a Resultado.
 7. Copiar prompt o abrir ChatGPT/Gemini.
 
+Para `Jingle / canción promocional`, el flujo salta Diseño y va directo a Resultado después de completar los datos del audio.
+
 El botón `Inicio` pide confirmación antes de volver al inicio. Si confirmás, se borra el trabajo actual del flyer/video y se conserva la institución seleccionada.
 
 El selector `Ir a...` permite saltar a Institución, Tipo de pieza, Contenido, Diseño o Resultado sin borrar datos.
@@ -58,6 +60,21 @@ En `Desde flyer / imagen estática`, adjuntá el nombre del flyer o imagen que d
 
 Luego configurar destino, duración, estilo de movimiento, música, estructura y mensaje final.
 
+## Jingle / canción promocional
+
+Elegí `Jingle / canción promocional` como tipo de pieza para generar un prompt musical optimizado para Gemini.
+
+Completá pocos datos:
+- Objetivo del audio.
+- Estilo musical.
+- Tipo de voces.
+- Duración.
+- Destino.
+- Mensaje final.
+- Letra o idea base opcional.
+
+Si dejás vacía la letra o idea base, el prompt le pide a Gemini crear una letra breve desde los datos de la institución, campaña o profesional. Si Gemini no genera audio directo, debe devolver letra, dirección musical, voz sugerida, coros e indicaciones para producir o usar el jingle con flyers animados o videos.
+
 ## Adjuntos
 
 La app no sube archivos. Copia nombres para que el prompt indique qué archivos necesita. Si el usuario no sube esos archivos en la plataforma externa, la IA debe pedirlos por nombre exacto antes de trabajar.
@@ -78,10 +95,10 @@ En Resultado, tocar `Corregir`, editar el campo indicado y luego usar `Volver al
 - Si una plataforma no pega automáticamente: pegar manualmente.
 - Si faltan archivos: subirlos con el mismo nombre mencionado en el prompt.
 - Si un video queda corto: reducir texto y usar mensaje final más breve.
+- Si Gemini no genera audio directo: usar la letra y dirección musical que devuelve como guía para una herramienta de generación musical.
 
 ## Pendiente futuro
 
-- Generador de prompts para canciones/jingles promocionales con Gemini.
-- Letra o idea base, estilo musical, voz femenina/masculina y duración.
-- Destino: promoción, flyer animado, video o redes.
-- Prompt optimizado para lograr una canción/jingle acorde a la marca.
+- Jingles con referencias de audio o melodías base.
+- Variantes por temporada/campaña.
+- Exportar prompts de audio por plataforma.

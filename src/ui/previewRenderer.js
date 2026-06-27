@@ -6,7 +6,7 @@ export function renderPreview(state, validation) {
   summary.innerHTML = `
     <dl>
       <div><dt>Tipo de pieza</dt><dd>${escapeHtml(labelPieceType(state.promptOptions.pieceType))}</dd></div>
-      <div><dt>Resultado</dt><dd>${state.promptOptions.requestAnimation ? 'Animado' : 'Estático'}</dd></div>
+      <div><dt>Resultado</dt><dd>${state.promptOptions.pieceType === PIECE_TYPES.jinglePromotional ? 'Audio / jingle' : state.promptOptions.requestAnimation ? 'Animado' : 'Estático'}</dd></div>
       <div><dt>Objetivo</dt><dd>${escapeHtml(state.promptOptions.contentGoal) || 'Sin completar'}</dd></div>
       <div><dt>Institución</dt><dd>${escapeHtml(state.clinic.name) || 'Sin completar'}</dd></div>
       <div><dt>Tipo institución</dt><dd>${escapeHtml(state.clinic.institutionType) || 'Sin completar'}</dd></div>
@@ -288,7 +288,8 @@ function labelPieceType(value) {
     professionalFlyer: 'Flyer profesional',
     clinicalInfographic: 'Infografia clinica',
     informativeFlyer: 'Flyer informativo',
-    promotionCampaign: 'Promoción / campaña'
+    promotionCampaign: 'Promoción / campaña',
+    jinglePromotional: 'Jingle / canción promocional'
   }[value] || 'Flyer profesional';
 }
 

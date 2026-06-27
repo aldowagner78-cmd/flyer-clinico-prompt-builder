@@ -4,7 +4,8 @@ const PIECES = {
   professionalFlyer: 'Flyer profesional',
   clinicalInfographic: 'Infografía clínica',
   informativeFlyer: 'Flyer informativo',
-  promotionCampaign: 'Promoción / campaña'
+  promotionCampaign: 'Promoción / campaña',
+  jinglePromotional: 'Jingle / canción promocional'
 };
 
 function watchBrowserErrors(page) {
@@ -253,7 +254,7 @@ test.describe('Etapa 10T - flujo principal', () => {
     expect(errors).toEqual([]);
   });
 
-  for (const [pieceType, label] of Object.entries(PIECES)) {
+  for (const [pieceType, label] of Object.entries(PIECES).filter(([pieceType]) => pieceType !== 'jinglePromotional')) {
     test(`el flujo de ${label} genera prompt de una sola imagen`, async ({ page }) => {
       const errors = watchBrowserErrors(page);
       await openCleanApp(page);
@@ -1280,6 +1281,87 @@ test.describe('Etapa 11D.4 - resultado asistido', () => {
     await expect(page.locator('#promptOutput')).toContainText('Dra. Demo Accionable');
     await expect(page.locator('#warnings')).not.toContainText(/Nombre del profesional/i);
 
+    await expect(errors).toEqual([]);
+  });
+});
+
+test.describe('Etapa jingles Gemini', () => {
+  test('la opción jingle / canción promocional aparece y muestra campos mínimos', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+    await fillBasicInstitution(page);
+    await continueFromInstitution(page);
+
+    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toBeVisible();
+    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toContainText(/Jingle \/ canción promocional/i);
+    await choosePiece(page, 'jinglePromotional');
+
+    await expect(page.locator('#serviceFields')).toContainText('Objetivo del audio');
+    await expect(page.locator('#serviceFields')).toContainText('Estilo musical');
+    await expect(page.locator('#serviceFields')).toContainText('Tipo de voces');
+    await expect(page.locator('#serviceFields')).toContainText('Duración');
+    await expect(page.locator('#serviceFields')).toContainText('Destino');
+    await expect(page.locator('#serviceFields')).toContainText('Mensaje final');
+    await expect(page.locator('#serviceFields')).toContainText('Letra o idea base');
+
+    const voiceOptions = await page.locator('select[data-path="promptOptions.jingleVoices"] option').evaluateAll(options => options.map(option => option.textContent.trim()));
+    expect(voiceOptions).toEqual(expect.arrayContaining([
+      'Voz femenina',
+      'Voz masculina',
+      'Dúo femenino/masculino',
+      'Voz principal + coros',
+      'Coro breve',
+      'Solo instrumental'
+    ]));
+
+    await expect(page.locator('details.jingle-advanced-options')).toContainText('Más opciones del jingle');
+    await expect(errors).toEqual([]);
+  });
+
+  test('jingle sin letra genera prompt para crear letra desde datos cargados y conserva Gemini', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'jinglePromotional');
+
+    await page.locator('select[data-path="promptOptions.jingleStyle"]').selectOption('Corporativo moderno');
+    await page.locator('select[data-path="promptOptions.jingleVoices"]').selectOption('Voz principal + coros');
+    await page.locator('select[data-path="promptOptions.jingleDuration"]').selectOption('15 segundos');
+    await page.locator('select[data-path="promptOptions.jingleFinalMessage"]').selectOption('Cuidá tu salud');
+
+    await goResult(page);
+    const prompt = await getPrompt(page);
+
+    expect(prompt).toContain('Actuá como compositor');
+    expect(prompt).toMatch(/jingle|canci[oó]n/i);
+    expect(prompt).toContain('Duración: 15 segundos');
+    expect(prompt).toContain('Estilo musical: Corporativo moderno');
+    expect(prompt).toContain('Tipo de voces: Voz principal + coros');
+    expect(prompt).toContain('Mensaje final obligatorio: Cuidá tu salud');
+    expect(prompt).toContain('El usuario no escribió letra ni idea base. Creá una letra breve desde los datos de institución');
+    expect(prompt).toContain('No prometer curación');
+    expect(prompt).toContain('Mantener tono profesional y apto para salud');
+
+    await expect(page.locator('#copyPromptButton')).toContainText(/Copiar prompt/i);
+    await expect(page.locator('[data-open-platform][data-platform-name="Gemini"]')).toBeVisible();
+    await expect(page.locator('[data-open-platform][data-platform-name="Gemini"]')).toHaveClass(/is-recommended-platform/);
+    await expect(page.locator('[data-open-platform][data-platform-name="CapCut"]')).toHaveCount(0);
+    await expect(page.locator('[data-open-platform][data-platform-name="Canva"]')).toHaveCount(0);
+    await expect(errors).toEqual([]);
+  });
+
+  test('jingle con letra o idea base pide respetarla y pulirla', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'jinglePromotional');
+
+    await fillPath(page, 'promptOptions.jingleBaseIdea', 'En Centro Médico Rincón te cuidamos con atención cercana');
+    await goResult(page);
+    const prompt = await getPrompt(page);
+
+    expect(prompt).toContain('El usuario escribió esta letra o idea base');
+    expect(prompt).toContain('Respetala y pulila sin cambiar el mensaje principal');
+    expect(prompt).toContain('En Centro Médico Rincón te cuidamos con atención cercana');
     await expect(errors).toEqual([]);
   });
 });

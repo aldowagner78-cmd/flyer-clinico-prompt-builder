@@ -17,7 +17,8 @@ const pieceWorkflows = {
   [PIECE_TYPES.professionalFlyer]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
   [PIECE_TYPES.clinicalInfographic]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
   [PIECE_TYPES.informativeFlyer]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
-  [PIECE_TYPES.promotionCampaign]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado']
+  [PIECE_TYPES.promotionCampaign]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
+  [PIECE_TYPES.jinglePromotional]: ['clinica', 'tipo', 'prestaciones', 'resultado']
 };
 
 const resultStep = 'resultado';
@@ -426,6 +427,9 @@ function createDemoState(pieceType = PIECE_TYPES.professionalFlyer) {
     case PIECE_TYPES.promotionCampaign:
       applyCampaignDemo(demo);
       break;
+    case PIECE_TYPES.jinglePromotional:
+      applyJingleDemo(demo);
+      break;
     default:
       applyProfessionalDemo(demo);
       break;
@@ -743,6 +747,40 @@ function applyCampaignDemo(demo) {
   };
 }
 
+function applyJingleDemo(demo) {
+  demo.professional = { ...demo.professional, title: '', fullName: '', license: '', roleNote: '', showPhoto: false, photoFileName: '' };
+  demo.specialty = {
+    ...demo.specialty,
+    primaryProfessionalSpecialty: 'Clínica médica',
+    communicationFocus: 'Promoción institucional y cuidado preventivo',
+    visibleSpecialtyText: ''
+  };
+  demo.services = {
+    ...demo.services,
+    visibleServices: ['Turnos por WhatsApp', 'Atención profesional', 'Controles preventivos'],
+    mainHighlightedService: 'Controles preventivos y atención cercana'
+  };
+  demo.promptOptions = {
+    ...demo.promptOptions,
+    pieceType: PIECE_TYPES.jinglePromotional,
+    jingleObjective: 'Institucional',
+    jingleStyle: 'Corporativo moderno',
+    jingleVoices: 'Voz principal + coros',
+    jingleDuration: '15 segundos',
+    jingleDestination: 'Instagram / Reels / Stories',
+    jingleFinalMessage: 'Consultanos por WhatsApp',
+    jingleBaseIdea: 'Cuidar tu salud también puede sonar cercano',
+    jingleEmotionalTone: 'Profesional',
+    jinglePace: 'Media',
+    jingleInstrumentation: 'Instrumental corporativo',
+    jingleIncludeSlogan: true,
+    jingleAvoidSensitiveTopics: true,
+    jingleWithLyrics: true,
+    jingleInstrumentalAlternative: true,
+    requestAnimation: false
+  };
+}
+
 function addService() {
   const input = document.querySelector('#newService');
   const value = input.value.trim();
@@ -959,6 +997,11 @@ function applyInterfaceTheme(color = 'violet', mode = 'light') {
 function selectPieceType(pieceType) {
   state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
   state.promptOptions.pieceTypeConfirmed = true;
+  if (state.promptOptions.pieceType === PIECE_TYPES.jinglePromotional) {
+    state.promptOptions.requestAnimation = false;
+    state.professional.showPhoto = false;
+    syncSingleAttachment(ATTACHMENT_ROLES.professionalPhoto, '', '');
+  }
   applySpecialtyPreset(state.specialty.primaryProfessionalSpecialty, true);
   currentStep = 'tipo';
   update(true);
@@ -2043,7 +2086,8 @@ function updateSectionHeadings(pieceType) {
     [PIECE_TYPES.professionalFlyer]: ['Contenido del flyer profesional', 'Profesional, especialidades, prestaciones sugeridas, atención y cobertura.'],
     [PIECE_TYPES.clinicalInfographic]: ['Contenido de la infografía', 'Área sanitaria, tema, público, mensaje y bloques sugeridos.'],
     [PIECE_TYPES.informativeFlyer]: ['Contenido del flyer informativo', 'Área, tipo de información, título, mensaje, datos visibles y mensaje final.'],
-    [PIECE_TYPES.promotionCampaign]: ['Contenido de la campaña', 'Área, tipo de campaña, público, vigencia, condiciones y mensaje final.']
+    [PIECE_TYPES.promotionCampaign]: ['Contenido de la campaña', 'Área, tipo de campaña, público, vigencia, condiciones y mensaje final.'],
+    [PIECE_TYPES.jinglePromotional]: ['Contenido del jingle', 'Objetivo, estilo musical, voces, duración, destino, mensaje final e idea base.']
   };
 
   const [mainTitle, mainDescription] = contentLabels[pieceType] || contentLabels[PIECE_TYPES.professionalFlyer];
@@ -2065,16 +2109,21 @@ function updateActionLabels(pieceType) {
     [PIECE_TYPES.professionalFlyer]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de flyer', 'Cargar ejemplo de flyer'],
     [PIECE_TYPES.clinicalInfographic]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de infografía', 'Cargar ejemplo de infografía'],
     [PIECE_TYPES.informativeFlyer]: ['Acción principal', 'Copiar prompt informativo revisado', 'Descargar prompt informativo', 'Cargar ejemplo informativo'],
-    [PIECE_TYPES.promotionCampaign]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de campaña', 'Cargar ejemplo de campaña']
+    [PIECE_TYPES.promotionCampaign]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de campaña', 'Cargar ejemplo de campaña'],
+    [PIECE_TYPES.jinglePromotional]: ['Acción principal', 'Copiar prompt para Gemini', 'Descargar prompt de jingle', 'Cargar ejemplo de jingle']
   };
 
   const [, copyLabel, downloadLabel, demoLabel] = labels[pieceType] || labels[PIECE_TYPES.professionalFlyer];
 
   if (actionTitle) actionTitle.textContent = 'Acción principal';
-  if (secondaryTitle) secondaryTitle.textContent = 'Enviar a ChatGPT';
+  if (secondaryTitle) secondaryTitle.textContent = pieceType === PIECE_TYPES.jinglePromotional ? 'Enviar a Gemini' : 'Enviar a ChatGPT';
   if (copyButton) copyButton.textContent = copyLabel;
   if (downloadButton) downloadButton.textContent = downloadLabel;
   if (demoButton) demoButton.textContent = demoLabel;
+  document.querySelectorAll('[data-open-platform]').forEach(button => {
+    const isGeminiForJingle = pieceType === PIECE_TYPES.jinglePromotional && button.dataset.platformName === 'Gemini';
+    button.classList.toggle('is-recommended-platform', isGeminiForJingle);
+  });
 }
 
 function labelStepForPiece(step, pieceType) {
@@ -2093,7 +2142,8 @@ function labelPieceType(value) {
     professionalFlyer: 'Flyer profesional',
     clinicalInfographic: 'Infografía clínica',
     informativeFlyer: 'Flyer informativo',
-    promotionCampaign: 'Promoción / campaña'
+    promotionCampaign: 'Promoción / campaña',
+    jinglePromotional: 'Jingle / canción promocional'
   }[value] || 'Flyer profesional';
 }
 

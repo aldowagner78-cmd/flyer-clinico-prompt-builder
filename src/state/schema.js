@@ -24,7 +24,8 @@ export const PIECE_TYPES = {
   professionalFlyer: 'professionalFlyer',
   clinicalInfographic: 'clinicalInfographic',
   informativeFlyer: 'informativeFlyer',
-  promotionCampaign: 'promotionCampaign'
+  promotionCampaign: 'promotionCampaign',
+  jinglePromotional: 'jinglePromotional'
 };
 
 export const CONTENT_DENSITIES = {
