@@ -24,6 +24,14 @@
 
 
 
+### Manual de usuario interactivo - completado
+
+- Manual navegable en `docs/manual-usuario.html`.
+- Acceso desde la app en pestaña nueva.
+- Secciones para instalación PWA, uso básico, imagen, video, adjuntos, plataformas y correcciones.
+- Versión textual de respaldo en `docs/MANUAL_USUARIO.md`.
+
+
 ## Pendientes futuros
 
 ### PWA instalable

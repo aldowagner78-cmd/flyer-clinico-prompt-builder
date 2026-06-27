@@ -1,3 +1,69 @@
+# Manual sincronizado con tema de color - 2026-06-27
+
+## Archivos modificados
+- `docs/manual-usuario.html`
+- `service-worker.js`
+- `tests/manual-usuario.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- El manual interactivo ahora toma el color y modo visual elegidos en la app desde `localStorage`.
+- Se aplican variables CSS dinámicas para acentos, fondos, tarjetas, botones, navegación e iconos.
+- Se actualizó el test del manual para validar que el tema verde se refleja en la página del manual.
+- Se incrementó la versión de cache del service worker para evitar que la PWA sirva una versión vieja del manual.
+
+## Por qué se cambió
+- Para que el manual se vea coherente con la paleta seleccionada por el usuario dentro de la app.
+
+## Cómo probar
+```powershell
+npx playwright test tests/manual-usuario.spec.js --project=chromium-desktop
+```
+
+## Cómo revertir
+- Revertir `docs/manual-usuario.html`, `service-worker.js` y `tests/manual-usuario.spec.js` al commit anterior.
+
+---
+
+# Manual de usuario interactivo - 2026-06-27
+
+## Archivos agregados
+- `docs/manual-usuario.html`
+- `docs/MANUAL_USUARIO.md`
+- `tests/manual-usuario.spec.js`
+
+## Archivos modificados
+- `index.html`
+- `assets/css/styles.css`
+- `service-worker.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- Se agregó un manual navegable con secciones, iconos, vínculos y contenido claro para usuarios no técnicos.
+- Se agregaron accesos al manual desde la barra superior y desde Inicio.
+- Se actualizó el service worker para que el manual quede disponible dentro de la PWA.
+- Se agregó una prueba dirigida para validar que el manual abre en una pestaña nueva y no contiene caracteres rotos.
+
+## Por qué se cambió
+- Para que la app pueda usarse sin explicación técnica externa y para facilitar instalación, uso, adjuntos, videos, plataformas y corrección de sugerencias.
+
+## Cómo probar
+```powershell
+npx playwright test tests/manual-usuario.spec.js --project=chromium-desktop
+```
+
+## Cómo revertir
+- Quitar los enlaces al manual en `index.html`.
+- Quitar los estilos `.manual-link` de `assets/css/styles.css`.
+- Eliminar `docs/manual-usuario.html`, `docs/MANUAL_USUARIO.md` y `tests/manual-usuario.spec.js`.
+- Retirar las rutas del manual en `service-worker.js`.
+
+---
+
 # Accesos rápidos a plataformas - 2026-06-27
 
 ## Archivos modificados
