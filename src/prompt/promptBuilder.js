@@ -93,6 +93,7 @@ function buildVideoPrompt({ clinic, professional, specialty, services, schedule,
   const promptAttachments = mergePromptAttachments(pieceType, clinic, professional, attachments.items);
   const materialItems = promptAttachments.filter(item => isVideoMaterialRole(item.role) && hasText(item.fileName));
   const creationMode = options.videoCreationMode || 'Desde cero';
+  const staticFlyerItems = promptAttachments.filter(item => item.role === 'videoStaticFlyer' && hasText(item.fileName));
   const duration = resolveVideoDuration(options.videoDuration, pieceType, creationMode);
   const destination = options.videoDestination || 'Instagram / WhatsApp vertical 9:16';
   const motionStyle = options.videoMotionStyle || 'Suave profesional';
@@ -111,6 +112,7 @@ TIPO DE CREACIÓN:
 - Modo: ${valueOrEmpty(creationMode)}
 - Si el modo usa material de apoyo, integrar los archivos indicados sin inventar archivos no adjuntos.
 - Si el modo es híbrido, combinar el material subido con escenas generadas, textos animados y cierre profesional.
+${creationMode === 'Desde flyer / imagen estática' ? buildStaticFlyerVideoRules(staticFlyerItems) : ''}
 
 ESPECIFICACIÓN TÉCNICA OBLIGATORIA:
 - Duración total: ${duration}.
@@ -309,6 +311,26 @@ function resolveVideoDuration(value, pieceType, creationMode) {
   return '20 segundos';
 }
 
+function buildStaticFlyerVideoRules(staticFlyerItems = []) {
+  return `
+VIDEO DESDE FLYER / IMAGEN ESTÁTICA:
+Usá el flyer o imagen adjunta como base principal.
+Animá la pieza sin rediseñarla.
+No cambies textos.
+No cambies colores.
+No cambies logo.
+No cambies composición.
+No inventes contenido.
+No rehagas el diseño desde cero.
+Convertí esa imagen en una pieza animada o video breve listo para redes.
+Archivos requeridos para este modo:
+${staticFlyerItems.length ? buildAttachmentSection(staticFlyerItems) : '- No se seleccionó flyer o imagen estática base.'}
+Si el archivo no está adjunto, debe responder exactamente:
+Para poder realizar la tarea necesito que subas los siguientes archivos:
+y listar los nombres exactos.
+No debe generar el video hasta recibir el archivo.`;
+}
+
 function defaultVideoStructure(pieceType) {
   if (pieceType === PIECE_TYPES.promotionCampaign) return 'Beneficio → Servicio → Mensaje final';
   if (pieceType === PIECE_TYPES.clinicalInfographic) return 'Dato educativo → Recomendación → Mensaje final';
@@ -335,7 +357,7 @@ Escenas temporizadas obligatorias:
 }
 
 function isVideoMaterialRole(role) {
-  return ['videoBase', 'videoProfessionalPhoto', 'videoLogo', 'videoSupportImage', 'videoVisualReference', 'videoStyleReference', 'videoOther'].includes(role);
+  return ['videoBase', 'videoStaticFlyer', 'videoProfessionalPhoto', 'videoLogo', 'videoSupportImage', 'videoVisualReference', 'videoStyleReference', 'videoOther'].includes(role);
 }
 
 
@@ -466,6 +488,7 @@ function labelAttachmentRole(value) {
     referenceFlyer: 'Referencia visual',
     thematicImage: 'Imagen temática',
     videoBase: 'Video base',
+    videoStaticFlyer: 'Flyer / imagen estática',
     videoProfessionalPhoto: 'Foto del profesional',
     videoLogo: 'Logo institucional',
     videoSupportImage: 'Imagen de apoyo',

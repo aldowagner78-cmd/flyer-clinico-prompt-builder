@@ -5591,3 +5591,94 @@ body.is-wizard-open .result-actions-panel {
   outline: 3px solid rgba(14, 165, 233, 0.22);
   outline-offset: 3px;
 }
+
+/* Etapa reset seguro: selector Ir a y modal de confirmacion */
+.quick-step-jump {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.quick-step-jump select {
+  min-height: 38px;
+  min-width: 150px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  border-radius: 12px;
+  background: var(--surface-solid);
+  color: var(--text);
+  font: inherit;
+  padding: 0 34px 0 10px;
+}
+
+.modal-backdrop {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.48);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 18px;
+  position: fixed;
+  z-index: 1000;
+}
+
+.modal-backdrop[hidden] {
+  display: none !important;
+}
+
+.confirmation-modal {
+  background: var(--surface-solid);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.26);
+  color: var(--text);
+  display: grid;
+  gap: 12px;
+  max-width: 460px;
+  padding: 22px;
+  width: min(100%, 460px);
+}
+
+.confirmation-modal h2 {
+  font-size: 1.18rem;
+  margin: 0;
+}
+
+.confirmation-modal p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.confirmation-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+body.has-modal-open {
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .quick-step-jump {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .quick-step-jump select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .confirmation-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

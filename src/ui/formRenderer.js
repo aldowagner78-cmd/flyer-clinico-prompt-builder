@@ -30,7 +30,8 @@ const attachmentInstructionOptions = [
   'Otro / Personalizar'
 ];
 const customInstructionOption = 'Otro / Personalizar';
-const videoCreationModes = ['Desde cero', 'Basado en material', 'Híbrido'];
+const VIDEO_STATIC_FLYER_MODE = 'Desde flyer / imagen estática';
+const videoCreationModes = ['Desde cero', 'Basado en material', 'Híbrido', VIDEO_STATIC_FLYER_MODE];
 const videoDestinations = ['Instagram / WhatsApp vertical 9:16', 'Feed cuadrado 1:1', 'Post vertical 4:5', 'Otro / Personalizar'];
 const videoDurations = ['Automático recomendado', '15 segundos', '20 segundos', '25 segundos'];
 const videoMotionStyles = ['Suave profesional', 'Dinámico promocional', 'Educativo claro', 'Premium elegante', 'Infantil amigable'];
@@ -41,9 +42,11 @@ const videoVoiceOverOptions = ['Sin voz en off', 'Con voz en off sugerida'];
 const videoTextAmountOptions = ['Muy breve', 'Breve', 'Moderado'];
 const videoPaceOptions = ['Lento', 'Medio', 'Rápido'];
 const videoRestrictionOptions = ['Mantener tono profesional; no exagerar resultados; evitar saturación visual.', 'No usar humor; mantener estética clínica sobria.', 'Priorizar textos grandes y pocos elementos por escena.', 'Otro / Personalizar'];
-const videoAttachmentRoles = ['videoBase', 'videoProfessionalPhoto', 'videoLogo', 'videoSupportImage', 'videoVisualReference', 'videoStyleReference', 'videoOther'];
+const videoAttachmentRoles = ['videoBase', 'videoStaticFlyer', 'videoProfessionalPhoto', 'videoLogo', 'videoSupportImage', 'videoVisualReference', 'videoStyleReference', 'videoOther'];
+const videoStaticFlyerRoles = ['videoStaticFlyer'];
 const videoAttachmentInstructionOptions = [
   'Usar como material principal del video.',
+  'Usar como flyer o imagen estática base.',
   'Extraer fragmentos útiles.',
   'Agregar textos y subtítulos.',
   'Integrar al cierre del video.',
@@ -1255,6 +1258,7 @@ function renderVideoConfigurationHtml(state, includeModeHelp = true) {
   const options = state.promptOptions || {};
   const mode = options.videoCreationMode || 'Desde cero';
   const usesMaterial = mode !== 'Desde cero';
+  const usesStaticFlyer = mode === VIDEO_STATIC_FLYER_MODE;
   return `
     <div class="video-config-panel full-width" data-video-config-panel>
       <div class="video-config-head">
@@ -1291,7 +1295,36 @@ function renderVideoConfigurationHtml(state, includeModeHelp = true) {
           ${renderField(selectWithCustom('Restricciones visuales', 'promptOptions.videoRestrictions', options.videoRestrictions || videoRestrictionOptions[0], videoRestrictionOptions))}
         </div>
       </details>
-      ${usesMaterial ? renderVideoMaterialAttachmentsHtml(state) : ''}
+      ${usesStaticFlyer ? renderStaticFlyerVideoAttachmentHtml(state) : ''}
+      ${usesMaterial && !usesStaticFlyer ? renderVideoMaterialAttachmentsHtml(state) : ''}
+    </div>
+  `;
+}
+
+function renderStaticFlyerVideoAttachmentHtml(state) {
+  const indexes = state.attachments.items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => item.role === 'videoStaticFlyer');
+
+  return `
+    <div class="list-editor attachment-panel video-material-panel full-width">
+      <div class="list-title attachment-list-title">
+        <div>
+          <label>Flyer o imagen estática base</label>
+          <small>La app solo copia el nombre del archivo; después lo adjuntás manualmente en Gemini o ChatGPT.</small>
+        </div>
+        <div class="attachment-title-actions">
+          <label class="file-picker-button multi-file-picker">
+            Adjuntar archivos
+            <input type="file" accept="image/*" multiple data-multiple-attachment-file="videoStaticFlyer" data-multiple-attachment-instruction="Usar como flyer o imagen estática base.">
+          </label>
+          <button class="secondary-button" type="button" data-add-static-flyer-video>Agregar nombre manual</button>
+        </div>
+      </div>
+      <p class="helper-text">No se sube ningún archivo desde esta app. El prompt exigirá que Gemini/ChatGPT pida este archivo por nombre si falta.</p>
+      <div class="repeatable-list">
+        ${indexes.length ? indexes.map(({ item, index }) => renderAttachmentRow(item, index, videoStaticFlyerRoles, videoAttachmentInstructionOptions, 'Instrucción para Gemini')).join('') : '<p class="institution-empty-state">No hay flyer o imagen estática seleccionada.</p>'}
+      </div>
     </div>
   `;
 }
@@ -1331,6 +1364,12 @@ function bindVideoConfigurationControls(target, handlers) {
       else handlers.onAddAttachment();
     });
   });
+  target.querySelectorAll('[data-add-static-flyer-video]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (handlers.onAddAttachmentWithRole) handlers.onAddAttachmentWithRole('videoStaticFlyer');
+      else handlers.onAddAttachment();
+    });
+  });
   bindAttachmentControls(target, handlers);
 }
 
@@ -1338,7 +1377,8 @@ function videoModeHelp(value) {
   return {
     'Desde cero': 'Genera el video solo con las indicaciones.',
     'Basado en material': 'Usa videos, fotos, logo o referencias que vas a adjuntar.',
-    'Híbrido': 'Combina material subido con escenas generadas y textos.'
+    'Híbrido': 'Combina material subido con escenas generadas y textos.',
+    [VIDEO_STATIC_FLYER_MODE]: 'Anima un flyer o imagen existente sin rediseñarlo.'
   }[value] || '';
 }
 
@@ -1943,6 +1983,7 @@ function labelAttachmentRole(value) {
     contentDocument: 'Documento o texto de referencia',
     visualExample: 'Ejemplo visual',
     videoBase: 'Video base',
+    videoStaticFlyer: 'Flyer / imagen estática',
     videoProfessionalPhoto: 'Foto del profesional',
     videoLogo: 'Logo institucional',
     videoSupportImage: 'Imagen de apoyo',

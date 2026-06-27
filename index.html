@@ -89,6 +89,16 @@
             <strong id="workflowTitle">Flujo de creación</strong>
             <span id="workflowSubtitle">Completá los pasos y generá el prompt final.</span>
           </div>
+          <label class="quick-step-jump" for="quickStepSelect">
+            <span>Ir a...</span>
+            <select id="quickStepSelect" aria-label="Ir a un paso del asistente">
+              <option value="clinica">Institución</option>
+              <option value="tipo">Tipo de pieza</option>
+              <option value="prestaciones">Contenido</option>
+              <option value="diseno">Diseño</option>
+              <option value="resultado">Resultado</option>
+            </select>
+          </label>
           <button class="secondary-button compact-action wizard-close-button" type="button" id="closeAssistantButton">Cerrar asistente</button>
         </div>
         <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
@@ -342,8 +352,6 @@
                       <span>Abrir en:</span>
                       <button class="platform-button" type="button" data-open-platform data-platform-name="ChatGPT" data-platform-url="https://chatgpt.com/">ChatGPT</button>
                       <button class="platform-button" type="button" data-open-platform data-platform-name="Gemini" data-platform-url="https://gemini.google.com/">Gemini</button>
-                      <button class="platform-button" type="button" data-open-platform data-platform-name="CapCut" data-platform-url="https://www.capcut.com/tools/ai-video-generator">CapCut</button>
-                      <button class="platform-button" type="button" data-open-platform data-platform-name="Canva" data-platform-url="https://www.canva.com/ai/">Canva</button>
                     </div>
                     <details class="more-actions more-actions-inline">
                       <summary aria-label="Mostrar más opciones"></summary>
@@ -372,6 +380,17 @@
       </section>
       <aside class="side-panel" aria-label="Resumen y acciones" hidden></aside>
     </main>
+
+    <div class="modal-backdrop" id="homeResetModal" hidden>
+      <div class="confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="homeResetTitle" aria-describedby="homeResetDescription">
+        <h2 id="homeResetTitle">Volver al inicio</h2>
+        <p id="homeResetDescription">Si volvés al inicio, se perderá el progreso actual del flyer/video y tendrás que empezar de nuevo. La institución seleccionada se conservará.</p>
+        <div class="confirmation-modal-actions">
+          <button class="secondary-button" type="button" id="confirmHomeCancel">Cancelar</button>
+          <button class="danger-button" type="button" id="confirmHomeAccept">Sí, volver al inicio</button>
+        </div>
+      </div>
+    </div>
 
     <script type="module" src="src/app.js"></script>
     <script type="module" src="src/pwa.js"></script>

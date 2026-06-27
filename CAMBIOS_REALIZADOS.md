@@ -1,3 +1,41 @@
+# Reset seguro, Ir a y video desde flyer - 2026-06-27
+
+## Archivos modificados
+- `index.html`
+- `assets/css/styles.css`
+- `src/app.js`
+- `src/ui/formRenderer.js`
+- `src/prompt/promptBuilder.js`
+- `src/state/schema.js`
+- `src/state/storage.js`
+- `service-worker.js`
+- `tests/app.spec.js`
+- `tests/qa-final-smoke.spec.js`
+- `tests/manual-usuario.spec.js`
+- `docs/ROADMAP.md`
+- `docs/MANUAL_USUARIO.md`
+- `docs/manual-usuario.html`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- `Inicio` ahora abre un modal de confirmación antes de limpiar el trabajo.
+- El reset confirmado borra datos de flyer/video y conserva institución seleccionada, datos institucionales y logo.
+- Al recargar, la app no restaura trabajo viejo de campañas/profesionales.
+- Se agregó el selector `Ir a...`.
+- Se agregó el modo `Desde flyer / imagen estática`.
+- Resultado deja ChatGPT y Gemini, sin CapCut ni Canva.
+- Se documentó jingles/canciones como pendiente futuro, sin UI.
+
+## Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "Inicio|Ir a|video desde flyer|botones de plataforma" --project=chromium-desktop --project=mobile-chrome --workers=1 --timeout=60000
+npx playwright test tests/qa-final-smoke.spec.js --project=chromium-desktop --workers=1 --timeout=60000
+npx playwright test tests/qa-final-smoke.spec.js --project=mobile-chrome --workers=1 --timeout=60000
+```
+
+---
+
 # Manual sincronizado con tema de color - 2026-06-27
 
 ## Archivos modificados
