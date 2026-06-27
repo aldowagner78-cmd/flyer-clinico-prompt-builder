@@ -1,3 +1,47 @@
+# Manual de usuario interactivo
+
+La app incluye un manual navegable para usuarios no técnicos.
+
+## Tema visual del manual
+
+El manual interactivo usa el mismo color de tema elegido en la app desde el selector superior.
+Por ejemplo, si el usuario elige `Verde`, el manual se abre con acentos, botones e iconos verdes.
+También respeta el modo claro/oscuro seleccionado.
+
+## Cómo abrirlo
+
+Desde la pantalla principal:
+- Tocar `Manual` en la barra superior.
+- O tocar `Abrir manual` en la tarjeta de inicio.
+
+El manual se abre en una pestaña nueva:
+`docs/manual-usuario.html`
+
+## Contenido
+
+- Primeros pasos.
+- Instalación como PWA.
+- Crear o cargar institución.
+- Generar imagen/flyer.
+- Generar video/animación.
+- Adjuntos y referencias.
+- Resultado y plataformas.
+- Corregir sugerencias.
+- Problemas frecuentes.
+
+## Prueba dirigida
+
+Desde la raíz del proyecto:
+
+```powershell
+npx playwright test tests/manual-usuario.spec.js --project=chromium-desktop
+```
+
+Resultado esperado:
+`1 passed`
+
+---
+
 # Accesos rápidos a plataformas
 
 En `Resultado`, además de `Copiar prompt revisado`, la app muestra botones para copiar el prompt y abrir una plataforma externa:

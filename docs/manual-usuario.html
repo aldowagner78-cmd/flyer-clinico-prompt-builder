@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manual de usuario · Flyer Clínico</title>
+    <meta name="description" content="Manual interactivo para usar el Generador de contenido médico promocional.">
+    <style>
+      :root {
+        --accent: #0ea5e9;
+        --accent-dark: #0369a1;
+        --accent-soft: #e0f2fe;
+        --accent-pale: #f6f9ff;
+        --accent-glow: rgba(14, 165, 233, 0.15);
+        --accent-border: rgba(14, 165, 233, 0.20);
+        --accent-shadow: rgba(14, 165, 233, 0.22);
+        --teal: #14b8a6;
+        --teal-soft: #ccfbf1;
+        --teal-glow: rgba(20, 184, 166, 0.13);
+        --ink: #172033;
+        --muted: #64748b;
+        --text: #334155;
+        --line: #dbe6f3;
+        --surface: rgba(255, 255, 255, 0.94);
+        --surface-solid: #ffffff;
+        --subtle-surface: #f8fbff;
+        --page: #f6f9ff;
+        --code-bg: #eef2ff;
+        --code-text: #1e3a8a;
+        --shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color-scheme: light;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 8%, var(--accent-glow), transparent 26%),
+          radial-gradient(circle at 92% 10%, var(--teal-glow), transparent 24%),
+          linear-gradient(180deg, var(--accent-pale) 0%, var(--page) 100%);
+      }
+
+      a { color: inherit; }
+
+      .manual-shell {
+        width: min(1180px, calc(100% - 28px));
+        margin: 0 auto;
+        padding: 22px 0 42px;
+      }
+
+      .manual-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 18px;
+        padding: clamp(20px, 4vw, 34px);
+        border: 1px solid var(--accent-border);
+        border-radius: 30px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--accent-dark);
+        font-size: 0.78rem;
+        font-weight: 950;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      h1, h2, h3 { margin: 0; line-height: 1.12; }
+
+      h1 {
+        max-width: 780px;
+        font-size: clamp(2rem, 5vw, 4.1rem);
+        letter-spacing: -0.055em;
+      }
+
+      .lead {
+        max-width: 780px;
+        margin: 16px 0 0;
+        color: var(--muted);
+        font-size: clamp(1rem, 2vw, 1.16rem);
+        line-height: 1.65;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 10px 16px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        font-weight: 850;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .button.primary {
+        background: linear-gradient(135deg, var(--accent), var(--teal));
+        color: white;
+        box-shadow: 0 12px 26px var(--accent-shadow);
+      }
+
+      .button.secondary {
+        border-color: var(--accent-border);
+        background: var(--surface);
+        color: var(--accent-dark);
+      }
+
+      .manual-grid {
+        display: grid;
+        grid-template-columns: minmax(220px, 285px) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .manual-nav {
+        position: sticky;
+        top: 16px;
+        max-height: calc(100vh - 32px);
+        overflow: auto;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--surface);
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+      }
+
+      .manual-nav h2 {
+        margin: 0 0 10px;
+        font-size: 0.95rem;
+      }
+
+      .nav-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .nav-list a {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        padding: 9px;
+        border-radius: 16px;
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .nav-list a:hover,
+      .nav-list a:focus {
+        outline: 0;
+        background: var(--accent-soft);
+      }
+
+      .icon {
+        display: inline-grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--accent-soft), var(--teal-soft));
+        color: var(--accent-dark);
+        font-weight: 950;
+      }
+
+      .manual-content {
+        display: grid;
+        gap: 16px;
+      }
+
+      .manual-card {
+        scroll-margin-top: 18px;
+        padding: clamp(18px, 3vw, 26px);
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        background: var(--surface);
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+      }
+
+      .card-title {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .card-title h2 {
+        font-size: clamp(1.28rem, 3vw, 2rem);
+      }
+
+      p, li {
+        color: var(--text);
+        line-height: 1.65;
+      }
+
+      ul, ol {
+        padding-left: 1.25rem;
+      }
+
+      .steps {
+        display: grid;
+        gap: 10px;
+        margin: 16px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .steps li {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--subtle-surface);
+      }
+
+      .step-number {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--accent);
+        color: white;
+        font-weight: 900;
+      }
+
+      .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .mini-card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--surface-solid);
+      }
+
+      .mini-card strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      details {
+        margin-top: 12px;
+        border: 1px solid var(--accent-border);
+        border-radius: 18px;
+        background: var(--subtle-surface);
+      }
+
+      summary {
+        padding: 12px 14px;
+        color: var(--accent-dark);
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      details div {
+        padding: 0 14px 14px;
+      }
+
+      code {
+        padding: 2px 6px;
+        border-radius: 8px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        font-weight: 750;
+      }
+
+      .warning {
+        padding: 12px 14px;
+        border-left: 4px solid #f59e0b;
+        border-radius: 14px;
+        background: #fffbeb;
+      }
+
+      .footer-note {
+        margin-top: 16px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      @media (max-width: 860px) {
+        .manual-hero,
+        .manual-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .manual-nav {
+          position: relative;
+          top: auto;
+          max-height: none;
+        }
+
+        .quick-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media print {
+        .manual-nav,
+        .hero-actions {
+          display: none;
+        }
+
+        .manual-shell {
+          width: 100%;
+          padding: 0;
+        }
+
+        .manual-card,
+        .manual-hero {
+          box-shadow: none;
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="manual-shell">
+      <header class="manual-hero">
+        <div>
+          <p class="eyebrow">Manual interactivo</p>
+          <h1>Usá la app sin conocimientos técnicos</h1>
+          <p class="lead">
+            Guía rápida para instalar la app, crear una institución, generar prompts de imagen o video,
+            adjuntar referencias por nombre y abrir el resultado en ChatGPT, Gemini, CapCut o Canva.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="../index.html">Abrir la app</a>
+            <a class="button secondary" href="#primeros-pasos">Empezar guía</a>
+            <a class="button secondary" href="javascript:window.print()">Imprimir / guardar PDF</a>
+          </div>
+        </div>
+        <span class="icon" aria-hidden="true" style="width:72px;height:72px;border-radius:24px;font-size:1.5rem;">?</span>
+      </header>
+
+      <div class="manual-grid">
+        <nav class="manual-nav" aria-label="Secciones del manual">
+          <h2>Contenido</h2>
+          <div class="nav-list">
+            <a href="#primeros-pasos"><span class="icon">1</span><span>Primeros pasos</span></a>
+            <a href="#instalar"><span class="icon">2</span><span>Instalar como app</span></a>
+            <a href="#institucion"><span class="icon">3</span><span>Institución</span></a>
+            <a href="#imagen"><span class="icon">4</span><span>Imagen / flyer</span></a>
+            <a href="#video"><span class="icon">5</span><span>Video / animación</span></a>
+            <a href="#adjuntos"><span class="icon">6</span><span>Adjuntos</span></a>
+            <a href="#resultado"><span class="icon">7</span><span>Resultado y plataformas</span></a>
+            <a href="#corregir"><span class="icon">8</span><span>Corregir sugerencias</span></a>
+            <a href="#problemas"><span class="icon">9</span><span>Problemas frecuentes</span></a>
+          </div>
+        </nav>
+
+        <main class="manual-content">
+          <section class="manual-card" id="primeros-pasos">
+            <div class="card-title">
+              <span class="icon">1</span>
+              <h2>Primeros pasos</h2>
+            </div>
+            <p>La app crea prompts listos para usar en plataformas de IA. No sube archivos reales: copia nombres y arma instrucciones claras.</p>
+            <ol class="steps">
+              <li><span class="step-number">1</span><span>Entrá a la app y tocá <strong>Comenzar asistente</strong>.</span></li>
+              <li><span class="step-number">2</span><span>Cargá o elegí una institución.</span></li>
+              <li><span class="step-number">3</span><span>Elegí el tipo de pieza: flyer, infografía, pieza informativa o campaña.</span></li>
+              <li><span class="step-number">4</span><span>Completá contenido, diseño y resultado.</span></li>
+              <li><span class="step-number">5</span><span>Copiá el prompt o abrilo en ChatGPT, Gemini, CapCut o Canva.</span></li>
+            </ol>
+          </section>
+
+          <section class="manual-card" id="instalar">
+            <div class="card-title">
+              <span class="icon">2</span>
+              <h2>Instalar como app</h2>
+            </div>
+            <div class="quick-grid">
+              <div class="mini-card">
+                <strong>Android / Chrome</strong>
+                <p>Abrí la página publicada, tocá el menú de tres puntos y elegí <strong>Agregar a pantalla principal</strong> o <strong>Instalar app</strong>.</p>
+              </div>
+              <div class="mini-card">
+                <strong>Escritorio / Chrome o Edge</strong>
+                <p>Abrí la página y usá el botón de instalación del navegador si aparece, o el menú del navegador.</p>
+              </div>
+            </div>
+            <p class="warning">Si instalaste una versión anterior y no ves cambios, cerrá la app instalada y volvé a abrirla. También podés actualizar desde el navegador.</p>
+          </section>
+
+          <section class="manual-card" id="institucion">
+            <div class="card-title">
+              <span class="icon">3</span>
+              <h2>Crear o cargar institución</h2>
+            </div>
+            <p>La institución guarda nombre, contacto, redes, frase institucional y logo. Es la base para que el prompt mantenga identidad visual.</p>
+            <ul>
+              <li>Usá <strong>Crear nueva institución</strong> para cargar datos nuevos.</li>
+              <li>Usá una institución guardada para reutilizar datos.</li>
+              <li>El logo se recuerda con la institución. Otros adjuntos no se recuerdan entre sesiones.</li>
+            </ul>
+          </section>
+
+          <section class="manual-card" id="imagen">
+            <div class="card-title">
+              <span class="icon">4</span>
+              <h2>Generar imagen o flyer</h2>
+            </div>
+            <p>Elegí el tipo de pieza y completá el contenido guiado. Después ajustá diseño, colores, estilo, formato y recursos.</p>
+            <details>
+              <summary>Consejo para mejores resultados</summary>
+              <div>
+                <p>Usá textos breves, datos reales y pocos elementos por pieza. Si hay demasiada información, priorizá lo más importante.</p>
+              </div>
+            </details>
+          </section>
+
+          <section class="manual-card" id="video">
+            <div class="card-title">
+              <span class="icon">5</span>
+              <h2>Generar video o animación</h2>
+            </div>
+            <p>En Diseño, activá <strong>Solicitar pieza animada / video</strong>. La app mostrará una configuración rápida con pocas opciones.</p>
+            <div class="quick-grid">
+              <div class="mini-card">
+                <strong>Desde cero</strong>
+                <p>La IA genera el video solo con las indicaciones del formulario.</p>
+              </div>
+              <div class="mini-card">
+                <strong>Basado en material</strong>
+                <p>Usá nombres de videos, fotos, logos o referencias que después subirás manualmente a Gemini o ChatGPT.</p>
+              </div>
+              <div class="mini-card">
+                <strong>Híbrido</strong>
+                <p>Combina material subido con escenas generadas, textos, música y cierre profesional.</p>
+              </div>
+              <div class="mini-card">
+                <strong>Mensaje final</strong>
+                <p>Es el cierre del video: por ejemplo, “Consultanos por WhatsApp”.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="manual-card" id="adjuntos">
+            <div class="card-title">
+              <span class="icon">6</span>
+              <h2>Adjuntos y referencias</h2>
+            </div>
+            <p>La app no sube archivos. Solo copia nombres para que el prompt sepa qué archivos esperar.</p>
+            <ol>
+              <li>Tocá <strong>Adjuntar archivos</strong>.</li>
+              <li>Elegí uno o varios archivos para copiar sus nombres.</li>
+              <li>Indicá el rol: logo, video base, foto profesional, referencia visual, imagen de apoyo u otro.</li>
+              <li>Al pegar el prompt, subí manualmente esos archivos a la plataforma elegida.</li>
+            </ol>
+            <p class="warning">Si el prompt menciona archivos y no los subís, la IA debe pedirlos por nombre exacto antes de trabajar.</p>
+          </section>
+
+          <section class="manual-card" id="resultado">
+            <div class="card-title">
+              <span class="icon">7</span>
+              <h2>Resultado y plataformas</h2>
+            </div>
+            <p>En Resultado aparece el prompt final y los accesos rápidos.</p>
+            <ul>
+              <li><strong>Copiar prompt</strong>: copia el texto final.</li>
+              <li><strong>ChatGPT / Gemini / CapCut / Canva</strong>: copian el prompt y abren la plataforma en otra pestaña.</li>
+              <li>Por seguridad del navegador, la app no puede pegar el texto automáticamente. Pegalo con <code>Ctrl + V</code> o la opción <strong>Pegar</strong>.</li>
+            </ul>
+          </section>
+
+          <section class="manual-card" id="corregir">
+            <div class="card-title">
+              <span class="icon">8</span>
+              <h2>Corregir sugerencias del Resultado</h2>
+            </div>
+            <p>Si Resultado muestra una sugerencia, podés tocar <strong>Corregir</strong>. La app te lleva al paso relacionado.</p>
+            <ol>
+              <li>Tocá <strong>Corregir</strong>.</li>
+              <li>Editá el campo indicado.</li>
+              <li>Tocá <strong>Volver al resultado</strong>.</li>
+              <li>El prompt se actualiza automáticamente.</li>
+            </ol>
+          </section>
+
+          <section class="manual-card" id="problemas">
+            <div class="card-title">
+              <span class="icon">9</span>
+              <h2>Problemas frecuentes</h2>
+            </div>
+            <details open>
+              <summary>No veo los últimos cambios</summary>
+              <div><p>Hacé una recarga fuerte con <code>Ctrl + F5</code>. En Android, cerrá y reabrí la app instalada.</p></div>
+            </details>
+            <details>
+              <summary>La plataforma no pegó el prompt automáticamente</summary>
+              <div><p>Es normal. El navegador no permite pegar automáticamente en otra web. Usá <code>Ctrl + V</code> o mantené presionado y elegí <strong>Pegar</strong>.</p></div>
+            </details>
+            <details>
+              <summary>La IA no recibió los archivos</summary>
+              <div><p>Revisá que hayas subido manualmente los archivos mencionados en el prompt con los mismos nombres.</p></div>
+            </details>
+            <details>
+              <summary>El video queda corto o no respeta todo</summary>
+              <div><p>Probá menos texto, un mensaje final más breve y material de apoyo claro. Algunas plataformas limitan la duración de video generado.</p></div>
+            </details>
+          </section>
+        </main>
+      </div>
+
+      <p class="footer-note">Manual de usuario · Generador de contenido médico promocional</p>
+    </div>
+
+    <script>
+      (function syncManualTheme() {
+        const palettes = {
+          violet: { accent: '#7c3aed', dark: '#5b21b6', soft: '#ede9fe', pale: '#f6f4ff', glow: 'rgba(124, 58, 237, 0.16)', shadow: 'rgba(124, 58, 237, 0.20)' },
+          blue: { accent: '#0284c7', dark: '#0369a1', soft: '#e0f2fe', pale: '#f6f9ff', glow: 'rgba(14, 165, 233, 0.15)', shadow: 'rgba(14, 165, 233, 0.22)' },
+          green: { accent: '#16a34a', dark: '#166534', soft: '#dcfce7', pale: '#f3fff6', glow: 'rgba(22, 163, 74, 0.15)', shadow: 'rgba(22, 163, 74, 0.20)' },
+          orange: { accent: '#f97316', dark: '#c2410c', soft: '#ffedd5', pale: '#fff7ed', glow: 'rgba(249, 115, 22, 0.15)', shadow: 'rgba(249, 115, 22, 0.20)' },
+          red: { accent: '#dc2626', dark: '#991b1b', soft: '#fee2e2', pale: '#fff7f7', glow: 'rgba(220, 38, 38, 0.13)', shadow: 'rgba(220, 38, 38, 0.18)' },
+          pink: { accent: '#db2777', dark: '#9d174d', soft: '#fce7f3', pale: '#fff7fb', glow: 'rgba(219, 39, 119, 0.14)', shadow: 'rgba(219, 39, 119, 0.18)' }
+        };
+
+        const root = document.documentElement;
+        const storedColor = localStorage.getItem('fcpb-ui-theme-color') || 'violet';
+        const storedMode = localStorage.getItem('fcpb-ui-theme-mode') || 'light';
+        const color = Object.prototype.hasOwnProperty.call(palettes, storedColor) ? storedColor : 'violet';
+        const mode = storedMode === 'dark' ? 'dark' : 'light';
+        const palette = palettes[color];
+
+        root.dataset.themeColor = color;
+        root.dataset.themeMode = mode;
+
+        root.style.setProperty('--accent', palette.accent);
+        root.style.setProperty('--accent-dark', palette.dark);
+        root.style.setProperty('--accent-soft', palette.soft);
+        root.style.setProperty('--accent-pale', palette.pale);
+        root.style.setProperty('--accent-glow', palette.glow);
+        root.style.setProperty('--accent-border', palette.glow);
+        root.style.setProperty('--accent-shadow', palette.shadow);
+
+        if (mode === 'dark') {
+          root.style.setProperty('--ink', '#e5eefb');
+          root.style.setProperty('--muted', '#a9b8d3');
+          root.style.setProperty('--text', '#d8e2f3');
+          root.style.setProperty('--line', '#26364d');
+          root.style.setProperty('--surface', 'rgba(15, 23, 42, 0.92)');
+          root.style.setProperty('--surface-solid', '#111c2e');
+          root.style.setProperty('--subtle-surface', 'rgba(30, 41, 59, 0.70)');
+          root.style.setProperty('--page', '#0f172a');
+          root.style.setProperty('--accent-pale', '#0b1221');
+          root.style.setProperty('--teal-soft', 'rgba(20, 184, 166, 0.16)');
+          root.style.setProperty('--teal-glow', 'rgba(20, 184, 166, 0.10)');
+          root.style.setProperty('--code-bg', 'rgba(124, 58, 237, 0.16)');
+          root.style.setProperty('--code-text', '#d8b4fe');
+          root.style.setProperty('--shadow', '0 18px 45px rgba(0, 0, 0, 0.28)');
+          root.style.colorScheme = 'dark';
+        }
+      })();
+    </script>
+
+  </body>
+</html>

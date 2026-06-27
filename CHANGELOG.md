@@ -1,3 +1,28 @@
+## 2026-06-27 - Manual sincronizado con tema de color
+
+### Modificado
+- `docs/manual-usuario.html` ahora lee el tema de color elegido en la app y aplica la misma paleta al manual.
+- Se agregó compatibilidad con modo claro/oscuro del selector de interfaz.
+- Se actualizó el cache de la PWA para refrescar el manual.
+
+### Pruebas sugeridas
+- `npx playwright test tests/manual-usuario.spec.js --project=chromium-desktop`
+
+## 2026-06-27 - Manual de usuario interactivo
+
+### Agregado
+- `docs/manual-usuario.html` con navegación por secciones, iconos visuales, enlaces y contenido para usuarios no técnicos.
+- `docs/MANUAL_USUARIO.md` como versión textual de respaldo.
+- Accesos al manual desde la barra superior y desde Inicio.
+- `tests/manual-usuario.spec.js` para validar apertura del manual, navegación y ausencia de caracteres rotos.
+
+### Modificado
+- `service-worker.js` cachea el manual para uso desde la PWA.
+- `README_INSTALACION.txt` documenta cómo abrir y probar el manual.
+
+### Pruebas sugeridas
+- `npx playwright test tests/manual-usuario.spec.js --project=chromium-desktop`
+
 
 ## Fix pruebas dirigidas Resultado/Video
 
