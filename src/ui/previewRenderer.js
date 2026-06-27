@@ -257,6 +257,13 @@ function labelAttachmentRole(value) {
     professionalPhoto: 'Foto profesional',
     referenceFlyer: 'Flyer de referencia',
     thematicImage: 'Imagen tematica',
+    videoBase: 'Video base',
+    videoProfessionalPhoto: 'Foto del profesional',
+    videoLogo: 'Logo institucional',
+    videoSupportImage: 'Imagen de apoyo',
+    videoVisualReference: 'Referencia visual para video',
+    videoStyleReference: 'Referencia de estilo',
+    videoOther: 'Otro material de video',
     other: 'Otro'
   }[value] || value;
 }

@@ -1,3 +1,21 @@
+## 2026-06-27 - Etapa videos animados base
+
+### Agregado
+- Configuración rápida de video al activar `Solicitar pieza animada`.
+- Modos de creación: `Desde cero`, `Basado en material` e `Híbrido`.
+- Campos compactos para destino, duración, estilo de movimiento, música, estructura y mensaje final.
+- Material de apoyo para video con la misma lógica visual de adjuntos múltiples.
+- Prompt de video separado del prompt de imagen, con escenas temporizadas y reglas para Gemini/ChatGPT.
+- Tests básicos para configuración de video y material de apoyo.
+
+### Modificado
+- La tarjeta de diseño `Modo animado` pasa a `Video / animación`.
+- Se amplían etiquetas de adjuntos para roles de video.
+
+### Pendiente
+- Probar prompts reales en Gemini y ajustar calidad de salida, música y duración según resultado.
+
+
 ## 2026-06-26 - Etapa PWA instalable
 
 ## 2026-06-26 - Fix texto de adjuntos en Resultado
@@ -431,3 +449,9 @@
 
 ### Corregido
 - Se quitaron acciones redundantes que hacían largo el cierre del flujo.
+
+
+### Corregido
+- Se reemplazó la etiqueta visible `CTA` por `Mensaje final` en flujos, resumen y prompt.
+- Se corrigió `Diseno visual` por `Diseño visual` y textos con acentos en la pantalla de diseño.
+- En modo video, el bloque de adjuntos visuales ahora se identifica como `Imágenes/videos personalizados para Gemini`.

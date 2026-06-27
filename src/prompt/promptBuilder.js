@@ -14,6 +14,10 @@ export function buildPrompt(state) {
   const pieceType = options.pieceType || 'professionalFlyer';
   const animated = Boolean(options.requestAnimation);
 
+  if (animated) {
+    return buildVideoPrompt({ clinic, professional, specialty, services, schedule, coverage, design, attachments, options, pieceType });
+  }
+
   return cleanPrompt(`
 Comportate como experto en diseño de piezas visuales para clinicas, centros medicos y comunicacion sanitaria.
 
@@ -85,6 +89,102 @@ RESTRICCIONES CRÍTICAS:
 `);
 }
 
+function buildVideoPrompt({ clinic, professional, specialty, services, schedule, coverage, design, attachments, options, pieceType }) {
+  const promptAttachments = mergePromptAttachments(pieceType, clinic, professional, attachments.items);
+  const materialItems = promptAttachments.filter(item => isVideoMaterialRole(item.role) && hasText(item.fileName));
+  const creationMode = options.videoCreationMode || 'Desde cero';
+  const duration = resolveVideoDuration(options.videoDuration, pieceType, creationMode);
+  const destination = options.videoDestination || 'Instagram / WhatsApp vertical 9:16';
+  const motionStyle = options.videoMotionStyle || 'Suave profesional';
+  const music = options.videoMusic || 'Instrumental suave';
+  const structure = options.videoStructure || defaultVideoStructure(pieceType);
+  const finalMessage = options.videoFinalMessage || fallbackFinalMessage(pieceType, options);
+
+  return cleanPrompt(`
+Actuá como director creativo audiovisual especializado en videos médicos/promocionales para redes sociales.
+
+MODO ANIMADO / VIDEO:
+Necesito crear un video corto final real o pieza animada completa, listo para publicar, basado en ${articleForOutput(pieceType)} ${outputLabel(pieceType)}.
+No quiero una imagen estática ni una propuesta conceptual: quiero un video completo.
+
+TIPO DE CREACIÓN:
+- Modo: ${valueOrEmpty(creationMode)}
+- Si el modo usa material de apoyo, integrar los archivos indicados sin inventar archivos no adjuntos.
+- Si el modo es híbrido, combinar el material subido con escenas generadas, textos animados y cierre profesional.
+
+ESPECIFICACIÓN TÉCNICA OBLIGATORIA:
+- Duración total: ${duration}.
+- Formato/destino: ${valueOrEmpty(destination)}.
+- Salida lista para Instagram, Reels, Stories, estados de WhatsApp o publicación equivalente.
+- Mantener composición vertical segura, sin cortar textos ni logos.
+- No generar un video más corto que la duración indicada.
+- No cambiar el formato solicitado.
+
+ESTILO AUDIOVISUAL:
+- Estilo de movimiento: ${valueOrEmpty(motionStyle)}.
+- Música / sonido: ${valueOrEmpty(music)}.
+- Voz en off: ${valueOrEmpty(options.videoVoiceOver || 'Sin voz en off')}.
+- Texto en pantalla: ${valueOrEmpty(options.videoTextAmount || 'Breve')}.
+- Ritmo: ${valueOrEmpty(options.videoPace || 'Medio')}.
+- Restricciones visuales: ${valueOrEmpty(options.videoRestrictions || 'Mantener tono profesional; no exagerar resultados; evitar saturación visual.')}
+- La música no debe tapar ni competir con el mensaje visual.
+
+ESTRUCTURA DEL VIDEO:
+- Estructura narrativa: ${valueOrEmpty(structure)}.
+- Mensaje final: ${valueOrEmpty(finalMessage)}
+${buildTimedScenes(duration, structure, finalMessage)}
+
+DIRECCIÓN VISUAL:
+- Respetar identidad institucional y colores indicados.
+- Color principal: ${colorName(design.primaryColor, design.customPrimaryColor)}.
+- Color secundario: ${colorName(design.secondaryColor, design.customSecondaryColor)}.
+- Estilo visual: ${valueOrEmpty(design.visualStyle)}.
+- Tipografía sugerida: ${valueOrEmpty(design.typography)}.
+- Usar textos grandes, breves y legibles.
+- Mantener jerarquía clara: título, beneficio o dato principal, cierre.
+- Evitar saturación visual, transiciones agresivas, parpadeos o efectos bruscos.
+
+TIPO DE PIEZA:
+- Tipo: ${pieceTypeLabel(pieceType)}
+${buildPieceContent(pieceType, { professional, specialty, services, schedule, coverage, options })}
+
+DATOS DE LA INSTITUCIÓN:
+- Nombre: ${valueOrEmpty(clinic.name)}
+- Tipo de institución: ${valueOrEmpty(clinic.institutionType === 'Otro' ? clinic.otherInstitutionType : clinic.institutionType)}
+- Dirección: ${valueOrEmpty(clinic.address)}
+- WhatsApp principal: ${valueOrEmpty(clinic.primaryPhone)}
+- Teléfono secundario: ${valueOrEmpty(clinic.secondaryPhone)}
+- Email: ${valueOrEmpty(clinic.email)}
+- Sitio web: ${valueOrEmpty(clinic.website)}
+- Redes sociales:
+${buildSocialSection(clinic.socialLinks)}
+- Frase institucional: ${valueOrEmpty(clinic.institutionalPhrase)}
+- Mostrar datos de contacto: ${yesNo(clinic.showContactData)}
+- Logo institucional esperado: ${valueOrEmpty(clinic.logoFileName)}
+- Si no se adjunta logo institucional, usar el nombre del centro como marca textual sin inventar un logo oficial.
+
+MATERIAL DE APOYO PARA VIDEO:
+${materialItems.length ? buildAttachmentSection(materialItems) : '- No se seleccionó material de apoyo específico para video.'}
+
+ADJUNTOS:
+La app solo copió nombres de archivo; no subió ni adjuntó archivos reales.
+El usuario debe adjuntar manualmente estos archivos en Gemini o ChatGPT antes de enviar el prompt, si fueron seleccionados.
+${buildAttachmentSection(promptAttachments)}
+Regla obligatoria para archivos faltantes:
+- Si esta lista menciona archivos y no están adjuntos en la conversación, pedilos por nombre exacto antes de generar.
+- Respondé: "Para poder realizar la tarea necesito que subas los siguientes archivos:" y listá los archivos faltantes con el mismo nombre usado en este prompt.
+- No generes el video hasta recibir esos archivos.
+
+RESTRICCIONES CRÍTICAS:
+- No inventes datos médicos, administrativos, horarios, teléfonos, redes sociales, logos ni matrículas.
+- No prometas curación ni resultados garantizados.
+- No uses urgencia falsa, exageraciones ni afirmaciones sanitarias no verificadas.
+- El video debe ser prudente, claro, profesional y apto para publicar.
+- Cerrar con el mensaje final visible durante los últimos 3 a 5 segundos.
+`);
+}
+
+
 
 function buildOutputIntro(pieceType, animated = false) {
   if (animated) {
@@ -121,10 +221,10 @@ function buildAnimationSection() {
 - Formato vertical 9:16, apto para historias, estados, reels cortos y WhatsApp.
 - Animación suave, profesional y clínica.
 - Usar entrada progresiva de textos, apariciones suaves, pequeños desplazamientos o fundidos.
-- Mantener logo, datos de contacto y llamada a la acción legibles durante toda la animación.
+- Mantener logo, datos de contacto y mensaje final legibles durante toda la animación.
 - Usar movimiento sutil de fondo, íconos o recursos visuales relacionados con la especialidad.
 - Evitar movimientos bruscos, efectos excesivos, parpadeos, transiciones agresivas o música sugerida.
-- El cierre debe dejar visible la llamada a la acción y los datos de contacto.
+- El cierre debe dejar visible el mensaje final y los datos de contacto.
 - Si la herramienta permite exportar video o animación, priorizar ese formato final por encima de una imagen estática.`;
 }
 
@@ -181,7 +281,7 @@ CONTENIDO DEL FLYER INFORMATIVO:
 - Mensaje principal: ${valueOrEmpty(options.mainMessage)}
 - Datos visibles sugeridos:
 ${buildList(services.visibleServices, '- No se cargaron datos visibles.')}
-- Llamada a la acción: ${valueOrEmpty(options.campaignCallToAction)}
+- Mensaje final: ${valueOrEmpty(options.campaignCallToAction)}
 `;
   }
 
@@ -195,10 +295,49 @@ CONTENIDO DE LA PROMOCIÓN / CAMPAÑA:
 - Condiciones o aclaración breve: ${valueOrEmpty(options.campaignConditions)}
 - Puntos visibles sugeridos:
 ${buildList(services.visibleServices, '- No se cargaron puntos visibles.')}
-- Llamada a la acción: ${valueOrEmpty(options.campaignCallToAction)}
+- Mensaje final: ${valueOrEmpty(options.campaignCallToAction)}
 - Nota prudente: ${valueOrEmpty(options.legalEthicalNote)}
 `;
 }
+
+function resolveVideoDuration(value, pieceType, creationMode) {
+  const selected = String(value || '').trim();
+  if (selected && selected !== 'Automático recomendado') return selected;
+  if (pieceType === PIECE_TYPES.promotionCampaign) return '15 segundos';
+  if (pieceType === PIECE_TYPES.clinicalInfographic) return '20 a 25 segundos';
+  if (creationMode === 'Basado en material') return '20 segundos';
+  return '20 segundos';
+}
+
+function defaultVideoStructure(pieceType) {
+  if (pieceType === PIECE_TYPES.promotionCampaign) return 'Beneficio → Servicio → Mensaje final';
+  if (pieceType === PIECE_TYPES.clinicalInfographic) return 'Dato educativo → Recomendación → Mensaje final';
+  if (pieceType === PIECE_TYPES.professionalFlyer) return 'Presentación → Prestaciones → Mensaje final';
+  return 'Problema → Solución → Mensaje final';
+}
+
+function fallbackFinalMessage(pieceType, options = {}) {
+  if (hasText(options.videoFinalMessage)) return options.videoFinalMessage;
+  if (hasText(options.campaignCallToAction)) return options.campaignCallToAction;
+  if (pieceType === PIECE_TYPES.clinicalInfographic) return 'Consultá con tu equipo de salud';
+  return 'Pedí tu turno';
+}
+
+function buildTimedScenes(duration, structure, finalMessage) {
+  return `
+Escenas temporizadas obligatorias:
+- Escena 1 (0-5 s): apertura clara con gancho visual, marca institucional y tema principal.
+- Escena 2 (5-10 s): mostrar beneficio, dato o servicio principal con texto breve y movimiento suave.
+- Escena 3 (10-15 s): reforzar información clave, material de apoyo o prestación destacada.
+- Escena 4 (15-20/25 s): cierre con mensaje final visible: "${valueOrEmpty(finalMessage)}".
+- Si la duración elegida es 15 segundos, compactar en 3 escenas sin perder mensaje final.
+- Si la duración elegida es 25 segundos, extender lectura y respiración visual sin agregar datos inventados.`;
+}
+
+function isVideoMaterialRole(role) {
+  return ['videoBase', 'videoProfessionalPhoto', 'videoLogo', 'videoSupportImage', 'videoVisualReference', 'videoStyleReference', 'videoOther'].includes(role);
+}
+
 
 function buildSocialSection(socialLinks = []) {
   const filled = socialLinks.filter(item => hasText(item?.type) || hasText(item?.value));
@@ -326,6 +465,13 @@ function labelAttachmentRole(value) {
     professionalPhoto: 'Foto profesional',
     referenceFlyer: 'Referencia visual',
     thematicImage: 'Imagen temática',
+    videoBase: 'Video base',
+    videoProfessionalPhoto: 'Foto del profesional',
+    videoLogo: 'Logo institucional',
+    videoSupportImage: 'Imagen de apoyo',
+    videoVisualReference: 'Referencia visual para video',
+    videoStyleReference: 'Referencia de estilo',
+    videoOther: 'Otro material de video',
     other: 'Otro archivo'
   }[value] || valueOrEmpty(value);
 }

@@ -5,6 +5,13 @@ export const ATTACHMENT_ROLES = {
   professionalPhoto: 'professionalPhoto',
   referenceFlyer: 'referenceFlyer',
   thematicImage: 'thematicImage',
+  videoBase: 'videoBase',
+  videoProfessionalPhoto: 'videoProfessionalPhoto',
+  videoLogo: 'videoLogo',
+  videoSupportImage: 'videoSupportImage',
+  videoVisualReference: 'videoVisualReference',
+  videoStyleReference: 'videoStyleReference',
+  videoOther: 'videoOther',
   other: 'other'
 };
 
