@@ -1,3 +1,41 @@
+# Etapa videos animados base - 2026-06-27
+
+## Archivos modificados
+- `src/state/schema.js`
+- `src/state/defaultState.js`
+- `src/state/migrations.js`
+- `src/app.js`
+- `src/ui/formRenderer.js`
+- `src/ui/previewRenderer.js`
+- `src/prompt/promptBuilder.js`
+- `assets/css/styles.css`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+- `docs/ROADMAP.md`
+
+## Qué se cambió
+- Se agregó una configuración rápida de video al activar `Solicitar pieza animada`.
+- Se agregaron modos `Desde cero`, `Basado en material` e `Híbrido`.
+- Se agregó material de apoyo para video con la misma lógica de nombres de archivo de adjuntos múltiples.
+- Se separó el prompt de video del prompt de imagen.
+- Se agregaron instrucciones temporizadas, duración de 15 a 25 segundos, formato y mensaje final.
+
+## Por qué
+- El prompt de imagen adaptado no era suficiente para Gemini/video.
+- El usuario necesita interacción mínima, pero un prompt final más detallado y profesional.
+
+## Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "video animado|video basado en material" --project=chromium-desktop --project=mobile-chrome
+```
+
+## Cómo revertir
+- Revertir este parche o restaurar los archivos modificados desde la rama estable anterior.
+
+---
+
 # Etapa PWA instalable - 2026-06-26
 
 ## 2026-06-26 - Fix texto de adjuntos en Resultado
@@ -734,3 +772,25 @@ npx playwright test tests/app.spec.js -g "completa nombres de logo, foto profesi
 - Se agregó un botón `+` para opciones avanzadas.
 - Se quitaron de la UI los botones `Descargar TXT` y `Copiar checklist de adjuntos`.
 - Se confirmó que el prompt conserva la regla para pedir archivos faltantes por nombre exacto.
+
+
+## Ajuste de coherencia video y textos visibles
+
+### Archivos modificados
+- `index.html`
+- `src/ui/formRenderer.js`
+- `src/app.js`
+- `src/prompt/promptBuilder.js`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se reemplazó `CTA` por `Mensaje final` en la interfaz y en el prompt generado.
+- Se corrigieron textos visibles sin `ñ` en la sección de Diseño.
+- Cuando se solicita video, el bloque de referencias pasa a decir `Imágenes/videos personalizados para Gemini`.
+
+### Cómo probar
+- Activar `Solicitar pieza animada`.
+- Revisar que no aparezca `CTA` en la interfaz.
+- Revisar que Diseño muestre `Diseño visual`.
+- Ir a Resultado y confirmar que el prompt usa `Mensaje final`.

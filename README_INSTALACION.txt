@@ -632,3 +632,51 @@ npm test
 ## Nota de uso - Resultado
 
 En la pantalla Resultado, la acción principal es copiar el prompt revisado. Las opciones avanzadas se abren desde el botón `+`. Si el prompt menciona archivos referidos, ChatGPT debe pedirlos por nombre exacto antes de generar la pieza si el usuario no los adjuntó.
+
+
+
+# Videos animados / material de apoyo
+
+## Qué agrega esta etapa
+
+- Al marcar `Solicitar pieza animada`, aparece `Configuración rápida de video`.
+- El usuario elige cómo crear el video:
+  - `Desde cero`.
+  - `Basado en material`.
+  - `Híbrido`.
+- Se configuran pocos campos: destino, duración, estilo de movimiento, música, estructura y mensaje final.
+- El prompt generado para video es diferente al prompt de imagen y contiene escenas temporizadas.
+- Si se usa material de apoyo, la app solo copia nombres de archivo. El usuario debe adjuntarlos manualmente en Gemini o ChatGPT.
+
+## Prueba rápida
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+py -m http.server 8000
+```
+
+Abrir:
+`http://127.0.0.1:8000/`
+
+Validar:
+- Ir a `Diseño`.
+- Activar `Solicitar pieza animada`.
+- Ver `Configuración rápida de video`.
+- Elegir `Basado en material` o `Híbrido`.
+- Adjuntar nombres de material de apoyo.
+- Ir a `Resultado` y confirmar que el prompt incluye `MODO ANIMADO / VIDEO` y la regla de pedir archivos faltantes.
+
+## Test dirigido
+
+```powershell
+npx playwright test tests/app.spec.js -g "video animado|video basado en material" --project=chromium-desktop --project=mobile-chrome
+```
+
+
+## Nota de coherencia de video
+
+En modo video/animación, la app usa el término `Mensaje final` en lugar de `CTA`.
+Si el usuario agrega referencias para video, la app solo copia nombres de archivos; esos archivos deben adjuntarse manualmente en Gemini o ChatGPT según corresponda.

@@ -30,6 +30,27 @@ const attachmentInstructionOptions = [
   'Otro / Personalizar'
 ];
 const customInstructionOption = 'Otro / Personalizar';
+const videoCreationModes = ['Desde cero', 'Basado en material', 'Híbrido'];
+const videoDestinations = ['Instagram / WhatsApp vertical 9:16', 'Feed cuadrado 1:1', 'Post vertical 4:5', 'Otro / Personalizar'];
+const videoDurations = ['Automático recomendado', '15 segundos', '20 segundos', '25 segundos'];
+const videoMotionStyles = ['Suave profesional', 'Dinámico promocional', 'Educativo claro', 'Premium elegante', 'Infantil amigable'];
+const videoMusicOptions = ['Sin música', 'Instrumental suave', 'Moderna dinámica', 'Institucional', 'Cálida emocional', 'Otro / Personalizar'];
+const videoStructureOptions = ['Beneficio → Servicio → Mensaje final', 'Problema → Solución → Mensaje final', 'Presentación → Prestaciones → Mensaje final', 'Dato educativo → Recomendación → Mensaje final', 'Otro / Personalizar'];
+const videoFinalMessageOptions = ['Pedí tu turno', 'Consultanos por WhatsApp', 'Reservá tu consulta', 'Escribinos hoy', 'Seguinos para más info', 'Otro / Personalizar'];
+const videoVoiceOverOptions = ['Sin voz en off', 'Con voz en off sugerida'];
+const videoTextAmountOptions = ['Muy breve', 'Breve', 'Moderado'];
+const videoPaceOptions = ['Lento', 'Medio', 'Rápido'];
+const videoRestrictionOptions = ['Mantener tono profesional; no exagerar resultados; evitar saturación visual.', 'No usar humor; mantener estética clínica sobria.', 'Priorizar textos grandes y pocos elementos por escena.', 'Otro / Personalizar'];
+const videoAttachmentRoles = ['videoBase', 'videoProfessionalPhoto', 'videoLogo', 'videoSupportImage', 'videoVisualReference', 'videoStyleReference', 'videoOther'];
+const videoAttachmentInstructionOptions = [
+  'Usar como material principal del video.',
+  'Extraer fragmentos útiles.',
+  'Agregar textos y subtítulos.',
+  'Integrar al cierre del video.',
+  'Respetar identidad visual.',
+  'Usar como referencia de estilo.',
+  'Otro / Personalizar'
+];
 const appointmentTextOptions = [
   'Solicitar turno por WhatsApp.',
   'Consultar disponibilidad por WhatsApp.',
@@ -170,7 +191,7 @@ function pieceTypeDescription(pieceType) {
     professionalFlyer: 'Para profesionales, especialidades, horarios, prestaciones, turnos y datos de contacto.',
     clinicalInfographic: 'Para educación sanitaria, prevención, pasos, recomendaciones y contenidos explicativos.',
     informativeFlyer: 'Para comunicar servicios, estudios, prestaciones, novedades o información institucional.',
-    promotionCampaign: 'Para agenda abierta, jornadas, campañas preventivas, vigencias y llamados a la acción.'
+    promotionCampaign: 'Para agenda abierta, jornadas, campañas preventivas, vigencias y mensaje final.'
   }[pieceType] || 'Tipo de pieza seleccionado para adaptar el contenido y el prompt final.';
 }
 
@@ -656,11 +677,11 @@ function informativeContentSteps(state, specialtyNames, preset) {
     },
     {
       key: 'message-cta',
-      title: 'Mensaje y llamada a la acción',
+      title: 'Mensaje y mensaje final',
       help: 'Completá el mensaje central y qué debe hacer el paciente.',
       fields: [
         selectWithCustom('Mensaje principal', 'promptOptions.mainMessage', state.promptOptions.mainMessage, preset.informativeMessages || preset.messages || [], true),
-        selectWithCustom('Llamada a la acción', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false)
+        selectWithCustom('Mensaje final', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false)
       ]
     },
     {
@@ -672,7 +693,7 @@ function informativeContentSteps(state, specialtyNames, preset) {
     {
       key: 'summary',
       title: 'Revisión del flyer informativo',
-      help: 'Confirmá tipo de información, título, datos visibles y CTA.',
+      help: 'Confirmá tipo de información, título, datos visibles y mensaje final.',
       html: () => renderContentSummaryHtml(state, PIECE_TYPES.informativeFlyer)
     }
   ];
@@ -704,11 +725,11 @@ function campaignContentSteps(state, specialtyNames, preset) {
     },
     {
       key: 'conditions-cta',
-      title: 'Condiciones y CTA',
-      help: 'Aclaración breve, llamado a la acción y nota prudente para evitar promesas.',
+      title: 'Condiciones y mensaje final',
+      help: 'Aclaración breve, mensaje final y nota prudente para evitar promesas.',
       fields: [
         textarea('Condiciones o aclaración breve', 'promptOptions.campaignConditions', state.promptOptions.campaignConditions),
-        selectWithCustom('Llamada a la acción', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false),
+        selectWithCustom('Mensaje final', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false),
         selectWithCustom('Nota prudente', 'promptOptions.legalEthicalNote', state.promptOptions.legalEthicalNote, noteOptions, false)
       ]
     },
@@ -721,7 +742,7 @@ function campaignContentSteps(state, specialtyNames, preset) {
     {
       key: 'summary',
       title: 'Revisión de campaña',
-      help: 'Confirmá campaña, fecha, condiciones, puntos visibles y CTA.',
+      help: 'Confirmá campaña, fecha, condiciones, puntos visibles y mensaje final.',
       html: () => renderContentSummaryHtml(state, PIECE_TYPES.promotionCampaign)
     }
   ];
@@ -859,14 +880,14 @@ function renderContentSummaryHtml(state, pieceType) {
       <div><dt>Tipo</dt><dd>${escapeHtml(state.promptOptions.contentGoal || 'Sin completar')}</dd></div>
       <div><dt>Título</dt><dd>${escapeHtml(state.promptOptions.educationalTopic || 'Sin completar')}</dd></div>
       ${common}
-      <div><dt>CTA</dt><dd>${escapeHtml(state.promptOptions.campaignCallToAction || 'Sin completar')}</dd></div>
+      <div><dt>Mensaje final</dt><dd>${escapeHtml(state.promptOptions.campaignCallToAction || 'Sin completar')}</dd></div>
       <div><dt>Datos visibles</dt><dd>${escapeHtml(visibleServices)}</dd></div>
     `,
     [PIECE_TYPES.promotionCampaign]: `
       <div><dt>Tipo</dt><dd>${escapeHtml(state.promptOptions.campaignType || 'Sin completar')}</dd></div>
       <div><dt>Período</dt><dd>${escapeHtml(campaignValidityText(state.promptOptions) || 'Sin completar')}</dd></div>
       ${common}
-      <div><dt>CTA</dt><dd>${escapeHtml(state.promptOptions.campaignCallToAction || 'Sin completar')}</dd></div>
+      <div><dt>Mensaje final</dt><dd>${escapeHtml(state.promptOptions.campaignCallToAction || 'Sin completar')}</dd></div>
       <div><dt>Puntos visibles</dt><dd>${escapeHtml(visibleServices)}</dd></div>
     `
   };
@@ -997,7 +1018,7 @@ function renderInformativeContent(state, handlers, specialtyNames, preset) {
     selectWithCustom('Tipo de información', 'promptOptions.contentGoal', state.promptOptions.contentGoal, preset.informativeTypes || informationTypes, true),
     selectWithCustom('Título visible', 'promptOptions.educationalTopic', state.promptOptions.educationalTopic, preset.informativeTitles || preset.topics || [], true),
     selectWithCustom('Mensaje principal', 'promptOptions.mainMessage', state.promptOptions.mainMessage, preset.informativeMessages || preset.messages || [], true),
-    selectWithCustom('Llamada a la acción', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false)
+    selectWithCustom('Mensaje final', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false)
   ], handlers);
 
   renderSmartServiceSelector({
@@ -1020,7 +1041,7 @@ function renderCampaignContent(state, handlers, specialtyNames, preset) {
     selectWithCustom('Público objetivo', 'promptOptions.targetAudience', state.promptOptions.targetAudience, preset.audiences || defaultAudiences(), false),
     selectWithCustom('Mensaje principal', 'promptOptions.mainMessage', state.promptOptions.mainMessage, preset.campaignMessages || preset.messages || [], true),
     textarea('Condiciones o aclaración breve', 'promptOptions.campaignConditions', state.promptOptions.campaignConditions),
-    selectWithCustom('Llamada a la acción', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false),
+    selectWithCustom('Mensaje final', 'promptOptions.campaignCallToAction', state.promptOptions.campaignCallToAction, ctaOptions, false),
     selectWithCustom('Nota prudente', 'promptOptions.legalEthicalNote', state.promptOptions.legalEthicalNote, noteOptions, false)
   ], handlers);
 
@@ -1166,7 +1187,16 @@ function renderFullDesignStep(state, handlers, fields) {
   const target = document.querySelector('#designFields');
   if (!target) return;
   target.insertAdjacentHTML('afterbegin', renderDesignModeBanner());
+  if (state.promptOptions.requestAnimation) {
+    const animationField = target.querySelector('[data-path="promptOptions.requestAnimation"]')?.closest('.field');
+    const videoHtml = renderVideoConfigurationHtml(state, true);
+    if (animationField) animationField.insertAdjacentHTML('afterend', videoHtml);
+    else target.insertAdjacentHTML('beforeend', videoHtml);
+  }
+  const videoPanel = target.querySelector('[data-video-config-panel]');
+  if (videoPanel) bindFieldControls(videoPanel, handlers);
   bindDesignModeControls(target, state, handlers, fields);
+  bindVideoConfigurationControls(target, handlers);
   renderCustomImageAttachments(state, handlers);
 }
 
@@ -1209,7 +1239,99 @@ function renderGuidedDesignStep(state, handlers, fields) {
   bindFieldControls(target, handlers);
   bindDesignModeControls(target, state, handlers, fields);
   bindDesignGuidedControls(target, state, handlers, fields);
+  bindVideoConfigurationControls(target, handlers);
   bindCustomImageAttachmentControls(target, handlers);
+}
+
+function renderVideoConfigurationHtml(state, includeModeHelp = true) {
+  const options = state.promptOptions || {};
+  const mode = options.videoCreationMode || 'Desde cero';
+  const usesMaterial = mode !== 'Desde cero';
+  return `
+    <div class="video-config-panel full-width" data-video-config-panel>
+      <div class="video-config-head">
+        <div>
+          <span class="guided-kicker">Video / animación</span>
+          <h4>Configuración rápida de video</h4>
+          <p>Completá pocos datos; la app generará un prompt de video profesional con escenas, duración, formato, música y mensaje final.</p>
+        </div>
+      </div>
+      ${includeModeHelp ? '<p class="helper-text">Si no querés video, desmarcá “Solicitar pieza animada”.</p>' : ''}
+      <div class="video-mode-grid" role="group" aria-label="Cómo crear el video">
+        ${videoCreationModes.map(option => `
+          <label class="video-mode-card${mode === option ? ' is-selected' : ''}">
+            <input type="radio" name="videoCreationMode" value="${escapeHtml(option)}" data-path="promptOptions.videoCreationMode" ${mode === option ? 'checked' : ''}>
+            <span>${escapeHtml(option)}</span>
+            <small>${escapeHtml(videoModeHelp(option))}</small>
+          </label>
+        `).join('')}
+      </div>
+      <div class="video-config-grid">
+        ${renderField(selectWithCustom('Destino', 'promptOptions.videoDestination', options.videoDestination || 'Instagram / WhatsApp vertical 9:16', videoDestinations))}
+        ${renderField(select('Duración', 'promptOptions.videoDuration', options.videoDuration || 'Automático recomendado', videoDurations))}
+        ${mode !== 'Basado en material' ? renderField(select('Estilo de movimiento', 'promptOptions.videoMotionStyle', options.videoMotionStyle || 'Suave profesional', videoMotionStyles)) : ''}
+        ${renderField(selectWithCustom('Música / sonido', 'promptOptions.videoMusic', options.videoMusic || 'Instrumental suave', videoMusicOptions))}
+        ${mode !== 'Basado en material' ? renderField(selectWithCustom('Estructura del video', 'promptOptions.videoStructure', options.videoStructure || 'Beneficio → Servicio → Mensaje final', videoStructureOptions)) : ''}
+        ${renderField(selectWithCustom('Mensaje final', 'promptOptions.videoFinalMessage', options.videoFinalMessage || 'Pedí tu turno', videoFinalMessageOptions))}
+      </div>
+      <details class="video-advanced-options">
+        <summary>Más opciones de video</summary>
+        <div class="video-config-grid">
+          ${renderField(select('Voz en off', 'promptOptions.videoVoiceOver', options.videoVoiceOver || 'Sin voz en off', videoVoiceOverOptions))}
+          ${renderField(select('Texto en pantalla', 'promptOptions.videoTextAmount', options.videoTextAmount || 'Breve', videoTextAmountOptions))}
+          ${renderField(select('Ritmo', 'promptOptions.videoPace', options.videoPace || 'Medio', videoPaceOptions))}
+          ${renderField(selectWithCustom('Restricciones visuales', 'promptOptions.videoRestrictions', options.videoRestrictions || videoRestrictionOptions[0], videoRestrictionOptions))}
+        </div>
+      </details>
+      ${usesMaterial ? renderVideoMaterialAttachmentsHtml(state) : ''}
+    </div>
+  `;
+}
+
+function renderVideoMaterialAttachmentsHtml(state) {
+  const indexes = state.attachments.items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => videoAttachmentRoles.includes(item.role));
+
+  return `
+    <div class="list-editor attachment-panel video-material-panel full-width">
+      <div class="list-title attachment-list-title">
+        <div>
+          <label>Material de apoyo para el video</label>
+          <small>La app solo copia nombres de archivo; después los adjuntás manualmente en Gemini o ChatGPT.</small>
+        </div>
+        <div class="attachment-title-actions">
+          <label class="file-picker-button multi-file-picker">
+            Adjuntar archivos
+            <input type="file" accept="image/*,video/*,audio/*" multiple data-multiple-attachment-file="videoBase" data-multiple-attachment-instruction="Usar como material principal del video.">
+          </label>
+          <button class="secondary-button" type="button" data-add-video-material>Agregar nombre manual</button>
+        </div>
+      </div>
+      <p class="helper-text">No se sube ningún archivo desde esta app. Solo se agregan nombres al prompt para que Gemini/ChatGPT los pida si el usuario olvida adjuntarlos.</p>
+      <div class="repeatable-list">
+        ${indexes.length ? indexes.map(({ item, index }) => renderAttachmentRow(item, index, videoAttachmentRoles, videoAttachmentInstructionOptions, 'Instrucción para Gemini')).join('') : '<p class="institution-empty-state">No hay material de apoyo seleccionado.</p>'}
+      </div>
+    </div>
+  `;
+}
+
+function bindVideoConfigurationControls(target, handlers) {
+  target.querySelectorAll('[data-add-video-material]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (handlers.onAddAttachmentWithRole) handlers.onAddAttachmentWithRole('videoBase');
+      else handlers.onAddAttachment();
+    });
+  });
+  bindAttachmentControls(target, handlers);
+}
+
+function videoModeHelp(value) {
+  return {
+    'Desde cero': 'Genera el video solo con las indicaciones.',
+    'Basado en material': 'Usa videos, fotos, logo o referencias que vas a adjuntar.',
+    'Híbrido': 'Combina material subido con escenas generadas y textos.'
+  }[value] || '';
 }
 
 function renderDesignModeBanner() {
@@ -1264,9 +1386,10 @@ function designGuidedSteps(state, fields) {
     },
     {
       key: 'animation',
-      title: 'Modo animado',
-      help: 'Activá esta opción solo si querés pedir un video corto o clip animado en vez de imagen estática.',
-      fields: visible('promptOptions.requestAnimation')
+      title: 'Video / animación',
+      help: 'Activá video solo si querés generar una pieza animada y configurala con pocos datos.',
+      fields: visible('promptOptions.requestAnimation'),
+      html: () => state.promptOptions.requestAnimation ? renderVideoConfigurationHtml(state, false) : ''
     },
     {
       key: 'images',
@@ -1545,26 +1668,36 @@ function renderCustomImageAttachments(state, handlers) {
 function renderCustomImageAttachmentsHtml(state) {
   const customIndexes = state.attachments.items
     .map((item, index) => ({ item, index }))
-    .filter(({ item }) => ![ATTACHMENT_ROLES.clinicLogo, ATTACHMENT_ROLES.professionalPhoto].includes(item.role));
+    .filter(({ item }) => ![ATTACHMENT_ROLES.clinicLogo, ATTACHMENT_ROLES.professionalPhoto].includes(item.role) && !videoAttachmentRoles.includes(item.role));
+  const isVideoPrompt = Boolean(state.promptOptions?.requestAnimation);
+  const attachmentLabel = isVideoPrompt ? 'Imágenes/videos personalizados para Gemini' : 'Imágenes personalizadas para ChatGPT';
+  const attachmentSmall = isVideoPrompt
+    ? 'La app solo copia nombres de imágenes o videos para agregarlos al prompt.'
+    : 'La app solo copia nombres de archivo para agregarlos al prompt.';
+  const attachmentHelper = isVideoPrompt
+    ? 'No se sube ningún archivo desde esta app. Solo se guardan los nombres como referencia para el prompt; después esos mismos archivos se adjuntan manualmente en Gemini.'
+    : 'No se sube ningún archivo desde esta app. Solo se guardan los nombres como referencia para el prompt; después esos mismos archivos se adjuntan manualmente en ChatGPT.';
+  const emptyText = isVideoPrompt ? 'No hay imágenes/videos personalizados seleccionados.' : 'No hay imágenes personalizadas seleccionadas.';
+  const acceptedTypes = isVideoPrompt ? 'image/*,video/*' : 'image/*';
 
   return `
     <div class="list-editor attachment-panel full-width">
       <div class="list-title attachment-list-title">
         <div>
-          <label>Imágenes personalizadas para GPT</label>
-          <small>La app solo copia nombres de archivo para agregarlos al prompt.</small>
+          <label>${attachmentLabel}</label>
+          <small>${attachmentSmall}</small>
         </div>
         <div class="attachment-title-actions">
           <label class="file-picker-button multi-file-picker">
             Adjuntar archivos
-            <input type="file" accept="image/*" multiple data-multiple-attachment-file="${ATTACHMENT_ROLES.thematicImage}">
+            <input type="file" accept="${acceptedTypes}" multiple data-multiple-attachment-file="${ATTACHMENT_ROLES.thematicImage}">
           </label>
           <button class="secondary-button" type="button" id="addCustomAttachmentButton">Agregar nombre manual</button>
         </div>
       </div>
-      <p class="helper-text">No se sube ningún archivo desde esta app. Solo se guardan los nombres como referencia para el prompt; después esos mismos archivos se adjuntan manualmente en ChatGPT.</p>
+      <p class="helper-text">${attachmentHelper}</p>
       <div class="repeatable-list">
-        ${customIndexes.length ? customIndexes.map(({ item, index }) => renderAttachmentRow(item, index, customAttachmentRoles)).join('') : '<p class="institution-empty-state">No hay imágenes personalizadas seleccionadas.</p>'}
+        ${customIndexes.length ? customIndexes.map(({ item, index }) => renderAttachmentRow(item, index, customAttachmentRoles)).join('') : `<p class="institution-empty-state">${emptyText}</p>`}
       </div>
     </div>
   `;
@@ -1604,9 +1737,9 @@ function renderAttachments(state, handlers) {
   bindAttachmentControls(target, handlers);
 }
 
-function renderAttachmentRow(item, index, roles = attachmentRoles) {
+function renderAttachmentRow(item, index, roles = attachmentRoles, instructionOptions = attachmentInstructionOptions, instructionLabel = 'Instrucción para GPT') {
   const instructionValue = String(item.instruction || '').trim();
-  const usesCustomInstruction = instructionValue && !attachmentInstructionOptions.includes(instructionValue);
+  const usesCustomInstruction = instructionValue && !instructionOptions.includes(instructionValue);
   const instructionSelectValue = usesCustomInstruction ? customInstructionOption : instructionValue;
   const customInstructionValue = usesCustomInstruction ? instructionValue : '';
   return `
@@ -1621,9 +1754,9 @@ function renderAttachmentRow(item, index, roles = attachmentRoles) {
       </label>
       <label class="field attachment-name-field"><span>Nombre de archivo</span><input type="text" value="${escapeHtml(item.fileName)}" data-attachment-index="${index}" data-attachment-key="fileName" placeholder="Ej: imagen_flyer.jpg"></label>
       <label class="field attachment-instruction-field">
-        <span>Instrucción para GPT</span>
+        <span>${escapeHtml(instructionLabel)}</span>
         <select data-attachment-instruction-select="${index}">
-          ${attachmentInstructionOptions.map(option => `<option value="${escapeHtml(option)}" ${option === instructionSelectValue ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
+          ${instructionOptions.map(option => `<option value="${escapeHtml(option)}" ${option === instructionSelectValue ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
         </select>
         <input type="text" class="attachment-custom-instruction${usesCustomInstruction ? '' : ' is-hidden'}" value="${escapeHtml(customInstructionValue)}" data-attachment-index="${index}" data-attachment-key="instruction" placeholder="Escribí la instrucción personalizada">
       </label>
@@ -1801,6 +1934,13 @@ function labelAttachmentRole(value) {
     screenshotReference: 'Captura de pantalla',
     contentDocument: 'Documento o texto de referencia',
     visualExample: 'Ejemplo visual',
+    videoBase: 'Video base',
+    videoProfessionalPhoto: 'Foto del profesional',
+    videoLogo: 'Logo institucional',
+    videoSupportImage: 'Imagen de apoyo',
+    videoVisualReference: 'Referencia visual para video',
+    videoStyleReference: 'Referencia de estilo',
+    videoOther: 'Otro material de video',
     other: 'Otro'
   }[value] || value;
 }

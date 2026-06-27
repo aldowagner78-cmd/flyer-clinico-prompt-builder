@@ -890,7 +890,7 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
       ['style', /Estilo visual/i],
       ['typography-density', /Tipografía y densidad/i],
       ['resources', /Iconos, fondo y recursos/i],
-      ['animation', /Modo animado/i],
+      ['animation', /Video|animado/i],
       ['images', /Imágenes personalizadas/i]
     ];
 
@@ -938,6 +938,67 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
     const prompt = await getPrompt(page);
     expect(prompt).toContain('MODO ANIMADO');
     expect(prompt).toMatch(/pieza animada|video corto|clip animado/i);
+    await expect(errors).toEqual([]);
+  });
+
+  test('video animado muestra configuración rápida y genera prompt separado', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'promotionCampaign');
+
+    await clickCurrentNext(page);
+    await expectCurrentStep(page, 'diseno');
+
+    for (let i = 0; i < 5; i += 1) {
+      await page.locator('#designFields [data-design-guided="next"]').click();
+    }
+
+    await page.locator('[data-path="promptOptions.requestAnimation"]').first().check();
+    await expect(page.locator('[data-video-config-panel]')).toBeVisible();
+    await expect(page.locator('[data-video-config-panel]')).toContainText(/Configuración rápida de video/i);
+    await expect(page.locator('[data-video-config-panel]')).toContainText(/Desde cero/i);
+    await expect(page.locator('[data-path="promptOptions.videoDestination"]').first()).toBeVisible();
+    await expect(page.locator('[data-path="promptOptions.videoFinalMessage"]').first()).toBeVisible();
+
+    await goResult(page);
+    const prompt = await getPrompt(page);
+    expect(prompt).toContain('MODO ANIMADO / VIDEO');
+    expect(prompt).toContain('ESPECIFICACIÓN TÉCNICA OBLIGATORIA');
+    expect(prompt).toContain('Escenas temporizadas obligatorias');
+    expect(prompt).toContain('Mensaje final');
+    await expect(errors).toEqual([]);
+  });
+
+  test('video basado en material usa adjuntos con la misma lógica de nombres', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+
+    await clickCurrentNext(page);
+    await expectCurrentStep(page, 'diseno');
+
+    for (let i = 0; i < 5; i += 1) {
+      await page.locator('#designFields [data-design-guided="next"]').click();
+    }
+
+    await page.locator('[data-path="promptOptions.requestAnimation"]').first().check();
+    await page.locator('[data-path="promptOptions.videoCreationMode"][value="Basado en material"]').check();
+    await expect(page.locator('.video-material-panel')).toBeVisible();
+
+    await page.locator('.video-material-panel input[data-multiple-attachment-file="videoBase"]').setInputFiles([
+      {
+        name: 'video_medico_promocion.mp4',
+        mimeType: 'video/mp4',
+        buffer: Buffer.from('video')
+      }
+    ]);
+
+    await expect(page.locator('.video-material-panel')).toContainText('video_medico_promocion.mp4');
+
+    await goResult(page);
+    const prompt = await getPrompt(page);
+    expect(prompt).toContain('Video base: video_medico_promocion.mp4');
+    expect(prompt).toContain('Para poder realizar la tarea necesito que subas los siguientes archivos');
     await expect(errors).toEqual([]);
   });
 });

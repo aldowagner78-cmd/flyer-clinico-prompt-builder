@@ -273,3 +273,18 @@ Criterio de cierre:
 
 - La version publicada puede usarse como herramienta estable.
 - Hay documentacion suficiente para mantenimiento futuro.
+
+### Videos animados - base estructural completada
+
+- Agregar configuración rápida al activar `Solicitar pieza animada`.
+- Modos definidos: `Desde cero`, `Basado en material`, `Híbrido`.
+- Prompt de video separado del prompt de imagen.
+- Material de apoyo para video usa la misma lógica visual de adjuntos múltiples.
+- Interacción mínima para el usuario y detalle máximo para Gemini/ChatGPT.
+
+### Videos animados - próximos ajustes
+
+- Probar prompts reales en Gemini.
+- Ajustar duración real, música, subtítulos, ritmo y legibilidad según resultados.
+- Refinar instrucciones para material grabado por profesionales.
+- Agregar presets específicos por tipo de pieza si hace falta.

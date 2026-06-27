@@ -689,7 +689,7 @@ function applyCampaignDemo(demo) {
     forbiddenPhrases: 'No usar descuentos, promociones engañosas ni promesas de resultados.',
     highlightData: 'Agenda abierta, semana de control, cupos limitados, WhatsApp',
     smallData: 'Dirección, redes sociales y aclaración de disponibilidad',
-    freeInstructions: 'Diseño llamativo, claro, con CTA fuerte, sin parecer publicidad agresiva.'
+    freeInstructions: 'Diseño llamativo, claro, con mensaje final fuerte, sin parecer publicidad agresiva.'
   };
 }
 
@@ -1605,6 +1605,8 @@ function shouldRenderForm(path) {
     || path === 'design.primaryColor'
     || path === 'design.secondaryColor'
     || path === 'promptOptions.allowVisualCreativity'
+    || path === 'promptOptions.requestAnimation'
+    || path === 'promptOptions.videoCreationMode'
     || path.startsWith('attachments.');
 }
 
@@ -1653,6 +1655,13 @@ function labelAttachmentRole(value) {
     professionalPhoto: 'Foto profesional',
     referenceFlyer: 'Flyer de referencia',
     thematicImage: 'Imagen tematica',
+    videoBase: 'Video base',
+    videoProfessionalPhoto: 'Foto del profesional',
+    videoLogo: 'Logo institucional',
+    videoSupportImage: 'Imagen de apoyo',
+    videoVisualReference: 'Referencia visual para video',
+    videoStyleReference: 'Referencia de estilo',
+    videoOther: 'Otro material de video',
     other: 'Otro'
   }[value] || value;
 }
@@ -1683,8 +1692,8 @@ function updateSectionHeadings(pieceType) {
   const contentLabels = {
     [PIECE_TYPES.professionalFlyer]: ['Contenido del flyer profesional', 'Profesional, especialidades, prestaciones sugeridas, atención y cobertura.'],
     [PIECE_TYPES.clinicalInfographic]: ['Contenido de la infografía', 'Área sanitaria, tema, público, mensaje y bloques sugeridos.'],
-    [PIECE_TYPES.informativeFlyer]: ['Contenido del flyer informativo', 'Área, tipo de información, título, mensaje, datos visibles y CTA.'],
-    [PIECE_TYPES.promotionCampaign]: ['Contenido de la campaña', 'Área, tipo de campaña, público, vigencia, condiciones y llamada a la acción.']
+    [PIECE_TYPES.informativeFlyer]: ['Contenido del flyer informativo', 'Área, tipo de información, título, mensaje, datos visibles y mensaje final.'],
+    [PIECE_TYPES.promotionCampaign]: ['Contenido de la campaña', 'Área, tipo de campaña, público, vigencia, condiciones y mensaje final.']
   };
 
   const [mainTitle, mainDescription] = contentLabels[pieceType] || contentLabels[PIECE_TYPES.professionalFlyer];
