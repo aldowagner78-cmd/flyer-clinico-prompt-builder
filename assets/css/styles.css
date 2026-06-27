@@ -5437,6 +5437,12 @@ body.is-wizard-open .result-actions-panel {
   transform: none;
 }
 
+.platform-button.is-recommended-platform {
+  border-color: color-mix(in srgb, var(--accent) 46%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, white);
+  color: var(--accent-strong);
+}
+
 @media (max-width: 920px) {
   .prompt-actions-inline {
     align-items: center;

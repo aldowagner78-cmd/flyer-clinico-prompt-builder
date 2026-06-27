@@ -15,6 +15,14 @@
 - Se agregó modo de video `Desde flyer / imagen estática` para animar una pieza existente sin rediseñarla.
 - Resultado mantiene ChatGPT y Gemini, sin CapCut ni Canva.
 
+### Jingles / canciones promocionales con Gemini - completado
+
+- Se agregó `Jingle / canción promocional` como tipo de pieza.
+- Flujo simple con objetivo, estilo musical, voces, duración, destino, mensaje final e idea base opcional.
+- Opciones avanzadas colapsadas para tono, velocidad, instrumentación, slogan, prudencia médica y versiones alternativas.
+- Prompt específico para Gemini, separado de imagen y video.
+- Resultado conserva Copiar prompt, ChatGPT y Gemini; Gemini queda destacado para jingles.
+
 ### PWA instalable - completado en etapa actual
 
 - Agregado `manifest.webmanifest`.
@@ -59,16 +67,11 @@
 - Preparar salidas listas para Instagram y WhatsApp.
 - No implementar en esta etapa de modernizacion visual.
 
-### Generador de canciones/jingles promocionales
+### Evolución de jingles / audio
 
-- Pendiente futuro: generador de prompts para canciones/jingles promocionales con Gemini.
-- Incluir letra o idea base.
-- Incluir estilo musical.
-- Incluir voz femenina/masculina.
-- Incluir duración.
-- Incluir destino: promoción, flyer animado, video o redes.
-- Generar prompt optimizado para lograr una canción/jingle acorde a la marca.
-- No crear UI todavía.
+- Jingles con referencias de audio o melodías base.
+- Variantes por temporada/campaña.
+- Exportar prompts de audio por plataforma.
 
 ## Cambios UX recientes
 

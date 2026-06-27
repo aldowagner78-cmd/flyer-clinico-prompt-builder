@@ -90,6 +90,33 @@ const CAMPAIGN_REQUIRED_CHECKS = [
   }
 ];
 
+const JINGLE_REQUIRED_CHECKS = [
+  {
+    key: 'jingleObjective',
+    label: 'Objetivo del audio',
+    path: 'promptOptions.jingleObjective',
+    test: state => hasText(state?.promptOptions?.jingleObjective)
+  },
+  {
+    key: 'jingleStyle',
+    label: 'Estilo musical',
+    path: 'promptOptions.jingleStyle',
+    test: state => hasText(state?.promptOptions?.jingleStyle)
+  },
+  {
+    key: 'jingleVoices',
+    label: 'Tipo de voces',
+    path: 'promptOptions.jingleVoices',
+    test: state => hasText(state?.promptOptions?.jingleVoices)
+  },
+  {
+    key: 'jingleFinalMessage',
+    label: 'Mensaje final',
+    path: 'promptOptions.jingleFinalMessage',
+    test: state => hasText(state?.promptOptions?.jingleFinalMessage)
+  }
+];
+
 const KNOWN_SPECIALTIES = [
   'cardiologia',
   'clinica medica',
@@ -188,6 +215,9 @@ function getRequiredChecks(state) {
   }
   if (pieceType === 'promotionCampaign') {
     return [...BASE_REQUIRED_CHECKS, ...CAMPAIGN_REQUIRED_CHECKS];
+  }
+  if (pieceType === 'jinglePromotional') {
+    return [...BASE_REQUIRED_CHECKS, ...JINGLE_REQUIRED_CHECKS];
   }
   return [...BASE_REQUIRED_CHECKS, ...PROFESSIONAL_REQUIRED_CHECKS];
 }
@@ -319,6 +349,8 @@ function validateColors(state, issues, fieldPaths) {
 }
 
 function validateAttachments(state, issues, fieldPaths) {
+  if (state?.promptOptions?.pieceType === 'jinglePromotional') return;
+
   const attachments = getArray(state?.attachments?.items);
   const hasProfessionalPhoto = hasText(state?.professional?.photoFileName) || attachments.some(item => item?.role === 'professionalPhoto' && hasText(item?.fileName));
   const hasClinicLogo = hasText(state?.clinic?.logoFileName) || attachments.some(item => item?.role === 'clinicLogo' && hasText(item?.fileName));
@@ -370,6 +402,8 @@ function validateAttachments(state, issues, fieldPaths) {
 }
 
 function validateContentDensity(state, issues, fieldPaths) {
+  if (state?.promptOptions?.pieceType === 'jinglePromotional') return;
+
   const density = state?.design?.contentDensity || 'balanced';
   const format = normalize(state?.design?.format || '');
   const visibleServicesCount = getArray(state?.services?.visibleServices).filter(hasText).length;
@@ -419,6 +453,8 @@ function validatePromptOptions(state, issues, fieldPaths) {
     });
     fieldPaths.add('promptOptions.promptType');
   }
+
+  if (options.pieceType === 'jinglePromotional') return;
 
   if (Number(options.finalAlternativesCount) !== 2) {
     addIssue(issues, {

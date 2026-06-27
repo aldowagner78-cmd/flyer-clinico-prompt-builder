@@ -1,3 +1,17 @@
+## 2026-06-27 - Jingles promocionales con Gemini
+
+### Agregado
+- Tipo de pieza `Jingle / canción promocional`.
+- Formulario breve para objetivo, estilo musical, voces, duración, destino, mensaje final e idea base.
+- Opciones avanzadas colapsadas para tono, velocidad, instrumentación, slogan y versiones alternativas.
+- Prompt específico para Gemini como compositor/productor musical.
+- Tests dirigidos de jingle/canción.
+
+### Modificado
+- Resultado destaca Gemini cuando el tipo de pieza es jingle.
+- Manual y roadmap documentan la función y próximos pendientes de audio.
+- `service-worker.js` actualiza versión de cache para refrescar la PWA.
+
 ## 2026-06-27 - Reset seguro, Ir a y video desde flyer
 
 ### Agregado

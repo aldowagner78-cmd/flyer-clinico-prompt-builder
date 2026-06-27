@@ -14,6 +14,10 @@ export function buildPrompt(state) {
   const pieceType = options.pieceType || 'professionalFlyer';
   const animated = Boolean(options.requestAnimation);
 
+  if (pieceType === PIECE_TYPES.jinglePromotional) {
+    return buildJinglePrompt({ clinic, professional, specialty, services, schedule, coverage, options });
+  }
+
   if (animated) {
     return buildVideoPrompt({ clinic, professional, specialty, services, schedule, coverage, design, attachments, options, pieceType });
   }
@@ -86,6 +90,105 @@ RESTRICCIONES CRÍTICAS:
 - Si es promoción o campaña, evitar lenguaje engañoso, urgencia falsa o afirmaciones sanitarias no verificadas.
 - Usar poco texto por bloque, jerarquía clara y composición profesional.
 - El resultado debe ser apto para publicar en redes o enviar por WhatsApp.
+`);
+}
+
+function buildJinglePrompt({ clinic, professional, specialty, services, schedule, coverage, options }) {
+  const hasBaseIdea = hasText(options.jingleBaseIdea);
+  const includeSlogan = options.jingleIncludeSlogan !== false && hasText(clinic.institutionalPhrase);
+  const duration = resolveJingleDuration(options.jingleDuration);
+
+  return cleanPrompt(`
+Actuá como compositor, productor musical y redactor publicitario especializado en jingles profesionales para salud, clínicas, centros médicos y redes sociales.
+
+OBJETIVO:
+Crear una canción, jingle o audio breve para: ${valueOrEmpty(options.jingleObjective || 'Promoción / campaña')}.
+La pieza debe poder acompañar promociones, videos, flyers animados, publicaciones, reels, stories, estados de WhatsApp o campañas médicas/institucionales.
+
+ESPECIFICACIÓN TÉCNICA:
+- Duración: ${duration}.
+- Destino: ${valueOrEmpty(options.jingleDestination || 'Instagram / Reels / Stories')}.
+- Uso previsto: jingle/canción promocional para comunicación institucional de salud.
+- Formato de salida esperado: letra final, indicaciones musicales y guía para generación musical.
+- Si Gemini permite generar audio directamente, generá el audio/canción. Si no, entregá letra y dirección musical completa para producirlo en una herramienta musical.
+
+DIRECCIÓN MUSICAL:
+- Estilo musical: ${valueOrEmpty(options.jingleStyle || 'Pop alegre')}.
+- Tipo de voces: ${valueOrEmpty(options.jingleVoices || 'Voz principal + coros')}.
+- Tempo / velocidad: ${valueOrEmpty(options.jinglePace || 'Media')}.
+- Instrumentación: ${valueOrEmpty(options.jingleInstrumentation || 'Instrumental corporativo')}.
+- Tono emocional: ${valueOrEmpty(options.jingleEmotionalTone || 'Profesional')}.
+- Voz sugerida y coros: respetar el tipo de voces elegido; si hay dúo, coro o grupo mixto, indicar cómo entran y cuánto duran.
+
+DATOS DE LA INSTITUCIÓN:
+- Nombre: ${valueOrEmpty(clinic.name)}
+- Tipo de institución: ${valueOrEmpty(clinic.institutionType === 'Otro' ? clinic.otherInstitutionType : clinic.institutionType)}
+- Frase institucional / slogan: ${valueOrEmpty(clinic.institutionalPhrase)}
+- Incluir slogan institucional: ${yesNo(includeSlogan)}
+- WhatsApp principal: ${valueOrEmpty(clinic.primaryPhone)}
+- Redes sociales:
+${buildSocialSection(clinic.socialLinks)}
+
+DATOS DE CONTEXTO:
+- Área / especialidad: ${valueOrEmpty(specialty.primaryProfessionalSpecialty)}
+- Profesional: ${valueOrEmpty([professional.title, professional.fullName].filter(Boolean).join(' '))}
+- Prestaciones o datos visibles:
+${buildList(services.visibleServices, '- No se cargaron prestaciones o datos visibles.')}
+- Turnos / atención: ${valueOrEmpty(schedule.appointmentText || schedule.modality)}
+- Obras sociales: ${yesNo(coverage.insurance)}
+- Particulares: ${yesNo(coverage.privatePatients)}
+
+LETRA:
+${hasBaseIdea
+  ? `- El usuario escribió esta letra o idea base: "${valueOrEmpty(options.jingleBaseIdea)}".
+- Respetala y pulila sin cambiar el mensaje principal.`
+  : '- El usuario no escribió letra ni idea base. Creá una letra breve desde los datos de institución, pieza, campaña o profesional cargados.'}
+- Debe ser clara, memorable y prudente.
+- Debe evitar promesas médicas, curación garantizada o urgencia falsa.
+- Mensaje final obligatorio: ${valueOrEmpty(options.jingleFinalMessage || 'Consultanos por WhatsApp')}.
+- Versión con letra: ${yesNo(options.jingleWithLyrics !== false)}.
+- Versión instrumental alternativa: ${yesNo(Boolean(options.jingleInstrumentalAlternative))}.
+
+ESTRUCTURA SEGÚN DURACIÓN:
+Para 10 segundos:
+- Frase inicial / gancho.
+- Mensaje principal.
+- Mensaje final.
+
+Para 15 segundos:
+- Gancho.
+- Beneficio o servicio.
+- Nombre/marca.
+- Mensaje final.
+
+Para 20-30 segundos:
+- Intro breve.
+- Mensaje principal.
+- Refuerzo.
+- Slogan o marca.
+- Mensaje final.
+- Cierre musical.
+
+RESTRICCIONES:
+- No inventar datos.
+- No prometer curación.
+- No usar lenguaje agresivo.
+- No saturar con demasiadas palabras.
+- Mantener pronunciación simple.
+- Mantener tono profesional y apto para salud.
+- Si hay datos de institución, usarlos sin alterarlos.
+- Si hay frase institucional, integrarla solo si corresponde.
+- Evitar mencionar temas médicos sensibles: ${yesNo(options.jingleAvoidSensitiveTopics !== false)}.
+
+SALIDA ESPERADA:
+Entregá:
+- Letra final.
+- Descripción musical.
+- Voz sugerida.
+- Coros si aplica.
+- Duración.
+- Versión alternativa breve si corresponde.
+- Indicaciones para usarla con flyer animado, video o publicación.
 `);
 }
 
@@ -311,6 +414,12 @@ function resolveVideoDuration(value, pieceType, creationMode) {
   return '20 segundos';
 }
 
+function resolveJingleDuration(value) {
+  const selected = String(value || '').trim();
+  if (selected && selected !== 'Automático recomendado') return selected;
+  return '15 a 20 segundos, según la cantidad de texto y destino elegido';
+}
+
 function buildStaticFlyerVideoRules(staticFlyerItems = []) {
   return `
 VIDEO DESDE FLYER / IMAGEN ESTÁTICA:
@@ -468,7 +577,8 @@ function outputLabel(pieceType) {
     professionalFlyer: 'flyer profesional',
     clinicalInfographic: 'infografía clínica educativa',
     informativeFlyer: 'flyer informativo',
-    promotionCampaign: 'flyer de promoción o campaña'
+    promotionCampaign: 'flyer de promoción o campaña',
+    jinglePromotional: 'jingle o canción promocional'
   }[pieceType] || 'pieza visual';
 }
 
@@ -477,7 +587,8 @@ function pieceTypeLabel(pieceType) {
     professionalFlyer: 'Flyer profesional',
     clinicalInfographic: 'Infografía clínica educativa',
     informativeFlyer: 'Flyer informativo',
-    promotionCampaign: 'Promoción / campaña'
+    promotionCampaign: 'Promoción / campaña',
+    jinglePromotional: 'Jingle / canción promocional'
   }[pieceType] || 'Pieza visual';
 }
 

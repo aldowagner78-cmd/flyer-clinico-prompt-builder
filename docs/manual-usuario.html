@@ -345,7 +345,7 @@
           <p class="eyebrow">Manual interactivo</p>
           <h1>Usá la app sin conocimientos técnicos</h1>
           <p class="lead">
-            Guía rápida para instalar la app, crear una institución, generar prompts de imagen o video,
+            Guía rápida para instalar la app, crear una institución, generar prompts de imagen, video o jingle,
             adjuntar referencias por nombre y abrir el resultado en ChatGPT o Gemini.
           </p>
           <div class="hero-actions">
@@ -367,10 +367,11 @@
             <a href="#imagen"><span class="icon">4</span><span>Imagen / flyer</span></a>
             <a href="#video"><span class="icon">5</span><span>Video / animación</span></a>
             <a href="#adjuntos"><span class="icon">6</span><span>Adjuntos</span></a>
-            <a href="#resultado"><span class="icon">7</span><span>Resultado y plataformas</span></a>
-            <a href="#corregir"><span class="icon">8</span><span>Corregir sugerencias</span></a>
-            <a href="#problemas"><span class="icon">9</span><span>Problemas frecuentes</span></a>
-            <a href="#pendientes"><span class="icon">10</span><span>Pendiente futuro</span></a>
+            <a href="#jingle"><span class="icon">7</span><span>Jingle / canción</span></a>
+            <a href="#resultado"><span class="icon">8</span><span>Resultado y plataformas</span></a>
+            <a href="#corregir"><span class="icon">9</span><span>Corregir sugerencias</span></a>
+            <a href="#problemas"><span class="icon">10</span><span>Problemas frecuentes</span></a>
+            <a href="#pendientes"><span class="icon">11</span><span>Pendiente futuro</span></a>
           </div>
         </nav>
 
@@ -482,9 +483,31 @@
             <p class="warning">Si el prompt menciona archivos y no los subís, la IA debe pedirlos por nombre exacto antes de trabajar.</p>
           </section>
 
-          <section class="manual-card" id="resultado">
+          <section class="manual-card" id="jingle">
             <div class="card-title">
               <span class="icon">7</span>
+              <h2>Jingle / canción promocional</h2>
+            </div>
+            <p>Elegí <strong>Jingle / canción promocional</strong> para crear un prompt musical optimizado para Gemini. Sirve para canciones, cortinas o audios breves para promociones, videos, reels, stories o estados de WhatsApp.</p>
+            <div class="quick-grid">
+              <div class="mini-card">
+                <strong>Pocos datos</strong>
+                <p>Completá objetivo, estilo musical, voces, duración, destino, mensaje final y una letra o idea opcional.</p>
+              </div>
+              <div class="mini-card">
+                <strong>Gemini</strong>
+                <p>Si Gemini no genera audio directo, debe devolver letra, descripción musical, voz sugerida, coros e indicaciones de producción.</p>
+              </div>
+              <div class="mini-card">
+                <strong>Uso con videos</strong>
+                <p>Podés usar el jingle como cortina o música para flyers animados, videos promocionales y publicaciones.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="manual-card" id="resultado">
+            <div class="card-title">
+              <span class="icon">8</span>
               <h2>Resultado y plataformas</h2>
             </div>
             <p>En Resultado aparece el prompt final y los accesos rápidos.</p>
@@ -497,7 +520,7 @@
 
           <section class="manual-card" id="corregir">
             <div class="card-title">
-              <span class="icon">8</span>
+              <span class="icon">9</span>
               <h2>Corregir sugerencias del Resultado</h2>
             </div>
             <p>Si Resultado muestra una sugerencia, podés tocar <strong>Corregir</strong>. La app te lleva al paso relacionado.</p>
@@ -511,7 +534,7 @@
 
           <section class="manual-card" id="problemas">
             <div class="card-title">
-              <span class="icon">9</span>
+              <span class="icon">10</span>
               <h2>Problemas frecuentes</h2>
             </div>
             <details open>
@@ -530,18 +553,21 @@
               <summary>El video queda corto o no respeta todo</summary>
               <div><p>Probá menos texto, un mensaje final más breve y material de apoyo claro. Algunas plataformas limitan la duración de video generado.</p></div>
             </details>
+            <details>
+              <summary>Gemini no generó audio directo</summary>
+              <div><p>Usá la letra, descripción musical, voces y coros que devuelve como guía para generar o producir el jingle en una herramienta musical.</p></div>
+            </details>
           </section>
 
           <section class="manual-card" id="pendientes">
             <div class="card-title">
-              <span class="icon">10</span>
+              <span class="icon">11</span>
               <h2>Pendiente futuro</h2>
             </div>
             <ul>
-              <li>Generador de prompts para canciones/jingles promocionales con Gemini.</li>
-              <li>Letra o idea base, estilo musical, voz femenina/masculina y duración.</li>
-              <li>Destino: promoción, flyer animado, video o redes.</li>
-              <li>Prompt optimizado para lograr una canción/jingle acorde a la marca.</li>
+              <li>Jingles con referencias de audio o melodías base.</li>
+              <li>Variantes por temporada/campaña.</li>
+              <li>Exportar prompts de audio por plataforma.</li>
             </ul>
           </section>
         </main>

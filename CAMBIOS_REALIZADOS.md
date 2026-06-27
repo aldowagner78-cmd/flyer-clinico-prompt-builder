@@ -1,3 +1,38 @@
+# Jingles promocionales con Gemini - 2026-06-27
+
+## Archivos modificados
+- `index.html`
+- `assets/css/styles.css`
+- `src/app.js`
+- `src/ui/formRenderer.js`
+- `src/ui/previewRenderer.js`
+- `src/ui/validation.js`
+- `src/prompt/promptBuilder.js`
+- `src/state/defaultState.js`
+- `src/state/migrations.js`
+- `src/state/schema.js`
+- `service-worker.js`
+- `tests/app.spec.js`
+- `docs/ROADMAP.md`
+- `docs/MANUAL_USUARIO.md`
+- `docs/manual-usuario.html`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- Se agregó `Jingle / canción promocional` como tipo de pieza.
+- El flujo de jingle usa pocos campos y salta Diseño para ir directo a Resultado.
+- Se agregó un prompt musical específico para Gemini, separado de imagen y video.
+- Resultado conserva Copiar prompt, ChatGPT y Gemini, con Gemini destacado para jingle.
+- Manual y roadmap quedaron actualizados con la función y pendientes futuros de audio.
+
+## Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "jingle|canción|cancion" --project=chromium-desktop --project=mobile-chrome --workers=1 --timeout=60000
+```
+
+---
+
 # Reset seguro, Ir a y video desde flyer - 2026-06-27
 
 ## Archivos modificados
