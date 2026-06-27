@@ -31,7 +31,11 @@ export function renderPreview(state, validation) {
 
 export function renderResult(prompt, validation, state) {
   const attachmentFiles = collectAttachmentFiles(state).filter(item => item.fileName);
-  document.querySelector('#promptOutput').value = prompt;
+  const promptOutput = document.querySelector('#promptOutput');
+  if (promptOutput) {
+    promptOutput.value = prompt;
+    promptOutput.textContent = prompt;
+  }
   document.querySelector('#checklist').innerHTML = validation.checklist.map(item => `
     <li class="${item.ok ? 'ok' : 'missing'}"><span>${item.ok ? 'OK' : 'Revisar'}</span>${escapeHtml(item.label)}</li>
   `).join('');
@@ -139,14 +143,59 @@ function renderIssueGroup(title, badge, issues, className) {
 
   return [
     `<li class="${className}"><span>${escapeHtml(title)}</span>${issues.length} ${issues.length === 1 ? 'punto detectado' : 'puntos detectados'}</li>`,
-    ...issues.map(issue => `
-      <li class="${className}">
-        <span>${escapeHtml(badge)}</span>
-        ${escapeHtml(issue.message || issue)}
-        ${issue.path ? `<small>Campo: ${escapeHtml(issue.path)}</small>` : ''}
-      </li>
-    `)
+    ...issues.map(issue => {
+      const message = issue.message || issue;
+      return `
+        <li class="${className}">
+          <span>${escapeHtml(badge)}</span>
+          <div class="issue-copy">
+            <strong>${escapeHtml(message)}</strong>
+            ${issue.path ? `<small>Campo: ${escapeHtml(readableIssuePath(issue.path))}</small>` : ''}
+          </div>
+          ${issue.path ? `
+            <button
+              class="secondary-button compact-action issue-fix-button"
+              type="button"
+              data-fix-issue-path="${escapeHtml(issue.path)}"
+              data-fix-issue-message="${escapeHtml(message)}">
+              Corregir
+            </button>
+          ` : ''}
+        </li>
+      `;
+    })
   ].join('');
+}
+
+function readableIssuePath(path = '') {
+  const labels = {
+    'clinic.name': 'Nombre de la institución',
+    'clinic.primaryPhone': 'Datos de contacto',
+    'promptOptions.pieceType': 'Tipo de pieza',
+    'professional.fullName': 'Nombre del profesional',
+    'professional.title': 'Título profesional',
+    'professional.license': 'Matrícula',
+    'specialty.primaryProfessionalSpecialty': 'Especialidad principal',
+    'specialty.visibleSpecialtyText': 'Texto visible de especialidad',
+    'specialty.communicationFocus': 'Enfoque comunicacional',
+    'services.visibleServices': 'Prestaciones visibles',
+    'schedule.modality': 'Modalidad de atención',
+    'schedule.items': 'Horarios de atención',
+    'design.primaryColor': 'Color principal',
+    'design.secondaryColor': 'Color secundario',
+    'design.customPrimaryColor': 'Color principal personalizado',
+    'design.customSecondaryColor': 'Color secundario personalizado',
+    'design.contentDensity': 'Densidad del contenido',
+    'attachments.items': 'Adjuntos'
+  };
+
+  if (labels[path]) return labels[path];
+  if (path.startsWith('clinic.socialLinks')) return 'Redes sociales';
+  if (path.startsWith('schedule.items')) return 'Horarios de atención';
+  if (path.startsWith('attachments.items')) return 'Adjuntos';
+  if (path.startsWith('promptOptions.')) return 'Opciones de contenido';
+  if (path.startsWith('design.')) return 'Diseño visual';
+  return path || 'Campo sugerido';
 }
 
 function renderAttachmentsChecklist(state, precomputedFiles = null) {

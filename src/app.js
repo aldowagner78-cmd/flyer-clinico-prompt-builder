@@ -29,6 +29,9 @@ let institutionActionsPanelOpen = false;
 let institutionManagePointerHandled = false;
 let institutionActionPointerHandled = false;
 let statusClearTimer = null;
+let correctionReturnActive = false;
+let pendingCorrectionFocusPath = '';
+let correctionReturnMessage = '';
 let institutionEditorOpen = false;
 let institutionEditorMode = 'create';
 const GENERIC_SPECIALTY_WORDS = new Set(['consulta', 'control', 'controles', 'seguimiento', 'evaluacion', 'estudios', 'profesional', 'profesionales', 'prevencion', 'pacientes', 'salud', 'turnos', 'cuidar', 'orientar', 'periodico', 'periodicos', 'informacion', 'cuando', 'habitos']);
@@ -207,6 +210,16 @@ function update(renderFields = false) {
   saveState(state);
 }
 
+function returnToResultAfterCorrection() {
+  correctionReturnActive = false;
+  pendingCorrectionFocusPath = '';
+  correctionReturnMessage = '';
+  showStep(resultStep);
+  update(false);
+  showStep(resultStep);
+  showStatus('Volviste al Resultado. El prompt y las sugerencias se actualizaron.');
+}
+
 function bindStaticActions() {
   document.querySelectorAll('[data-piece-start]').forEach(button => {
     button.addEventListener('click', event => {
@@ -263,6 +276,12 @@ function bindStaticActions() {
     }, 500);
   }, true);
 
+  document.addEventListener('pointerdown', event => {
+    const returnButton = event.target.closest?.('[data-return-to-result]');
+    if (!returnButton) return;
+    event.preventDefault();
+  }, true);
+
   document.addEventListener('click', event => {
     const manageButton = event.target.closest?.('#manageInstitutionButton');
     if (manageButton) {
@@ -285,6 +304,22 @@ function bindStaticActions() {
         return;
       }
       runInstitutionPanelAction(institutionAction.id);
+      return;
+    }
+
+    const issueButton = event.target.closest?.('[data-fix-issue-path]');
+    if (issueButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      openIssueCorrection(issueButton.dataset.fixIssuePath || '', issueButton.dataset.fixIssueMessage || '');
+      return;
+    }
+
+    const returnButton = event.target.closest?.('[data-return-to-result]');
+    if (returnButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      returnToResultAfterCorrection();
       return;
     }
 
@@ -1383,6 +1418,170 @@ function startNewPiece(pieceType = PIECE_TYPES.professionalFlyer) {
   startPieceFlow(state.promptOptions.pieceType, false);
 }
 
+
+function openIssueCorrection(path = '', message = '') {
+  if (!path) {
+    showStatus('No se pudo ubicar el campo sugerido. Revisá el formulario manualmente.');
+    return;
+  }
+
+  const targetStep = stepForIssuePath(path);
+  correctionReturnActive = true;
+  pendingCorrectionFocusPath = path;
+  correctionReturnMessage = message || readableIssuePath(path);
+
+  if (targetStep === 'clinica') window.__setInstitutionViewMode?.('full');
+  if (targetStep === 'prestaciones') window.__setContentViewMode?.('full');
+  if (targetStep === 'diseno') window.__setDesignViewMode?.('full');
+
+  currentStep = targetStep;
+  update(true);
+  showStep(targetStep);
+
+  window.setTimeout(() => {
+    focusCorrectionField(path);
+  }, 80);
+
+  showStatus(`Corregí: ${correctionReturnMessage}. Después tocá “Volver al resultado”.`);
+}
+
+function stepForIssuePath(path = '') {
+  const normalized = String(path || '');
+
+  if (normalized.startsWith('clinic.')) return 'clinica';
+  if (normalized === 'promptOptions.pieceType') return 'tipo';
+
+  if (
+    normalized.startsWith('design.') ||
+    normalized.startsWith('attachments.') ||
+    normalized === 'attachments.items'
+  ) {
+    return 'diseno';
+  }
+
+  return 'prestaciones';
+}
+
+function showCorrectionReturnBanner() {
+  document.querySelector('#correctionReturnBanner')?.remove();
+
+  if (!correctionReturnActive || currentStep === resultStep || document.body.classList.contains('is-home')) return;
+
+  const section = document.querySelector('.form-section.is-current');
+  if (!section) return;
+
+  const heading = section.querySelector('.section-heading');
+  const banner = document.createElement('div');
+  banner.id = 'correctionReturnBanner';
+  banner.className = 'correction-return-banner';
+  banner.innerHTML = `
+    <div>
+      <strong>Corrección rápida</strong>
+      <span>${escapeHtmlApp(correctionReturnMessage || readableIssuePath(pendingCorrectionFocusPath))}</span>
+    </div>
+    <button class="secondary-button compact-action" type="button" data-return-to-result>Volver al resultado</button>
+  `;
+
+  if (heading?.nextSibling) {
+    section.insertBefore(banner, heading.nextSibling);
+  } else {
+    section.prepend(banner);
+  }
+}
+
+function focusCorrectionField(path = '') {
+  const candidates = correctionFieldSelectors(path);
+  let target = null;
+
+  for (const selector of candidates) {
+    target = document.querySelector(selector);
+    if (target) break;
+  }
+
+  if (!target) {
+    document.querySelector('.form-section.is-current')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (typeof target.focus === 'function') target.focus({ preventScroll: true });
+  target.classList.add('field-focus-highlight');
+  window.setTimeout(() => target.classList.remove('field-focus-highlight'), 1800);
+}
+
+function correctionFieldSelectors(path = '') {
+  const safePath = cssAttrValue(path);
+  const selectors = [];
+
+  if (safePath) {
+    selectors.push(`[data-path="${safePath}"]`);
+  }
+
+  if (path === 'attachments.items' || path.startsWith('attachments.items')) {
+    selectors.push('#customAttachmentsPanel', '#attachmentsChecklist', '#designFields');
+  }
+
+  if (path === 'schedule.items' || path.startsWith('schedule.items')) {
+    selectors.push('#scheduleEditor', '#serviceFields');
+  }
+
+  if (path === 'services.visibleServices') {
+    selectors.push('#visibleServicesList', '#serviceFields');
+  }
+
+  return selectors;
+}
+
+function readableIssuePath(path = '') {
+  const labels = {
+    'clinic.name': 'Nombre de la institución',
+    'clinic.primaryPhone': 'Datos de contacto',
+    'clinic.socialLinks': 'Redes sociales',
+    'promptOptions.pieceType': 'Tipo de pieza',
+    'professional.fullName': 'Nombre del profesional',
+    'professional.title': 'Título profesional',
+    'professional.license': 'Matrícula',
+    'professional.photoFileName': 'Foto profesional',
+    'specialty.primaryProfessionalSpecialty': 'Especialidad principal',
+    'specialty.visibleSpecialtyText': 'Texto visible de especialidad',
+    'specialty.communicationFocus': 'Enfoque comunicacional',
+    'services.visibleServices': 'Prestaciones visibles',
+    'schedule.modality': 'Modalidad de atención',
+    'schedule.items': 'Horarios de atención',
+    'design.primaryColor': 'Color principal',
+    'design.secondaryColor': 'Color secundario',
+    'design.customPrimaryColor': 'Color principal personalizado',
+    'design.customSecondaryColor': 'Color secundario personalizado',
+    'design.contentDensity': 'Densidad del contenido',
+    'attachments.items': 'Adjuntos'
+  };
+
+  const exact = labels[path];
+  if (exact) return exact;
+
+  if (path.startsWith('clinic.socialLinks')) return 'Redes sociales';
+  if (path.startsWith('schedule.items')) return 'Horarios de atención';
+  if (path.startsWith('attachments.items')) return 'Adjuntos';
+  if (path.startsWith('promptOptions.')) return 'Opciones de contenido';
+  if (path.startsWith('design.')) return 'Diseño visual';
+
+  return path || 'Campo sugerido';
+}
+
+function cssAttrValue(value = '') {
+  return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+function escapeHtmlApp(value = '') {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+
 function startPieceFlow(pieceType, resetCurrentStep = true, statusMessage = '') {
   state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
   document.body.classList.remove('is-home');
@@ -1422,6 +1621,7 @@ function showStep(step) {
   });
 
   updateWorkflowChrome();
+  showCorrectionReturnBanner();
 }
 
 function nextStep() {

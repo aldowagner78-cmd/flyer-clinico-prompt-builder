@@ -1,3 +1,13 @@
+
+## Fix pruebas dirigidas Resultado/Video
+
+### Corregido
+- Se ajustó el test de video animado en escritorio para marcar el checkbox de animación de forma robusta.
+- Se actualizó la expectativa del botón principal a `Copiar prompt`, acorde al texto final aprobado.
+
+### Pruebas sugeridas
+- `npx playwright test tests/app.spec.js -g "video animado|resultado muestra revisión final|botones de plataforma|sugerencias del resultado" --project=chromium-desktop --project=mobile-chrome`
+
 ## 2026-06-27 - Accesos rápidos a plataformas
 
 ### Agregado
@@ -488,3 +498,26 @@
 - Se compactó el botón principal del resultado como “Copiar prompt”.
 - Los botones ChatGPT/Gemini/CapCut/Canva ahora copian el prompt antes de abrir la plataforma.
 - Se mejoró la alineación de acciones rápidas en la pantalla Resultado.
+## Etapa sugerencias accionables
+
+### Agregado
+- Sugerencias del Resultado con botón Corregir.
+- Navegación directa al campo relacionado y botón Volver al resultado.
+
+### Corregido
+- Menos recorrido manual cuando una advertencia requiere ajuste.
+## Fix sugerencias accionables - retorno robusto
+
+### Corregido
+- El botón `Volver al resultado` ahora evita que el cambio de foco del campo editado interrumpa el retorno al Resultado.
+- Se mantiene la actualización del prompt y de las sugerencias al volver.
+
+### Pruebas sugeridas
+- `npx playwright test tests/app.spec.js -g "sugerencias del resultado permiten corregir|advertencias finales quedan agrupadas" --project=chromium-desktop --project=mobile-chrome`
+
+
+## Ajuste sugerencias accionables
+
+### Corregido
+- El resultado vuelve a exponer el prompt generado también como contenido legible del textarea para que las validaciones y pruebas visuales puedan confirmar el texto tras una corrección rápida.
+

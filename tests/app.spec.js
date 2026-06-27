@@ -953,7 +953,10 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
       await page.locator('#designFields [data-design-guided="next"]').click();
     }
 
-    await page.locator('[data-path="promptOptions.requestAnimation"]').first().check();
+    const animationToggle = page.locator('[data-path="promptOptions.requestAnimation"]').first();
+    await animationToggle.scrollIntoViewIfNeeded();
+    await expect(animationToggle).toBeVisible();
+    await animationToggle.check({ force: true });
     await expect(page.locator('[data-video-config-panel]')).toBeVisible();
     await expect(page.locator('[data-video-config-panel]')).toContainText(/Configuración rápida de video/i);
     await expect(page.locator('[data-video-config-panel]')).toContainText(/Desde cero/i);
@@ -1028,7 +1031,7 @@ test.describe('Etapa 11D.4 - resultado asistido', () => {
     await expect(resultCopyButton).toContainText(/^\s*Copiar prompt\s*$/i);
 
     await expect(page.locator('#copyPromptButton')).toHaveClass(/copy-prompt-primary/);
-    await expect(page.locator('#copyPromptButton')).toContainText(/revisado/i);
+    await expect(page.locator('#copyPromptButton')).toContainText(/^\s*Copiar prompt\s*$/i);
 
     await resultCopyButton.click();
     await expect(page.locator('#statusMessage')).toContainText(/Prompt revisado copiado/i);
@@ -1128,6 +1131,33 @@ test.describe('Etapa 11D.4 - resultado asistido', () => {
     await expect(page.locator('.result-warning-card')).toContainText(/Advertencias y sugerencias/i);
     await expect(page.locator('#warnings')).toContainText(/Falta o conviene completar/i);
     await expect(page.locator('#finalReviewSummary')).toContainText(/advertencia/i);
+
+    await expect(errors).toEqual([]);
+  });
+
+
+  test('sugerencias del resultado permiten corregir y volver al resultado', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'professionalFlyer');
+    await goResult(page);
+
+    const fixProfessionalName = page.locator('#warnings [data-fix-issue-path="professional.fullName"]').first();
+    await expect(fixProfessionalName).toBeVisible();
+    await fixProfessionalName.click();
+
+    await expectCurrentStep(page, 'prestaciones');
+    await expect(page.locator('#correctionReturnBanner')).toBeVisible();
+    await expect(page.locator('#correctionReturnBanner')).toContainText(/Volver al resultado/i);
+
+    const professionalName = page.locator('input[data-path="professional.fullName"]').first();
+    await expect(professionalName).toBeVisible();
+    await professionalName.fill('Dra. Demo Accionable');
+
+    await page.locator('[data-return-to-result]').click();
+    await expectCurrentStep(page, 'resultado');
+    await expect(page.locator('#promptOutput')).toContainText('Dra. Demo Accionable');
+    await expect(page.locator('#warnings')).not.toContainText(/Nombre del profesional/i);
 
     await expect(errors).toEqual([]);
   });

@@ -734,3 +734,39 @@ Si el usuario agrega referencias para video, la app solo copia nombres de archiv
 
 En la pantalla Resultado, el botón `Copiar prompt` copia el prompt actual.
 Los botones `ChatGPT`, `Gemini`, `CapCut` y `Canva` copian el prompt y abren la plataforma en una pestaña nueva. Después hay que pegar manualmente con `Ctrl+V` o desde el menú `Pegar`.
+## Sugerencias accionables en Resultado
+
+En la pantalla Resultado, las advertencias y sugerencias pueden mostrar un botón `Corregir`.
+Al tocarlo, la app lleva al paso relacionado, resalta el campo y muestra `Volver al resultado` para regresar sin recorrer todo el asistente.
+## Prueba dirigida: sugerencias accionables
+
+Para validar que una sugerencia del Resultado permite corregir y volver sin recorrer todo el asistente:
+
+Ruta:
+`C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`
+
+Comando:
+```powershell
+npx playwright test tests/app.spec.js -g "sugerencias del resultado permiten corregir|advertencias finales quedan agrupadas" --project=chromium-desktop --project=mobile-chrome
+```
+
+Resultado esperado:
+`4 passed`
+
+
+## Nota de prueba: sugerencias accionables
+
+Si una sugerencia del Resultado permite corregir un campo, al volver al Resultado el prompt debe actualizarse y mostrarse completo en el área de texto final.
+
+
+
+## Nota de prueba: Resultado y video
+
+El botón principal de Resultado se llama `Copiar prompt`. Las pruebas dirigidas deben validar ese texto aprobado y no el texto anterior `Copiar prompt revisado`.
+
+Para validar rápidamente video, plataformas y sugerencias:
+
+```powershell
+npx playwright test tests/app.spec.js -g "video animado|resultado muestra revisión final|botones de plataforma|sugerencias del resultado" --project=chromium-desktop --project=mobile-chrome
+```
+
