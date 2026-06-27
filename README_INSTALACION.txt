@@ -27,6 +27,24 @@ npx playwright test tests/app.spec.js -g "botones de plataforma" --project=chrom
 
 ---
 
+# QA final smoke automatizado
+
+Verificacion rapida separada de la bateria completa. No reemplaza `npm test`, pero sirve para cerrar una revision visual/funcional minima en desktop y mobile.
+
+Desktop:
+```powershell
+npx playwright test tests/qa-final-smoke.spec.js --project=chromium-desktop --workers=1 --timeout=60000
+```
+
+Mobile:
+```powershell
+npx playwright test tests/qa-final-smoke.spec.js --project=mobile-chrome --workers=1 --timeout=60000
+```
+
+El smoke revisa carga inicial, textos visibles sin caracteres rotos, ausencia de resumen lateral, boton Inicio, opcion `Odont.`, fechas de campana, video/Gemini, adjuntos referidos, accesos a plataformas, sugerencias corregibles, prompt final y overflow horizontal.
+
+---
+
 # Demo visual para generar prompt de video
 
 Esta demo no reemplaza los tests existentes. Sirve para ver Playwright completar en pantalla un flujo de `Promocion / campana` con video `Desde cero` y guardar el prompt final para probarlo en Gemini.

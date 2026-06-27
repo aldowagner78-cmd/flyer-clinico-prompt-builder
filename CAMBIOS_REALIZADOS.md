@@ -31,6 +31,31 @@ npx playwright test tests/app.spec.js -g "botones de plataforma" --project=chrom
 
 ---
 
+# QA final smoke - 2026-06-27
+
+## Archivos agregados
+- `tests/qa-final-smoke.spec.js`
+
+## Archivos modificados
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Que se cambio
+- Se agrego un smoke QA final separado de la bateria principal.
+- El smoke valida carga, textos visibles sin caracteres rotos, ausencia de resumen lateral, boton Inicio, `Odont.`, fechas de campana, video, material para Gemini, accesos a plataformas, sugerencias corregibles, prompt final y overflow horizontal.
+
+## Como probar
+```powershell
+npx playwright test tests/qa-final-smoke.spec.js --project=chromium-desktop --workers=1 --timeout=60000
+npx playwright test tests/qa-final-smoke.spec.js --project=mobile-chrome --workers=1 --timeout=60000
+```
+
+## Como revertir
+- Eliminar `tests/qa-final-smoke.spec.js` y quitar estas notas de documentacion.
+
+---
+
 # Demo visual prompt Gemini video - 2026-06-27
 
 ## Archivos agregados

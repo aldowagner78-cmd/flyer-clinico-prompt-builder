@@ -21,6 +21,17 @@
 ### Pruebas
 - Ejecutar: `npx playwright test tests/app.spec.js -g "botones de plataforma" --project=chromium-desktop`.
 
+## 2026-06-27 - QA final smoke
+
+### Agregado
+- `tests/qa-final-smoke.spec.js` como verificacion rapida separada para desktop y mobile.
+- Cobertura smoke de carga, textos visibles, ausencia de resumen lateral, Inicio, `Odont.`, fechas de campana, video/Gemini, adjuntos, plataformas, sugerencias corregibles, prompt final y overflow horizontal.
+
+### Pruebas
+- Desktop: `npx playwright test tests/qa-final-smoke.spec.js --project=chromium-desktop --workers=1 --timeout=60000`.
+- Mobile: `npx playwright test tests/qa-final-smoke.spec.js --project=mobile-chrome --workers=1 --timeout=60000`.
+- No reemplaza la bateria completa ni ejecuta `npm test`.
+
 ## 2026-06-27 - Demo visual prompt Gemini video
 
 ### Agregado
