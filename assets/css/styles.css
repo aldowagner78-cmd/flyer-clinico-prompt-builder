@@ -5469,3 +5469,82 @@ body.is-wizard-open .result-actions-panel {
     grid-column: 1 / -1;
   }
 }
+
+
+/* Etapa sugerencias accionables */
+.warnings li {
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.warnings .issue-copy {
+  display: grid;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.warnings .issue-copy strong {
+  font-size: 0.94rem;
+  line-height: 1.35;
+}
+
+.issue-fix-button {
+  flex: 0 0 auto;
+  min-height: 2.1rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.correction-return-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(14, 165, 233, 0.28);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(239, 246, 255, 0.95));
+  box-shadow: 0 14px 28px rgba(14, 165, 233, 0.12);
+}
+
+.correction-return-banner div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.correction-return-banner strong {
+  color: var(--text-strong);
+  font-size: 0.95rem;
+}
+
+.correction-return-banner span {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.field-focus-highlight {
+  outline: 3px solid rgba(14, 165, 233, 0.35) !important;
+  box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.12) !important;
+}
+
+@media (max-width: 720px) {
+  .warnings li {
+    align-items: stretch;
+  }
+
+  .issue-fix-button {
+    width: 100%;
+  }
+
+  .correction-return-banner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .correction-return-banner button {
+    width: 100%;
+  }
+}

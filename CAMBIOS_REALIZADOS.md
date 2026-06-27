@@ -873,3 +873,83 @@ npx playwright test tests/app.spec.js -g "completa nombres de logo, foto profesi
 - Generar un resultado.
 - Usar un botón de plataforma.
 - Pegar en la plataforma abierta y verificar que se pegó el prompt actual.
+## Etapa sugerencias accionables
+
+### Archivos modificados
+- `src/app.js`
+- `src/ui/previewRenderer.js`
+- `src/ui/formRenderer.js`
+- `assets/css/styles.css`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Las advertencias/sugerencias del Resultado ahora tienen botón `Corregir`.
+- Al corregir, la app lleva al paso/campo relacionado.
+- Se agrega botón `Volver al resultado` para regresar sin recorrer todo el asistente.
+
+### Cómo probar
+- Ejecutar tests dirigidos de Resultado y sugerencias accionables.
+
+### Cómo revertir
+- Revertir este parche o restaurar los archivos modificados.
+## Fix sugerencias accionables - retorno robusto
+
+### Archivos modificados
+- `src/app.js`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+- `README_INSTALACION.txt`
+
+### Qué se cambió
+- Se agregó un retorno robusto desde `Corrección rápida` hacia Resultado.
+- Se previene que el blur del campo editado reprocesse la pantalla antes del clic en `Volver al resultado`.
+
+### Cómo probar
+- Ejecutar el test dirigido de sugerencias accionables en desktop y mobile.
+
+### Cómo revertir
+- Restaurar los archivos modificados desde el commit anterior o desde backup.
+
+
+## Ajuste sugerencias accionables
+
+### Archivos modificados
+- `src/ui/previewRenderer.js`
+
+### Qué se cambió
+- El textarea del prompt final conserva el valor del prompt y también su contenido textual interno para validar correctamente el regreso al Resultado después de corregir una sugerencia.
+
+### Cómo probar
+- Ejecutar el test dirigido de sugerencias accionables.
+
+### Cómo revertir
+- Revertir el cambio en `renderResult` para volver a asignar solo `.value`.
+
+
+
+## Fix pruebas dirigidas Resultado/Video
+
+### Archivos modificados
+- `tests/app.spec.js`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+- `README_INSTALACION.txt`
+
+### Qué se cambió
+- Se hizo más robusta la interacción del test con el checkbox `Solicitar pieza animada / video`.
+- Se alineó el test con el texto final aprobado del botón: `Copiar prompt`.
+
+### Por qué se cambió
+- Los fallos eran de validación/automatización, no de la funcionalidad visual aprobada.
+
+### Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "video animado|resultado muestra revisión final|botones de plataforma|sugerencias del resultado" --project=chromium-desktop --project=mobile-chrome
+```
+
+### Cómo revertir
+- Revertir los cambios en `tests/app.spec.js` y documentación asociada.
+

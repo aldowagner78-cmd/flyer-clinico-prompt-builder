@@ -93,6 +93,14 @@ let designViewMode = 'guided';
 let designGuidedIndex = 0;
 
 if (typeof window !== 'undefined') {
+  window.__setContentViewMode = mode => {
+    contentViewMode = ['guided', 'full'].includes(mode) ? mode : 'guided';
+    if (contentViewMode === 'guided') contentGuidedIndex = 0;
+  };
+  window.__setDesignViewMode = mode => {
+    designViewMode = ['guided', 'full'].includes(mode) ? mode : 'guided';
+    if (designViewMode === 'guided') designGuidedIndex = 0;
+  };
   window.__setInstitutionViewMode = mode => {
     institutionViewMode = ['choice', 'guided', 'full'].includes(mode) ? mode : 'choice';
     if (institutionViewMode === 'choice') institutionGuidedIndex = 0;
