@@ -97,30 +97,41 @@ function buildJinglePrompt({ clinic, professional, specialty, services, schedule
   const hasBaseIdea = hasText(options.jingleBaseIdea);
   const includeSlogan = options.jingleIncludeSlogan !== false && hasText(clinic.institutionalPhrase);
   const duration = resolveJingleDuration(options.jingleDuration);
+  const durationRules = jingleDurationRules(duration);
+  const singableData = buildCompactList([
+    clinic.name,
+    includeSlogan ? clinic.institutionalPhrase : '',
+    specialty.primaryProfessionalSpecialty,
+    [professional.title, professional.fullName].filter(Boolean).join(' '),
+    ...(services.visibleServices || [])
+  ], 'No hay datos cantables suficientes; usar un mensaje institucional genérico de salud.');
 
   return cleanPrompt(`
-Actuá como compositor, productor musical y redactor publicitario especializado en jingles profesionales para salud, clínicas, centros médicos y redes sociales.
+Actuá como compositor y productor musical especializado en jingles breves para salud.
 
 OBJETIVO:
-Crear una canción, jingle o audio breve para: ${valueOrEmpty(options.jingleObjective || 'Promoción / campaña')}.
-La pieza debe poder acompañar promociones, videos, flyers animados, publicaciones, reels, stories, estados de WhatsApp o campañas médicas/institucionales.
-
-ESPECIFICACIÓN TÉCNICA:
-- Duración: ${duration}.
+- Crear una canción o jingle breve para: ${valueOrEmpty(options.jingleObjective || 'Promoción / campaña')}.
 - Destino: ${valueOrEmpty(options.jingleDestination || 'Instagram / Reels / Stories')}.
-- Uso previsto: jingle/canción promocional para comunicación institucional de salud.
-- Formato de salida esperado: letra final, indicaciones musicales y guía para generación musical.
-- Si Gemini permite generar audio directamente, generá el audio/canción. Si no, entregá letra y dirección musical completa para producirlo en una herramienta musical.
+- Duración obligatoria: ${durationRules.exact}.
+- No hagas una versión larga ni excedas la duración elegida.
+- Si no podés generar audio con duración exacta, entregá solo una letra corta y una dirección musical precisa.
 
 DIRECCIÓN MUSICAL:
-- Estilo musical: ${valueOrEmpty(options.jingleStyle || 'Pop alegre')}.
-- Tipo de voces: ${valueOrEmpty(options.jingleVoices || 'Voz principal + coros')}.
+- Estilo musical elegido por el usuario: ${valueOrEmpty(options.jingleStyle || 'Pop alegre')}.
+- Tipo de voces elegido: ${valueOrEmpty(options.jingleVoices || 'Voz principal + coros')}.
 - Tempo / velocidad: ${valueOrEmpty(options.jinglePace || 'Media')}.
 - Instrumentación: ${valueOrEmpty(options.jingleInstrumentation || 'Instrumental corporativo')}.
 - Tono emocional: ${valueOrEmpty(options.jingleEmotionalTone || 'Profesional')}.
-- Voz sugerida y coros: respetar el tipo de voces elegido; si hay dúo, coro o grupo mixto, indicar cómo entran y cuánto duran.
+- Respetá estrictamente el estilo elegido. Si es infantil, corporativo, pop, acústico u otro, mantenelo sin mezclar estilos incompatibles.
+- Respetá las voces elegidas. Si hay coros, dúo o grupo, usalos sin extender la duración con repeticiones.
 
-DATOS DE LA INSTITUCIÓN:
+IDIOMA Y PRONUNCIACIÓN:
+- Idioma obligatorio: español argentino.
+- Pronunciá correctamente cada palabra en español argentino.
+- No deformes nombres propios, marcas, institución, especialidades ni términos médicos.
+- Respetá exactamente el nombre de la institución: ${valueOrEmpty(clinic.name)}.
+
+DATOS DE CONTEXTO:
 - Nombre: ${valueOrEmpty(clinic.name)}
 - Tipo de institución: ${valueOrEmpty(clinic.institutionType === 'Otro' ? clinic.otherInstitutionType : clinic.institutionType)}
 - Frase institucional / slogan: ${valueOrEmpty(clinic.institutionalPhrase)}
@@ -128,56 +139,42 @@ DATOS DE LA INSTITUCIÓN:
 - WhatsApp principal: ${valueOrEmpty(clinic.primaryPhone)}
 - Redes sociales:
 ${buildSocialSection(clinic.socialLinks)}
-
-DATOS DE CONTEXTO:
 - Área / especialidad: ${valueOrEmpty(specialty.primaryProfessionalSpecialty)}
 - Profesional: ${valueOrEmpty([professional.title, professional.fullName].filter(Boolean).join(' '))}
-- Prestaciones o datos visibles:
+- Prestaciones visibles:
 ${buildList(services.visibleServices, '- No se cargaron prestaciones o datos visibles.')}
 - Turnos / atención: ${valueOrEmpty(schedule.appointmentText || schedule.modality)}
 - Obras sociales: ${yesNo(coverage.insurance)}
 - Particulares: ${yesNo(coverage.privatePatients)}
 
+DATOS CANTABLES PERMITIDOS:
+${singableData}
+
 LETRA:
 ${hasBaseIdea
-  ? `- El usuario escribió esta letra o idea base: "${valueOrEmpty(options.jingleBaseIdea)}".
+  ? `- Idea base del usuario: "${valueOrEmpty(options.jingleBaseIdea)}".
+- Convertí esa idea en una letra breve, cantable y simple.
 - Respetala y pulila sin cambiar el mensaje principal.`
-  : '- El usuario no escribió letra ni idea base. Creá una letra breve desde los datos de institución, pieza, campaña o profesional cargados.'}
-- Debe ser clara, memorable y prudente.
-- Debe evitar promesas médicas, curación garantizada o urgencia falsa.
+  : '- El usuario no escribió letra ni idea base. Creá una letra breve usando solo los datos cantables permitidos.'}
+- Letra cantada: ${durationRules.lines}.
+- Cada línea: ${durationRules.words}.
+- Estructura sugerida: ${durationRules.structure}.
+- Usá frases simples, memorables y fáciles de cantar.
 - Mensaje final obligatorio: ${valueOrEmpty(options.jingleFinalMessage || 'Consultanos por WhatsApp')}.
 - Versión con letra: ${yesNo(options.jingleWithLyrics !== false)}.
 - Versión instrumental alternativa: ${yesNo(Boolean(options.jingleInstrumentalAlternative))}.
 
-ESTRUCTURA SEGÚN DURACIÓN:
-Para 10 segundos:
-- Frase inicial / gancho.
-- Mensaje principal.
-- Mensaje final.
-
-Para 15 segundos:
-- Gancho.
-- Beneficio o servicio.
-- Nombre/marca.
-- Mensaje final.
-
-Para 20-30 segundos:
-- Intro breve.
-- Mensaje principal.
-- Refuerzo.
-- Slogan o marca.
-- Mensaje final.
-- Cierre musical.
-
 RESTRICCIONES:
 - No inventar datos.
 - No prometer curación.
-- No usar lenguaje agresivo.
-- No saturar con demasiadas palabras.
-- Mantener pronunciación simple.
+- No prometas curación ni resultados garantizados.
+- No uses urgencia falsa, presión comercial ni lenguaje agresivo.
 - Mantener tono profesional y apto para salud.
 - Si hay datos de institución, usarlos sin alterarlos.
 - Si hay frase institucional, integrarla solo si corresponde.
+- No cantes teléfonos, WhatsApp numéricos, direcciones, emails, redes sociales, matrículas, horarios, obras sociales ni números.
+- Los datos administrativos sirven solo como contexto; no deben aparecer en la letra cantada.
+- No deletrees ni cantes arrobas, puntos, guiones ni números.
 - Evitar mencionar temas médicos sensibles: ${yesNo(options.jingleAvoidSensitiveTopics !== false)}.
 
 SALIDA ESPERADA:
@@ -187,8 +184,7 @@ Entregá:
 - Voz sugerida.
 - Coros si aplica.
 - Duración.
-- Versión alternativa breve si corresponde.
-- Indicaciones para usarla con flyer animado, video o publicación.
+- Indicaciones breves para producirla o usarla en video/redes.
 `);
 }
 
@@ -417,7 +413,52 @@ function resolveVideoDuration(value, pieceType, creationMode) {
 function resolveJingleDuration(value) {
   const selected = String(value || '').trim();
   if (selected && selected !== 'Automático recomendado') return selected;
-  return '15 a 20 segundos, según la cantidad de texto y destino elegido';
+  return '15 segundos';
+}
+
+function jingleDurationRules(duration) {
+  const selected = String(duration || '').trim();
+  if (selected.startsWith('10')) {
+    return {
+      exact: '10 segundos exactos',
+      lines: '2 líneas cantadas como máximo',
+      words: 'máximo 5 palabras por línea',
+      structure: 'gancho breve + nombre o mensaje final'
+    };
+  }
+  if (selected.startsWith('20')) {
+    return {
+      exact: '20 segundos exactos',
+      lines: '4 líneas cantadas como máximo',
+      words: 'máximo 7 palabras por línea',
+      structure: 'gancho + servicio/beneficio + nombre + cierre'
+    };
+  }
+  if (selected.startsWith('30')) {
+    return {
+      exact: '30 segundos exactos',
+      lines: '5 líneas cantadas como máximo',
+      words: 'máximo 7 palabras por línea',
+      structure: 'intro breve + mensaje + refuerzo + nombre + cierre'
+    };
+  }
+  return {
+    exact: '15 segundos exactos',
+    lines: '3 líneas cantadas como máximo',
+    words: 'máximo 6 palabras por línea',
+    structure: 'gancho + nombre/servicio + mensaje final'
+  };
+}
+
+function buildCompactList(values, fallback, maxItems = 3) {
+  const uniqueValues = values
+    .map(value => String(value || '').trim())
+    .filter(Boolean)
+    .filter((value, index, list) => list.indexOf(value) === index)
+    .slice(0, maxItems);
+
+  if (!uniqueValues.length) return fallback;
+  return uniqueValues.map(value => `- ${value}`).join('\n');
 }
 
 function buildStaticFlyerVideoRules(staticFlyerItems = []) {

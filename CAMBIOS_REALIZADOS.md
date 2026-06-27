@@ -1117,3 +1117,29 @@ npx playwright test tests/app.spec.js -g "video animado|resultado muestra revisi
 ### Cómo revertir
 - Revertir los cambios en `tests/app.spec.js` y documentación asociada.
 
+
+## 2026-06-27 - Ajuste de prompt de jingles
+
+Archivos modificados:
+- src/prompt/promptBuilder.js
+- tests/app.spec.js
+- service-worker.js
+- README_INSTALACION.txt
+- docs/MANUAL_USUARIO.md
+- docs/manual-usuario.html
+- CHANGELOG.md
+- CAMBIOS_REALIZADOS.md
+
+Qué cambió:
+- El prompt de jingle ahora es más corto, directo y estricto.
+- La duración se formula como exacta para evitar audios largos.
+- Se limitan líneas y palabras cantadas según duración.
+- Se agregan reglas para no cantar números ni datos administrativos.
+- Se refuerza español argentino y pronunciación exacta de nombres propios.
+- Se actualizó la caché PWA para publicar la versión nueva.
+
+Cómo probar:
+- Generar un jingle de 15 segundos.
+- Verificar que el prompt indique 15 segundos exactos, máximo 3 líneas y español argentino.
+- Verificar que prohíba cantar teléfonos, redes, direcciones, emails y números.
+- Probar en Gemini que la salida sea más breve y respete el estilo elegido.

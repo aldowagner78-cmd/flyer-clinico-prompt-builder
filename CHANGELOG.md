@@ -585,3 +585,11 @@
 ### Corregido
 - El resultado vuelve a exponer el prompt generado también como contenido legible del textarea para que las validaciones y pruebas visuales puedan confirmar el texto tras una corrección rápida.
 
+
+## 2026-06-27 - Ajuste de prompt de jingles
+
+- Se compactó el prompt de jingle/canción para evitar resultados demasiado largos.
+- Se agregó duración estricta por segundos y límites de líneas/palabras cantadas.
+- Se reforzó español argentino y pronunciación exacta de nombres propios, especialmente instituciones.
+- Se indicó no cantar teléfonos, WhatsApp numéricos, direcciones, emails, redes, matrículas ni números.
+- Se exige respetar estrictamente el estilo musical elegido por el usuario.

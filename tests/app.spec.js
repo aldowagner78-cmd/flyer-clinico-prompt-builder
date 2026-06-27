@@ -1334,13 +1334,17 @@ test.describe('Etapa jingles Gemini', () => {
 
     expect(prompt).toContain('Actuá como compositor');
     expect(prompt).toMatch(/jingle|canci[oó]n/i);
-    expect(prompt).toContain('Duración: 15 segundos');
-    expect(prompt).toContain('Estilo musical: Corporativo moderno');
-    expect(prompt).toContain('Tipo de voces: Voz principal + coros');
+    expect(prompt).toContain('Duración obligatoria: 15 segundos exactos');
+    expect(prompt).toContain('Estilo musical elegido por el usuario: Corporativo moderno');
+    expect(prompt).toContain('Tipo de voces elegido: Voz principal + coros');
     expect(prompt).toContain('Mensaje final obligatorio: Cuidá tu salud');
-    expect(prompt).toContain('El usuario no escribió letra ni idea base. Creá una letra breve desde los datos de institución');
+    expect(prompt).toContain('Idioma obligatorio: español argentino');
+    expect(prompt).toContain('Letra cantada: 3 líneas cantadas como máximo');
+    expect(prompt).toContain('No cantes teléfonos, WhatsApp numéricos, direcciones, emails, redes sociales, matrículas, horarios, obras sociales ni números.');
+    expect(prompt).toContain('Pronunciá correctamente cada palabra en español argentino.');
+    expect(prompt).toContain('El usuario no escribió letra ni idea base. Creá una letra breve usando solo los datos cantables permitidos.');
     expect(prompt).toContain('No prometer curación');
-    expect(prompt).toContain('Mantener tono profesional y apto para salud');
+    expect(prompt).toContain('No prometas curación ni resultados garantizados.');
 
     await expect(page.locator('#copyPromptButton')).toContainText(/Copiar prompt/i);
     await expect(page.locator('[data-open-platform][data-platform-name="Gemini"]')).toBeVisible();
@@ -1359,8 +1363,8 @@ test.describe('Etapa jingles Gemini', () => {
     await goResult(page);
     const prompt = await getPrompt(page);
 
-    expect(prompt).toContain('El usuario escribió esta letra o idea base');
-    expect(prompt).toContain('Respetala y pulila sin cambiar el mensaje principal');
+    expect(prompt).toContain('Idea base del usuario:');
+    expect(prompt).toContain('Convertí esa idea en una letra breve, cantable y simple.');
     expect(prompt).toContain('En Centro Médico Rincón te cuidamos con atención cercana');
     await expect(errors).toEqual([]);
   });
