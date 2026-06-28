@@ -3,6 +3,12 @@ import { PIECE_TYPES } from '../state/schema.js';
 
 export function renderPreview(state, validation) {
   const summary = document.querySelector('#summaryPanel');
+  if (state.promptOptions.pieceType === PIECE_TYPES.jinglePromotional) {
+    summary.innerHTML = renderAudioSummary(state);
+    document.querySelector('#progressText').textContent = `${validation.percent}%`;
+    document.querySelector('#progressBar').style.width = `${validation.percent}%`;
+    return;
+  }
   summary.innerHTML = `
     <dl>
       <div><dt>Tipo de pieza</dt><dd>${escapeHtml(labelPieceType(state.promptOptions.pieceType))}</dd></div>
@@ -27,6 +33,98 @@ export function renderPreview(state, validation) {
 
   document.querySelector('#progressText').textContent = `${validation.percent}%`;
   document.querySelector('#progressBar').style.width = `${validation.percent}%`;
+}
+
+function renderAudioSummary(state) {
+  const options = state.promptOptions || {};
+  const audioType = resolveAudioType(options);
+  const textToSing = audioTextToSing(state);
+  const allowedAdmin = parseLines(options.jingleAdministrativeDataAllowed).join(', ');
+  const rows = audioSummaryRows({ state, options, audioType, textToSing, allowedAdmin });
+
+  return `<dl>${rows.map(([label, value]) => `
+    <div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>
+  `).join('')}</dl>`;
+}
+
+function audioSummaryRows({ state, options, audioType, textToSing, allowedAdmin }) {
+  const baseRows = [
+    ['Tipo de pieza', labelPieceType(options.pieceType)],
+    ['Tipo de audio', audioType],
+    ['Modo de creación', options.jingleCreationMode || 'Desde cero']
+  ];
+
+  if (audioType === 'Spot narrado con música de fondo') {
+    return [
+      ...baseRows,
+      ['Voz sugerida', narratedVoiceSummary(options.jingleVoices)],
+      ['Guion para voz', textToSing || 'Guion institucional breve'],
+      ['Música de fondo', narratedMusicSummary(options.jingleStyle)],
+      allowedAdmin ? ['Datos administrativos permitidos', allowedAdmin] : null,
+      audioReferenceSummary(state)
+    ].filter(Boolean);
+  }
+
+  if (audioType === 'Instrumental / música de fondo') {
+    return [
+      ...baseRows,
+      ['Estilo', options.jingleStyle || 'Instrumental corporativo'],
+      ['Uso previsto', 'Redes sociales, video breve, flyer animado o fondo institucional'],
+      ['Tono', 'Profesional, cálido, confiable y sobrio'],
+      audioReferenceSummary(state)
+    ].filter(Boolean);
+  }
+
+  return [
+    ...baseRows,
+    ['Estilo', options.jingleStyle || 'Pop alegre promocional'],
+    ['Voces', options.jingleVoices || 'Voz principal + coros'],
+    ['Texto a cantar', textToSing || 'Texto institucional breve'],
+    allowedAdmin ? ['Datos administrativos permitidos', allowedAdmin] : null,
+    audioReferenceSummary(state)
+  ].filter(Boolean);
+}
+
+function resolveAudioType(options = {}) {
+  if (options.jingleAudioType === 'Spot narrado con música de fondo') return 'Spot narrado con música de fondo';
+  if (options.jingleAudioType === 'Instrumental / música de fondo') return 'Instrumental / música de fondo';
+  if (isAudioInstrumental(options)) return 'Instrumental / música de fondo';
+  return 'Jingle cantado';
+}
+
+function audioTextToSing(state) {
+  const options = state.promptOptions || {};
+  if (isAudioInstrumental(options)) return '';
+  if (options.jingleBaseIdea) return options.jingleBaseIdea;
+  if (options.jingleCustomPhrase) return [state.clinic.name, options.jingleCustomPhrase].filter(Boolean).join('. ');
+  if (state.clinic.name && state.clinic.institutionalPhrase) return `${state.clinic.name}. ${state.clinic.institutionalPhrase}`;
+  if (state.clinic.name) return `${state.clinic.name}. Cuidado cercano y profesional.`;
+  return '';
+}
+
+function isAudioInstrumental(options = {}) {
+  return options.jingleAudioType === 'Instrumental / música de fondo'
+    || options.jingleVoices === 'Instrumental'
+    || options.jingleContentMode === 'Instrumental'
+    || options.jingleWithLyrics === false;
+}
+
+function narratedVoiceSummary(voice = '') {
+  if (voice === 'Voz masculina') return 'Locutor masculino adulto argentino';
+  if (voice === 'Dúo femenino/masculino') return 'Una sola voz principal adulta argentina';
+  return 'Locutora femenina adulta argentina';
+}
+
+function narratedMusicSummary(style = '') {
+  if (style) return style;
+  return 'Corporativa suave, moderna, cálida y optimista';
+}
+
+function audioReferenceSummary(state) {
+  const mode = state.promptOptions?.jingleCreationMode || '';
+  if (mode !== 'Basado en flyer / imagen' && mode !== 'Híbrido') return null;
+  const file = collectAttachmentFiles(state).find(item => item.fileName);
+  return ['Imagen/flyer de referencia', file?.fileName || 'Solo si se adjunta manualmente'];
 }
 
 export function renderResult(prompt, validation, state) {
@@ -283,13 +381,17 @@ function listOrFallback(values) {
   return values.length ? values.join(', ') : 'Sin adicionales';
 }
 
+function parseLines(value = '') {
+  return String(value || '').split(/\n|;/).map(item => item.trim()).filter(Boolean);
+}
+
 function labelPieceType(value) {
   return {
     professionalFlyer: 'Flyer profesional',
     clinicalInfographic: 'Infografia clinica',
     informativeFlyer: 'Flyer informativo',
     promotionCampaign: 'Promoción / campaña',
-    jinglePromotional: 'Jingle / canción promocional'
+    jinglePromotional: 'Audio / jingle / música'
   }[value] || 'Flyer profesional';
 }
 

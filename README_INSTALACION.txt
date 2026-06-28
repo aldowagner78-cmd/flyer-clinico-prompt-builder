@@ -1,3 +1,94 @@
+# Audio / jingle / música
+
+La app permite preparar tres tipos de salida de audio:
+- `Jingle cantado`: prompt breve para Gemini Audio.
+- `Spot narrado con música de fondo`: paquete de producción con guion, voz sugerida, música, mezcla, herramientas externas y checklist.
+- `Instrumental / música de fondo`: prompt instrumental de 30 segundos sin voces ni palabras.
+
+Regla actual para Gemini Flash / Gemini Audio en jingle cantado e instrumental:
+- El audio usa duración objetivo fija de 30 segundos.
+- No se muestra selector de duración.
+- El jingle cantado pide un `spot publicitario musical breve`, no una canción larga.
+- El instrumental pide música de fondo sin locución, voces, coros, palabras, tarareo ni vocalizaciones.
+- El audio debe ser breve, publicitario, compacto y apto para redes.
+
+El prompt de jingle cantado es minimalista y cerrado. Solo incluye:
+- TAREA
+- AUDIO A GENERAR
+- TEXTO A CANTAR
+- ESTILO Y VOZ
+- DICCIÓN Y FRASEO
+- CIERRE FINAL
+- PRONUNCIACIÓN
+- REGLAS
+
+Gemini debe cantar únicamente el texto indicado en `TEXTO A CANTAR`. No debe agregar frases, datos administrativos, llamadas a la acción ni explicaciones.
+
+El modo `Spot narrado con música de fondo` no genera un prompt para Gemini Audio. Devuelve:
+- GUION PARA VOZ
+- VOZ SUGERIDA
+- MUSICA DE FONDO
+- MEZCLA
+- HERRAMIENTAS SUGERIDAS
+- CHECKLIST DE PRODUCCION
+
+Ese paquete sugiere usar una herramienta TTS natural y mezclar con Clipchamp, Audacity u otro editor simple. La app no integra esas herramientas ni envía datos a servicios externos.
+
+Uso recomendado:
+1. Elegir `Audio / jingle / música`.
+2. Cargar la institución. Si existe frase institucional, se usa automáticamente.
+3. Elegir `Tipo de audio`: jingle cantado, spot narrado o instrumental.
+4. Elegir `Desde cero`, `Basado en flyer / imagen` o `Híbrido`.
+5. Elegir contenido: datos/frase cargada, frase editada, texto exacto, jingle libre guiado o instrumental.
+6. Definir voces y estilo. La duración queda fija en 30 segundos.
+7. Copiar el prompt o paquete y usarlo en la herramienta correspondiente.
+
+Estilos controlados:
+- Pop alegre promocional
+- Corporativo moderno
+- Infantil puro
+- Folklore/pop argentino suave
+- Cumbia suave profesional
+- Motivador moderno
+- Instrumental corporativo
+- Otro / Personalizar
+
+Fraseo y cierre:
+- El prompt pide dicción clara pero compacta.
+- Pide fraseo unido, natural y fluido.
+- Evita pausas largas, palabras estiradas y vocales finales alargadas.
+- El cierre final debe tener énfasis publicitario breve y recordable, sin agregar palabras nuevas.
+
+Por defecto el audio no debe cantar teléfonos, WhatsApp, direcciones, emails, redes, matrículas, horarios, obras sociales, precios, URLs ni códigos.
+Para permitirlos, abrir `Más opciones de audio`, activar `Permitir cantar datos administrativos` y elegir cuáles se permiten en `Datos administrativos permitidos en audio`.
+Si se activa la opción pero no se elige ningún dato, no se incluye ninguno.
+Si se elige solo `WhatsApp`, el prompt solo permite WhatsApp y no agrega Instagram, Facebook, email, dirección ni horarios.
+
+Texto exacto:
+Si el usuario escribe un texto exacto para audio, ese texto manda. Si el texto exacto incluye WhatsApp, un teléfono en palabras u otro dato administrativo, el prompt no debe contradecirlo.
+En jingle pide respetar exactamente el texto a cantar; en spot narrado pide respetar exactamente el guion para voz.
+En ambos casos no agrega otros datos administrativos ni llamadas a la acción nuevas.
+Si hay números escritos en palabras, deben conservarse exactamente como están escritos.
+
+La pronunciación se arma solo desde el texto que realmente se canta. El campo `Corrección manual de pronunciación` queda como opción avanzada para casos excepcionales.
+
+En Resultado, el resumen de audio cambia según el tipo elegido: jingle muestra texto a cantar, spot muestra guion/voz/música, e instrumental muestra estilo, uso previsto y tono.
+El botón principal dice `Copiar prompt` y confirma la acción con `Copiado ✓`.
+
+Limitación real:
+Gemini puede no respetar siempre voces infantiles. Si elegís `Voces infantiles`, la app lo pedirá explícitamente en el prompt, pero no muestra garantía absoluta.
+
+Prueba automatizada dirigida:
+
+```powershell
+npm test -- audio-prompt.spec.js
+npx playwright test tests/app.spec.js -g "Etapa audio Gemini" --project=chromium-desktop --project=mobile-chrome
+```
+
+Nota: este `package.json` no define `npm run dev`. Para servir la app localmente, los tests usan `npx http-server . -p 4173 -c-1` mediante Playwright.
+
+---
+
 # Manual de usuario interactivo
 
 La app incluye un manual navegable para usuarios no técnicos.
