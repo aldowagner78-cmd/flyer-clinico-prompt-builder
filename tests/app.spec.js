@@ -154,13 +154,10 @@ async function choosePiece(page, pieceType) {
   }
 
   await expectCurrentStep(page, 'tipo');
-  await expect(page.locator('.form-section.is-current [data-wizard-action="next"]').last()).toBeDisabled();
+  await expect(page.locator('.form-section.is-current [data-wizard-action="next"]')).toHaveCount(0);
   await page.locator(`[data-piece-select="${pieceType}"]`).click();
-  await expectCurrentStep(page, 'tipo');
-  await expect(page.locator(`[data-piece-select="${pieceType}"]`)).toHaveClass(/is-selected/);
-  await expect(page.locator('#pieceFields')).toContainText(/Tipo seleccionado/i);
-  await clickCurrentNext(page);
   await expectCurrentStep(page, 'prestaciones');
+  await expect(page.locator(`[data-piece-select="${pieceType}"]`)).toHaveClass(/is-selected/);
 }
 
 async function startWithPiece(page, pieceType) {
@@ -231,7 +228,7 @@ test.describe('Etapa 10T - flujo principal', () => {
     await expect(errors).toEqual([]);
   });
 
-  test('tipo de pieza se confirma antes de avanzar a contenido', async ({ page }) => {
+  test('Tipo de pieza avanza al seleccionar tarjeta y permite volver a elegir', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
     await startAssistant(page);
@@ -239,18 +236,23 @@ test.describe('Etapa 10T - flujo principal', () => {
     await continueFromInstitution(page);
 
     await expectCurrentStep(page, 'tipo');
-    const nextButton = page.locator('.form-section.is-current [data-wizard-action="next"]').last();
-    await expect(nextButton).toBeDisabled();
+    await expect(page.locator('.form-section.is-current [data-wizard-action="next"]')).toHaveCount(0);
     await expect(page.locator('#pieceFields')).toContainText(/Elegí el tipo de pieza/i);
 
-    await page.locator('[data-piece-select="promotionCampaign"]').click();
-    await expectCurrentStep(page, 'tipo');
-    await expect(page.locator('[data-piece-select="promotionCampaign"]')).toHaveClass(/is-selected/);
-    await expect(page.locator('#pieceFields')).toContainText(/Promoción \/ campaña/i);
-    await expect(nextButton).toBeEnabled();
-
-    await nextButton.click();
+    await page.locator('[data-piece-select="professionalFlyer"]').click();
     await expectCurrentStep(page, 'prestaciones');
+    await expect(page.locator('[data-piece-select="professionalFlyer"]')).toHaveClass(/is-selected/);
+    await expect(page.locator('#prestaciones')).toContainText(/Siguiente|Continuar|Diseño|Ver resultado/i);
+
+    await clickCurrentPrevious(page);
+    await expectCurrentStep(page, 'tipo');
+    await expect(page.locator('[data-piece-select="professionalFlyer"]')).toHaveClass(/is-selected/);
+    await expect(page.locator('.form-section.is-current [data-wizard-action="next"]')).toHaveCount(0);
+
+    await page.locator('[data-piece-select="jinglePromotional"]').click();
+    await expectCurrentStep(page, 'prestaciones');
+    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toHaveClass(/is-selected/);
+    await expectNoHorizontalOverflow(page);
     expect(errors).toEqual([]);
   });
 
@@ -290,10 +292,9 @@ test.describe('Etapa 10T - flujo principal', () => {
       }
     }
 
+    await expect(page.locator('.form-section.is-current [data-wizard-action="next"]')).toHaveCount(0);
     await page.locator('[data-piece-select="jinglePromotional"]').click();
-    const nextButton = page.locator('.form-section.is-current [data-wizard-action="next"]').last();
-    await expect(nextButton).toBeVisible();
-    await expect(nextButton).toBeEnabled();
+    await expectCurrentStep(page, 'prestaciones');
     await expect(page.locator('[data-piece-select="jinglePromotional"]')).toContainText(/Audio \/ jingle \/ música/i);
     await expectNoHorizontalOverflow(page);
 

@@ -7,6 +7,8 @@ La pantalla `Tipo de pieza` muestra las cinco tarjetas principales en una sola f
 - Promoción / campaña
 - Audio / jingle / música
 
+Al elegir una tarjeta, el asistente avanza automáticamente al paso `Contenido`. No hace falta presionar `Siguiente` en esta pantalla. Desde `Contenido`, el botón `Anterior` vuelve a `Tipo de pieza` y permite elegir otra tarjeta.
+
 En móvil no se fuerzan cinco columnas. El layout se adapta a 1 columna en pantallas chicas y mantiene tarjetas tocables, sin scroll horizontal.
 
 Prueba automatizada dirigida:
@@ -23,11 +25,15 @@ npx http-server . -p 4173 -c-1
 
 Abrir `http://localhost:4173`, entrar al asistente y validar:
 - en escritorio, las 5 tarjetas quedan en una línea;
+- al elegir una tarjeta, avanza automáticamente;
+- al volver con `Anterior`, se puede elegir otra tarjeta;
 - en móvil/responsive, las tarjetas siguen visibles;
 - no hay scroll horizontal;
 - `Anterior / Siguiente` siguen funcionando.
 
 Cómo revertir:
+- En `src/app.js`, volver `selectPieceType` a quedarse en `tipo` después de seleccionar.
+- Restaurar el botón `Siguiente` en el footer del paso `tipo`.
 - En `assets/css/styles.css`, volver la regla desktop de `.piece-step-grid` a 4 columnas.
 - Quitar el ajuste compacto de `#tipo .piece-option-card`.
 

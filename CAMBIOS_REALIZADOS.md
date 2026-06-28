@@ -1,3 +1,38 @@
+# Autoavance en Tipo de pieza - 2026-06-28
+
+## Archivos modificados
+- `src/app.js`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- Al hacer clic o tap en cualquiera de las cinco tarjetas de `Tipo de pieza`, se selecciona la opción y se avanza automáticamente a `Contenido`.
+- El botón `Siguiente` ya no se muestra en `Tipo de pieza`, porque la tarjeta funciona como acción principal.
+- El botón `Anterior` desde `Contenido` vuelve a `Tipo de pieza`.
+- Al volver, se puede elegir otra tarjeta y vuelve a avanzar automáticamente.
+- No se modificó la generación de prompts ni módulos de audio, demo, instituciones, resultado o PWA.
+
+## Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "Tipo de pieza" --project=chromium-desktop --project=mobile-chrome
+```
+
+## Validación manual
+- Servir con `npx http-server . -p 4173 -c-1`.
+- Abrir `http://localhost:4173`.
+- En `Tipo de pieza`, elegir una tarjeta y confirmar que avanza sin presionar `Siguiente`.
+- Volver con `Anterior`, elegir otra tarjeta y confirmar que avanza otra vez.
+- Probar también en viewport móvil.
+
+## Cómo revertir
+- En `src/app.js`, cambiar `selectPieceType` para que vuelva a quedarse en `tipo`.
+- Volver a renderizar el botón `Siguiente` dentro del footer del paso `tipo`.
+- Revertir el test dirigido agregado o ajustado para autoavance.
+
+---
+
 # Tipo de pieza en una fila de escritorio - 2026-06-28
 
 ## Archivos modificados

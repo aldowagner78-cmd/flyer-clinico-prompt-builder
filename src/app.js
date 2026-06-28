@@ -1012,8 +1012,11 @@ function selectPieceType(pieceType) {
   applySpecialtyPreset(state.specialty.primaryProfessionalSpecialty, true);
   currentStep = 'tipo';
   update(true);
-  showStep('tipo');
-  showStatus(`${labelPieceType(state.promptOptions.pieceType)} seleccionado. Tocá Siguiente para continuar.`);
+  const steps = availableSteps();
+  const typeIndex = steps.indexOf('tipo');
+  const next = steps[Math.min(typeIndex + 1, steps.length - 1)] || 'prestaciones';
+  showStep(next);
+  showStatus(`${labelPieceType(state.promptOptions.pieceType)} seleccionado. Avanzamos al contenido.`);
 }
 
 
@@ -1828,10 +1831,11 @@ function syncStepFooterControls(steps = availableSteps()) {
     }
 
     const isResult = step === resultStep;
+    const isTypeStep = step === 'tipo';
     const needsPieceSelection = step === 'tipo' && !state.promptOptions.pieceTypeConfirmed;
     footer.innerHTML = `
       <button class="secondary-button" type="button" data-wizard-action="previous">← Anterior</button>
-      ${isResult ? '' : `<button class="primary-button" type="button" data-wizard-action="next" ${needsPieceSelection ? 'disabled' : ''}>${step === 'diseno' ? 'Ver resultado →' : 'Siguiente →'}</button>`}
+      ${isResult || isTypeStep ? '' : `<button class="primary-button" type="button" data-wizard-action="next" ${needsPieceSelection ? 'disabled' : ''}>${step === 'diseno' ? 'Ver resultado →' : 'Siguiente →'}</button>`}
     `;
   });
 }
