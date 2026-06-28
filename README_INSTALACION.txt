@@ -1,3 +1,38 @@
+# Ajuste visual: Tipo de pieza
+
+La pantalla `Tipo de pieza` muestra las cinco tarjetas principales en una sola fila en escritorio:
+- Flyer profesional
+- Infografía clínica
+- Flyer informativo
+- Promoción / campaña
+- Audio / jingle / música
+
+En móvil no se fuerzan cinco columnas. El layout se adapta a 1 columna en pantallas chicas y mantiene tarjetas tocables, sin scroll horizontal.
+
+Prueba automatizada dirigida:
+
+```powershell
+npx playwright test tests/app.spec.js -g "Tipo de pieza" --project=chromium-desktop --project=mobile-chrome
+```
+
+Prueba manual:
+
+```powershell
+npx http-server . -p 4173 -c-1
+```
+
+Abrir `http://localhost:4173`, entrar al asistente y validar:
+- en escritorio, las 5 tarjetas quedan en una línea;
+- en móvil/responsive, las tarjetas siguen visibles;
+- no hay scroll horizontal;
+- `Anterior / Siguiente` siguen funcionando.
+
+Cómo revertir:
+- En `assets/css/styles.css`, volver la regla desktop de `.piece-step-grid` a 4 columnas.
+- Quitar el ajuste compacto de `#tipo .piece-option-card`.
+
+---
+
 # Audio / jingle / música
 
 La app permite preparar tres tipos de salida de audio:

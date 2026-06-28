@@ -1,3 +1,37 @@
+# Tipo de pieza en una fila de escritorio - 2026-06-28
+
+## Archivos modificados
+- `assets/css/styles.css`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- La grilla de `Tipo de pieza` pasa a 5 columnas en escritorio para que las cinco tarjetas entren en una sola fila.
+- Se compactó únicamente esa pantalla en desktop: menor gap, menor padding y altura mínima más ajustada.
+- Se agregó protección de wrap para que títulos y descripciones no desborden.
+- En móvil se mantiene layout responsive sin forzar 5 columnas.
+- No se agregó ninguna sección, placeholder ni texto de futuro editor local.
+
+## Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "Tipo de pieza" --project=chromium-desktop --project=mobile-chrome
+```
+
+## Validación manual
+- Servir con `npx http-server . -p 4173 -c-1`.
+- Abrir `http://localhost:4173`.
+- Confirmar que en escritorio las cinco tarjetas quedan en una línea.
+- Confirmar que en móvil no hay scroll horizontal y que `Anterior / Siguiente` sigue accesible.
+
+## Cómo revertir
+- En `assets/css/styles.css`, volver `.piece-step-grid` de desktop a 4 columnas.
+- Quitar el ajuste compacto de `#tipo .piece-option-card`.
+- Quitar el test dirigido agregado para el layout de `Tipo de pieza`.
+
+---
+
 # Tipos de audio separados - 2026-06-28
 
 ## Archivos modificados

@@ -1,3 +1,16 @@
+## 2026-06-28 - Tipo de pieza en una fila de escritorio
+
+### Modificado
+- La pantalla `Tipo de pieza` ahora acomoda las 5 tarjetas principales en una sola fila en escritorio.
+- Se compactó solo esa grilla en desktop, manteniendo tarjetas legibles y sin desbordes de texto.
+- En tablet/móvil se conserva layout responsive: 2 columnas cuando corresponde y 1 columna en pantallas chicas.
+
+### Pruebas
+- `npx playwright test tests/app.spec.js -g "Tipo de pieza" --project=chromium-desktop --project=mobile-chrome`
+
+### Reversión
+- Volver la regla desktop de `.piece-step-grid` a 4 columnas y quitar el ajuste compacto de `#tipo .piece-option-card`.
+
 ## 2026-06-28 - Tipos de audio separados
 
 ### Agregado

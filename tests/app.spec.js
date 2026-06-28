@@ -254,6 +254,52 @@ test.describe('Etapa 10T - flujo principal', () => {
     expect(errors).toEqual([]);
   });
 
+  test('Tipo de pieza mantiene 5 tarjetas en escritorio y layout responsive sin desborde', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startAssistant(page);
+    await fillBasicInstitution(page);
+    await continueFromInstitution(page);
+
+    await expectCurrentStep(page, 'tipo');
+    const cards = page.locator('.piece-step-grid [data-piece-select]');
+    await expect(cards).toHaveCount(5);
+
+    for (const label of [
+      'Flyer profesional',
+      'Infografía clínica',
+      'Flyer informativo',
+      'Promoción / campaña',
+      'Audio / jingle / música'
+    ]) {
+      await expect(page.locator('.piece-step-grid')).toContainText(label);
+    }
+
+    await expectNoHorizontalOverflow(page);
+
+    const viewport = page.viewportSize();
+    if (viewport && viewport.width >= 1180) {
+      const boxes = await cards.evaluateAll(items => items.map(item => {
+        const rect = item.getBoundingClientRect();
+        return { top: Math.round(rect.top), left: Math.round(rect.left), width: Math.round(rect.width) };
+      }));
+      expect(new Set(boxes.map(box => box.top)).size).toBe(1);
+      expect(boxes.map(box => box.left)).toEqual([...boxes.map(box => box.left)].sort((a, b) => a - b));
+      for (const box of boxes) {
+        expect(box.width).toBeGreaterThan(90);
+      }
+    }
+
+    await page.locator('[data-piece-select="jinglePromotional"]').click();
+    const nextButton = page.locator('.form-section.is-current [data-wizard-action="next"]').last();
+    await expect(nextButton).toBeVisible();
+    await expect(nextButton).toBeEnabled();
+    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toContainText(/Audio \/ jingle \/ música/i);
+    await expectNoHorizontalOverflow(page);
+
+    expect(errors).toEqual([]);
+  });
+
   for (const [pieceType, label] of Object.entries(PIECES).filter(([pieceType]) => pieceType !== 'jinglePromotional')) {
     test(`el flujo de ${label} genera prompt de una sola imagen`, async ({ page }) => {
       const errors = watchBrowserErrors(page);
