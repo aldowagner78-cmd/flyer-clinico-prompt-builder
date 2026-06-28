@@ -1,3 +1,17 @@
+## 2026-06-28 - Autoavance en Tipo de pieza
+
+### Modificado
+- Al seleccionar una tarjeta en `Tipo de pieza`, el wizard avanza automáticamente al paso de contenido.
+- El botón `Siguiente` deja de mostrarse solo en esa pantalla para evitar una acción redundante.
+- `Anterior` sigue permitiendo volver a `Tipo de pieza` y elegir otra tarjeta.
+
+### Pruebas
+- `npx playwright test tests/app.spec.js -g "Tipo de pieza" --project=chromium-desktop --project=mobile-chrome`
+
+### Reversión
+- En `src/app.js`, volver `selectPieceType` a mostrar `tipo` después de seleccionar.
+- Restaurar el botón `Siguiente` en el footer del paso `tipo`.
+
 ## 2026-06-28 - Tipo de pieza en una fila de escritorio
 
 ### Modificado
