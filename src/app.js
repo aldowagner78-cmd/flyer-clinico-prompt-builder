@@ -763,12 +763,16 @@ function applyJingleDemo(demo) {
   demo.promptOptions = {
     ...demo.promptOptions,
     pieceType: PIECE_TYPES.jinglePromotional,
+    jingleCreationMode: 'Desde cero',
+    jingleAudioType: 'Jingle cantado',
+    jingleContentMode: 'Usar datos/frase cargada',
     jingleObjective: 'Institucional',
-    jingleStyle: 'Corporativo moderno',
+    jingleStyle: 'Pop alegre promocional',
     jingleVoices: 'Voz principal + coros',
-    jingleDuration: '15 segundos',
+    jingleDuration: '30 segundos',
     jingleDestination: 'Instagram / Reels / Stories',
-    jingleFinalMessage: 'Consultanos por WhatsApp',
+    jingleFinalMessage: 'Cuidamos tu salud',
+    jingleCustomPhrase: 'Cuidamos tu salud, acompañamos tu vida',
     jingleBaseIdea: 'Cuidar tu salud también puede sonar cercano',
     jingleEmotionalTone: 'Profesional',
     jinglePace: 'Media',
@@ -776,7 +780,10 @@ function applyJingleDemo(demo) {
     jingleIncludeSlogan: true,
     jingleAvoidSensitiveTopics: true,
     jingleWithLyrics: true,
-    jingleInstrumentalAlternative: true,
+    jingleInstrumentalAlternative: false,
+    jingleAllowAdministrativeData: false,
+    jingleAdministrativeDataAllowed: '',
+    jinglePronunciationGuide: '',
     requestAnimation: false
   };
 }
@@ -1879,10 +1886,22 @@ async function writePromptToClipboard(prompt) {
   }
 }
 
-async function copyPrompt() {
+async function copyPrompt(event) {
   const prompt = document.querySelector('#promptOutput').value;
+  animateCopyButton(event?.currentTarget);
   await writePromptToClipboard(prompt);
   showStatus('Prompt revisado copiado. Ahora adjuntá los archivos indicados en ChatGPT si corresponde.');
+}
+
+function animateCopyButton(button) {
+  if (!button) return;
+  const originalText = button.textContent || 'Copiar prompt';
+  button.textContent = 'Copiado ✓';
+  button.classList.add('is-copied');
+  window.setTimeout(() => {
+    button.textContent = 'Copiar prompt';
+    button.classList.remove('is-copied');
+  }, 1600);
 }
 
 async function copyPromptAndOpenPlatform(event) {
@@ -1999,6 +2018,8 @@ function shouldRenderForm(path) {
     || path === 'promptOptions.allowVisualCreativity'
     || path === 'promptOptions.requestAnimation'
     || path === 'promptOptions.videoCreationMode'
+    || path === 'promptOptions.jingleAudioType'
+    || path === 'promptOptions.jingleAllowAdministrativeData'
     || path.startsWith('attachments.');
 }
 
@@ -2087,7 +2108,7 @@ function updateSectionHeadings(pieceType) {
     [PIECE_TYPES.clinicalInfographic]: ['Contenido de la infografía', 'Área sanitaria, tema, público, mensaje y bloques sugeridos.'],
     [PIECE_TYPES.informativeFlyer]: ['Contenido del flyer informativo', 'Área, tipo de información, título, mensaje, datos visibles y mensaje final.'],
     [PIECE_TYPES.promotionCampaign]: ['Contenido de la campaña', 'Área, tipo de campaña, público, vigencia, condiciones y mensaje final.'],
-    [PIECE_TYPES.jinglePromotional]: ['Contenido del jingle', 'Objetivo, estilo musical, voces, duración, destino, mensaje final e idea base.']
+    [PIECE_TYPES.jinglePromotional]: ['Audio / jingle / música', 'Objetivo, estilo musical, voces, frase y modo de contenido. Duración fija: 30 segundos.']
   };
 
   const [mainTitle, mainDescription] = contentLabels[pieceType] || contentLabels[PIECE_TYPES.professionalFlyer];
@@ -2110,7 +2131,7 @@ function updateActionLabels(pieceType) {
     [PIECE_TYPES.clinicalInfographic]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de infografía', 'Cargar ejemplo de infografía'],
     [PIECE_TYPES.informativeFlyer]: ['Acción principal', 'Copiar prompt informativo revisado', 'Descargar prompt informativo', 'Cargar ejemplo informativo'],
     [PIECE_TYPES.promotionCampaign]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de campaña', 'Cargar ejemplo de campaña'],
-    [PIECE_TYPES.jinglePromotional]: ['Acción principal', 'Copiar prompt para Gemini', 'Descargar prompt de jingle', 'Cargar ejemplo de jingle']
+    [PIECE_TYPES.jinglePromotional]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de audio', 'Cargar ejemplo de audio']
   };
 
   const [, copyLabel, downloadLabel, demoLabel] = labels[pieceType] || labels[PIECE_TYPES.professionalFlyer];
@@ -2143,7 +2164,7 @@ function labelPieceType(value) {
     clinicalInfographic: 'Infografía clínica',
     informativeFlyer: 'Flyer informativo',
     promotionCampaign: 'Promoción / campaña',
-    jinglePromotional: 'Jingle / canción promocional'
+    jinglePromotional: 'Audio / jingle / música'
   }[value] || 'Flyer profesional';
 }
 

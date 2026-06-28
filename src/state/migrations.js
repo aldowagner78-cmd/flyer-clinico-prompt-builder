@@ -129,12 +129,16 @@ function migrateLegacyState(rawState) {
     videoTextAmount: 'Breve',
     videoPace: 'Medio',
     videoRestrictions: 'Mantener tono profesional; no exagerar resultados; evitar saturación visual.',
+    jingleAudioType: 'Jingle cantado',
+    jingleCreationMode: 'Desde cero',
+    jingleContentMode: 'Usar datos/frase cargada',
     jingleObjective: 'Promoción / campaña',
-    jingleStyle: 'Pop alegre',
+    jingleStyle: 'Pop alegre promocional',
     jingleVoices: 'Voz principal + coros',
-    jingleDuration: 'Automático recomendado',
+    jingleDuration: '30 segundos',
     jingleDestination: 'Instagram / Reels / Stories',
     jingleFinalMessage: 'Consultanos por WhatsApp',
+    jingleCustomPhrase: '',
     jingleBaseIdea: '',
     jingleEmotionalTone: 'Profesional',
     jinglePace: 'Media',
@@ -143,6 +147,9 @@ function migrateLegacyState(rawState) {
     jingleAvoidSensitiveTopics: true,
     jingleWithLyrics: true,
     jingleInstrumentalAlternative: false,
+    jingleAllowAdministrativeData: false,
+    jingleAdministrativeDataAllowed: '',
+    jinglePronunciationGuide: '',
     forbiddenPhrases: stringFrom(advanced.forbiddenPhrases),
     highlightData: stringFrom(advanced.highlightData),
     smallData: stringFrom(advanced.smallData)
@@ -301,12 +308,16 @@ function sanitizePromptOptions(promptOptions) {
     videoTextAmount: stringFrom(promptOptions.videoTextAmount) || 'Breve',
     videoPace: stringFrom(promptOptions.videoPace) || 'Medio',
     videoRestrictions: stringFrom(promptOptions.videoRestrictions) || 'Mantener tono profesional; no exagerar resultados; evitar saturación visual.',
+    jingleAudioType: stringFrom(promptOptions.jingleAudioType) || inferJingleAudioType(promptOptions),
+    jingleCreationMode: stringFrom(promptOptions.jingleCreationMode) || 'Desde cero',
+    jingleContentMode: stringFrom(promptOptions.jingleContentMode) || 'Usar datos/frase cargada',
     jingleObjective: stringFrom(promptOptions.jingleObjective) || 'Promoción / campaña',
-    jingleStyle: stringFrom(promptOptions.jingleStyle) || 'Pop alegre',
+    jingleStyle: normalizeLegacyJingleStyle(stringFrom(promptOptions.jingleStyle)) || 'Pop alegre promocional',
     jingleVoices: stringFrom(promptOptions.jingleVoices) || 'Voz principal + coros',
-    jingleDuration: stringFrom(promptOptions.jingleDuration) || 'Automático recomendado',
+    jingleDuration: '30 segundos',
     jingleDestination: stringFrom(promptOptions.jingleDestination) || 'Instagram / Reels / Stories',
     jingleFinalMessage: stringFrom(promptOptions.jingleFinalMessage) || 'Consultanos por WhatsApp',
+    jingleCustomPhrase: stringFrom(promptOptions.jingleCustomPhrase),
     jingleBaseIdea: stringFrom(promptOptions.jingleBaseIdea),
     jingleEmotionalTone: stringFrom(promptOptions.jingleEmotionalTone) || 'Profesional',
     jinglePace: stringFrom(promptOptions.jinglePace) || 'Media',
@@ -315,6 +326,9 @@ function sanitizePromptOptions(promptOptions) {
     jingleAvoidSensitiveTopics: booleanFrom(promptOptions.jingleAvoidSensitiveTopics, true),
     jingleWithLyrics: booleanFrom(promptOptions.jingleWithLyrics, true),
     jingleInstrumentalAlternative: booleanFrom(promptOptions.jingleInstrumentalAlternative, false),
+    jingleAllowAdministrativeData: booleanFrom(promptOptions.jingleAllowAdministrativeData, false),
+    jingleAdministrativeDataAllowed: stringFrom(promptOptions.jingleAdministrativeDataAllowed),
+    jinglePronunciationGuide: stringFrom(promptOptions.jinglePronunciationGuide),
     forbiddenPhrases: stringFrom(promptOptions.forbiddenPhrases),
     highlightData: stringFrom(promptOptions.highlightData),
     smallData: stringFrom(promptOptions.smallData)
@@ -422,6 +436,24 @@ function normalizeLegacyColor(value, type) {
   if (value === 'naranja') return 'naranjaSuave';
   if (isLegacyColorValue(value)) return 'otro';
   return value;
+}
+
+function normalizeLegacyJingleStyle(value) {
+  if (!value) return '';
+  const normalized = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  if (normalized === 'pop alegre' || normalized.includes('promocional')) return 'Pop alegre promocional';
+  if (normalized.includes('infantil')) return 'Infantil puro';
+  if (normalized.includes('folk') || normalized.includes('folklore')) return 'Folklore/pop argentino suave';
+  if (normalized.includes('energetico') || normalized.includes('motivador')) return 'Motivador moderno';
+  if (normalized.includes('instrumental')) return 'Instrumental corporativo';
+  return value;
+}
+
+function inferJingleAudioType(promptOptions = {}) {
+  const voice = stringFrom(promptOptions.jingleVoices);
+  const contentMode = stringFrom(promptOptions.jingleContentMode);
+  if (voice === 'Instrumental' || contentMode === 'Instrumental' || promptOptions.jingleWithLyrics === false) return 'Instrumental / música de fondo';
+  return 'Jingle cantado';
 }
 
 function inferAllowCreativity(value) {

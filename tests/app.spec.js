@@ -5,7 +5,7 @@ const PIECES = {
   clinicalInfographic: 'Infografía clínica',
   informativeFlyer: 'Flyer informativo',
   promotionCampaign: 'Promoción / campaña',
-  jinglePromotional: 'Jingle / canción promocional'
+  jinglePromotional: 'Audio / jingle / música'
 };
 
 function watchBrowserErrors(page) {
@@ -1285,8 +1285,8 @@ test.describe('Etapa 11D.4 - resultado asistido', () => {
   });
 });
 
-test.describe('Etapa jingles Gemini', () => {
-  test('la opción jingle / canción promocional aparece y muestra campos mínimos', async ({ page }) => {
+test.describe('Etapa audio Gemini', () => {
+  test('la opción audio / jingle / música aparece y muestra campos mínimos', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
     await startAssistant(page);
@@ -1294,16 +1294,26 @@ test.describe('Etapa jingles Gemini', () => {
     await continueFromInstitution(page);
 
     await expect(page.locator('[data-piece-select="jinglePromotional"]')).toBeVisible();
-    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toContainText(/Jingle \/ canción promocional/i);
+    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toContainText(/Audio \/ jingle \/ música/i);
     await choosePiece(page, 'jinglePromotional');
 
     await expect(page.locator('#serviceFields')).toContainText('Objetivo del audio');
+    await expect(page.locator('#serviceFields')).toContainText('Tipo de audio');
+    await expect(page.locator('#serviceFields')).toContainText('Tipo de creación');
+    await expect(page.locator('#serviceFields')).toContainText('Contenido');
     await expect(page.locator('#serviceFields')).toContainText('Estilo musical');
     await expect(page.locator('#serviceFields')).toContainText('Tipo de voces');
-    await expect(page.locator('#serviceFields')).toContainText('Duración');
+    await expect(page.locator('select[data-path="promptOptions.jingleDuration"]')).toHaveCount(0);
     await expect(page.locator('#serviceFields')).toContainText('Destino');
     await expect(page.locator('#serviceFields')).toContainText('Mensaje final');
-    await expect(page.locator('#serviceFields')).toContainText('Letra o idea base');
+    await expect(page.locator('#serviceFields')).toContainText('Texto exacto o idea base');
+
+    const typeOptions = await page.locator('select[data-path="promptOptions.jingleAudioType"] option').evaluateAll(options => options.map(option => option.textContent.trim()));
+    expect(typeOptions).toEqual([
+      'Jingle cantado',
+      'Spot narrado con música de fondo',
+      'Instrumental / música de fondo'
+    ]);
 
     const voiceOptions = await page.locator('select[data-path="promptOptions.jingleVoices"] option').evaluateAll(options => options.map(option => option.textContent.trim()));
     expect(voiceOptions).toEqual(expect.arrayContaining([
@@ -1312,41 +1322,82 @@ test.describe('Etapa jingles Gemini', () => {
       'Dúo femenino/masculino',
       'Voz principal + coros',
       'Coro breve',
-      'Solo instrumental'
+      'Instrumental'
     ]));
+    const styleOptions = await page.locator('select[data-path="promptOptions.jingleStyle"] option').evaluateAll(options => options.map(option => option.textContent.trim()));
+    expect(styleOptions).toEqual(expect.arrayContaining([
+      'Pop alegre promocional',
+      'Corporativo moderno',
+      'Infantil puro',
+      'Cumbia suave profesional'
+    ]));
+    await page.locator('select[data-path="promptOptions.jingleVoices"]').selectOption('Voces infantiles');
+    await expect(page.locator('details.jingle-advanced-options')).toContainText('Gemini puede no respetar siempre el tipo de voz');
 
-    await expect(page.locator('details.jingle-advanced-options')).toContainText('Más opciones del jingle');
+    await expect(page.locator('details.jingle-advanced-options')).toContainText('Más opciones de audio');
     await expect(errors).toEqual([]);
   });
 
-  test('jingle sin letra genera prompt para crear letra desde datos cargados y conserva Gemini', async ({ page }) => {
+  test('datos administrativos aparecen al permitirlos y conservan selección', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'jinglePromotional');
+
+    await page.locator('details.jingle-advanced-options summary').click();
+    await page.getByText('Permitir cantar datos administrativos').click();
+
+    const adminPanel = page.locator('details.jingle-advanced-options');
+    await expect(adminPanel).toContainText('Datos administrativos permitidos en audio');
+    await expect(adminPanel).toContainText('Elegí qué dato querés permitir en el audio.');
+
+    for (const option of ['WhatsApp', 'Teléfono', 'Instagram', 'Facebook', 'Email', 'Dirección', 'Horarios', 'Obras sociales', 'Otro']) {
+      await expect(page.locator(`[data-jingle-admin-option][value="${option}"]`)).toBeVisible();
+    }
+
+    await page.locator('[data-jingle-admin-option][value="WhatsApp"]').check();
+    await fillPath(page, 'promptOptions.jingleCustomPhrase', 'Vacunate a tiempo');
+    await expect(page.locator('[data-jingle-admin-option][value="WhatsApp"]')).toBeChecked();
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('audio genera prompt minimalista, resultado contextual y conserva Gemini', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
     await startWithPiece(page, 'jinglePromotional');
 
     await page.locator('select[data-path="promptOptions.jingleStyle"]').selectOption('Corporativo moderno');
     await page.locator('select[data-path="promptOptions.jingleVoices"]').selectOption('Voz principal + coros');
-    await page.locator('select[data-path="promptOptions.jingleDuration"]').selectOption('15 segundos');
     await page.locator('select[data-path="promptOptions.jingleFinalMessage"]').selectOption('Cuidá tu salud');
 
     await goResult(page);
     const prompt = await getPrompt(page);
 
-    expect(prompt).toContain('Actuá como compositor');
-    expect(prompt).toMatch(/jingle|canci[oó]n/i);
-    expect(prompt).toContain('Duración obligatoria: 15 segundos exactos');
-    expect(prompt).toContain('Estilo musical elegido por el usuario: Corporativo moderno');
-    expect(prompt).toContain('Tipo de voces elegido: Voz principal + coros');
-    expect(prompt).toContain('Mensaje final obligatorio: Cuidá tu salud');
-    expect(prompt).toContain('Idioma obligatorio: español argentino');
-    expect(prompt).toContain('Letra cantada: 3 líneas cantadas como máximo');
-    expect(prompt).toContain('No cantes teléfonos, WhatsApp numéricos, direcciones, emails, redes sociales, matrículas, horarios, obras sociales ni números.');
-    expect(prompt).toContain('Pronunciá correctamente cada palabra en español argentino.');
-    expect(prompt).toContain('El usuario no escribió letra ni idea base. Creá una letra breve usando solo los datos cantables permitidos.');
-    expect(prompt).toContain('No prometer curación');
-    expect(prompt).toContain('No prometas curación ni resultados garantizados.');
+    expect(prompt).toContain('TAREA:');
+    expect(prompt).toContain('AUDIO A GENERAR:');
+    expect(prompt).toContain('TEXTO A CANTAR:');
+    expect(prompt).toContain('DICCIÓN Y FRASEO:');
+    expect(prompt).toContain('CIERRE FINAL:');
+    expect(prompt).toContain('spot publicitario musical breve');
+    expect(prompt).toContain('Cantá únicamente el texto indicado');
+    expect(prompt).toContain('Duración objetivo: 30 segundos');
+    expect(prompt).toContain('No superar 30 segundos');
+    expect(prompt).not.toContain('15 segundos');
+    expect(prompt).not.toContain('DATOS DE CONTEXTO');
+    expect(prompt).not.toContain('CONTENIDO AUDIBLE PERMITIDO');
+    expect(prompt).not.toContain('WhatsApp');
+    expect(prompt).not.toContain('Diagnóstico por imágenes');
+
+    await expect(page.locator('#resultado #summaryPanel')).toContainText('Texto a cantar');
+    await expect(page.locator('#resultado #summaryPanel')).not.toContainText('Profesional');
+    await expect(page.locator('#resultado #summaryPanel')).not.toContainText('Prestaciones');
+    await expect(page.locator('#resultado #summaryPanel')).not.toContainText('Duración');
+    await expect(page.locator('#resultado #summaryPanel')).not.toContainText('Sin completar');
 
     await expect(page.locator('#copyPromptButton')).toContainText(/Copiar prompt/i);
+    await page.locator('#copyPromptButton').click();
+    await expect(page.locator('#copyPromptButton')).toContainText(/Copiado/i);
+    await expect(page.locator('#copyPromptButton')).toContainText(/Copiar prompt/i, { timeout: 2500 });
     await expect(page.locator('[data-open-platform][data-platform-name="Gemini"]')).toBeVisible();
     await expect(page.locator('[data-open-platform][data-platform-name="Gemini"]')).toHaveClass(/is-recommended-platform/);
     await expect(page.locator('[data-open-platform][data-platform-name="CapCut"]')).toHaveCount(0);
@@ -1354,7 +1405,63 @@ test.describe('Etapa jingles Gemini', () => {
     await expect(errors).toEqual([]);
   });
 
-  test('jingle con letra o idea base pide respetarla y pulirla', async ({ page }) => {
+  test('tipo de audio spot narrado genera paquete de producción', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'jinglePromotional');
+
+    await page.locator('select[data-path="promptOptions.jingleAudioType"]').selectOption('Spot narrado con música de fondo');
+    await fillPath(page, 'promptOptions.jingleBaseIdea', 'Vacunate a tiempo. Turnos por WhatsApp al tres cuatro dos, cuatro cuatro nueve, siete dos ocho uno.');
+    await page.locator('details.jingle-advanced-options summary').click();
+    await page.getByText('Permitir cantar datos administrativos').click();
+    await page.locator('[data-jingle-admin-option][value="WhatsApp"]').check();
+
+    await goResult(page);
+    let prompt = await getPrompt(page);
+
+    expect(prompt).toContain('GUION PARA VOZ:');
+    expect(prompt).toContain('VOZ SUGERIDA:');
+    expect(prompt).toContain('MUSICA DE FONDO:');
+    expect(prompt).toContain('HERRAMIENTAS SUGERIDAS:');
+    expect(prompt).toContain('CHECKLIST DE PRODUCCION:');
+    expect(prompt).toContain('Respetar exactamente el guion para voz.');
+    expect(prompt).not.toContain('Gemini Audio');
+    expect(prompt).not.toContain('TEXTO A CANTAR:');
+    await expect(page.locator('#resultado #summaryPanel')).toContainText('Tipo de audio');
+    await expect(page.locator('#resultado #summaryPanel')).toContainText('Spot narrado con música de fondo');
+    await expect(page.locator('#resultado #summaryPanel')).toContainText('Guion para voz');
+    await expect(page.locator('#resultado #summaryPanel')).not.toContainText('Texto a cantar');
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('tipo de audio instrumental genera prompt sin voces ni palabras', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+    await startWithPiece(page, 'jinglePromotional');
+    await page.locator('select[data-path="promptOptions.jingleAudioType"]').selectOption('Instrumental / música de fondo');
+    await page.locator('select[data-path="promptOptions.jingleStyle"]').selectOption('Corporativo moderno');
+
+    await goResult(page);
+    const prompt = await getPrompt(page);
+
+    expect(prompt).toContain('Generar música instrumental de fondo');
+    expect(prompt).toContain('Tipo: instrumental / música de fondo.');
+    expect(prompt).toContain('No voces.');
+    expect(prompt).toContain('No palabras.');
+    expect(prompt).toContain('No vocalizaciones.');
+    expect(prompt).toContain('Duración objetivo: 30 segundos');
+    expect(prompt).not.toContain('GUION PARA VOZ:');
+    expect(prompt).not.toContain('TEXTO A CANTAR:');
+    await expect(page.locator('#resultado #summaryPanel')).toContainText('Instrumental / música de fondo');
+    await expect(page.locator('#resultado #summaryPanel')).toContainText('Uso previsto');
+    await expect(page.locator('#resultado #summaryPanel')).not.toContainText('Voces');
+    await expect(page.locator('#resultado #summaryPanel')).not.toContainText('Texto a cantar');
+
+    await expect(errors).toEqual([]);
+  });
+
+  test('audio con texto o idea base la incluye como dato del usuario', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
     await startWithPiece(page, 'jinglePromotional');
@@ -1363,9 +1470,8 @@ test.describe('Etapa jingles Gemini', () => {
     await goResult(page);
     const prompt = await getPrompt(page);
 
-    expect(prompt).toContain('Idea base del usuario:');
-    expect(prompt).toContain('Convertí esa idea en una letra breve, cantable y simple.');
     expect(prompt).toContain('En Centro Médico Rincón te cuidamos con atención cercana');
+    expect(prompt).toContain('No cantar ninguna otra frase');
     await expect(errors).toEqual([]);
   });
 });

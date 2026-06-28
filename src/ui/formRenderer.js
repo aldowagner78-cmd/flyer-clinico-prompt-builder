@@ -73,14 +73,17 @@ const noteOptions = [
 const ctaOptions = ['Solicitar turno por WhatsApp', 'Consultar disponibilidad', 'Escribinos para más información', 'Reservá tu turno', 'Consultá requisitos', 'Otro / Personalizar'];
 const informationTypes = ['Nuevo servicio', 'Nuevo estudio', 'Nueva prestación', 'Cambio de horario', 'Agenda abierta', 'Incorporación profesional', 'Información para pacientes', 'Comunicado institucional', 'Recordatorio', 'Otro / Personalizar'];
 const jingleObjectiveOptions = ['Promoción / campaña', 'Institucional', 'Recordatorio de turnos', 'Salud / prevención', 'Presentación profesional', 'Acompañar video o flyer animado', 'Otro / Personalizar'];
-const jingleStyleOptions = ['Pop alegre', 'Acústico cálido', 'Corporativo moderno', 'Latino suave', 'Infantil amigable', 'Electrónico moderno', 'Folk suave', 'Piano emocional', 'Energético promocional', 'Otro / Personalizar'];
-const jingleVoiceOptions = ['Voz femenina', 'Voz masculina', 'Dúo femenino/masculino', 'Voz principal + coros', 'Coro breve', 'Voces infantiles', 'Grupo mixto', 'Solo instrumental', 'Otro / Personalizar'];
-const jingleDurationOptions = ['10 segundos', '15 segundos', '20 segundos', '30 segundos', 'Automático recomendado'];
+const jingleStyleOptions = ['Pop alegre promocional', 'Corporativo moderno', 'Infantil puro', 'Folklore/pop argentino suave', 'Cumbia suave profesional', 'Motivador moderno', 'Instrumental corporativo', 'Otro / Personalizar'];
+const jingleVoiceOptions = ['Voz femenina', 'Voz masculina', 'Dúo femenino/masculino', 'Voz principal + coros', 'Coro breve', 'Voces infantiles', 'Grupo mixto', 'Instrumental', 'Otro / Personalizar'];
 const jingleDestinationOptions = ['Instagram / Reels / Stories', 'WhatsApp / estados', 'Video promocional', 'Cortina para flyer animado', 'Audio institucional', 'Otro / Personalizar'];
 const jingleFinalMessageOptions = ['Pedí tu turno', 'Consultanos por WhatsApp', 'Cuidá tu salud', 'Escribinos hoy', 'Seguinos para más información', 'Otro / Personalizar'];
 const jingleToneOptions = ['Alegre', 'Cálido', 'Profesional', 'Tranquilo', 'Motivador', 'Familiar', 'Premium'];
 const jinglePaceOptions = ['Lenta', 'Media', 'Rápida'];
 const jingleInstrumentationOptions = ['Piano suave', 'Guitarra acústica', 'Percusión ligera', 'Sintetizadores modernos', 'Instrumental corporativo', 'Infantil ligero', 'Otro / Personalizar'];
+const jingleAudioTypeOptions = ['Jingle cantado', 'Spot narrado con música de fondo', 'Instrumental / música de fondo'];
+const jingleCreationModeOptions = ['Desde cero', 'Basado en flyer / imagen', 'Híbrido'];
+const jingleContentModeOptions = ['Usar datos/frase cargada', 'Usar frase editada por el usuario', 'Texto exacto opcional', 'Jingle libre guiado', 'Instrumental'];
+const jingleAdministrativeDataOptions = ['WhatsApp', 'Teléfono', 'Instagram', 'Facebook', 'Email', 'Dirección', 'Horarios', 'Obras sociales', 'Otro'];
 const campaignTypes = ['Agenda abierta', 'Turnos disponibles', 'Campaña preventiva', 'Jornada especial', 'Semana de controles', 'Chequeo general', 'Vacunación', 'Nuevo servicio', 'Promoción institucional', 'Otro / Personalizar'];
 const institutionalPhraseOptions = [
   'Cuidamos tu salud, acompañamos tu vida',
@@ -212,7 +215,7 @@ function pieceTypeDescription(pieceType) {
     clinicalInfographic: 'Para educación sanitaria, prevención, pasos, recomendaciones y contenidos explicativos.',
     informativeFlyer: 'Para comunicar servicios, estudios, prestaciones, novedades o información institucional.',
     promotionCampaign: 'Para agenda abierta, jornadas, campañas preventivas, vigencias y mensaje final.',
-    jinglePromotional: 'Para crear un prompt de canción, jingle o audio breve promocional con Gemini.'
+    jinglePromotional: 'Para crear un prompt de audio, jingle o música breve con Gemini.'
   }[pieceType] || 'Tipo de pieza seleccionado para adaptar el contenido y el prompt final.';
 }
 
@@ -576,6 +579,7 @@ function renderGuidedContentStep(state, handlers, specialtyNames, preset, pieceT
   bindInlineServiceSelector(target, state, handlers);
   bindInlineBlockSelector(target, state, handlers);
   bindInlineScheduleControls(target, handlers);
+  bindJingleAdministrativeControls(target, state, handlers);
 }
 
 function renderContentModeBanner(pieceType) {
@@ -776,8 +780,8 @@ function jingleContentSteps(state) {
   return [
     {
       key: 'jingle',
-      title: 'Jingle / canción promocional',
-      help: 'Definí el objetivo, estilo y mensaje. Si no escribís letra, Gemini recibirá instrucciones para crear una propuesta desde los datos cargados.',
+      title: 'Audio / jingle / música',
+      help: 'Definí pocos datos. La app arma instrucciones para que Gemini genere una pista final de audio.',
       fields: jingleFields(state),
       html: renderJingleAdvancedOptions
     }
@@ -787,33 +791,56 @@ function jingleContentSteps(state) {
 function jingleFields(state) {
   const options = state.promptOptions || {};
   return [
+    select('Tipo de audio', 'promptOptions.jingleAudioType', options.jingleAudioType || 'Jingle cantado', jingleAudioTypeOptions, true),
+    select('Tipo de creación', 'promptOptions.jingleCreationMode', options.jingleCreationMode || 'Desde cero', jingleCreationModeOptions, true),
+    select('Contenido', 'promptOptions.jingleContentMode', options.jingleContentMode || 'Usar datos/frase cargada', jingleContentModeOptions, true),
     selectWithCustom('Objetivo del audio', 'promptOptions.jingleObjective', options.jingleObjective || 'Promoción / campaña', jingleObjectiveOptions, true),
-    selectWithCustom('Estilo musical', 'promptOptions.jingleStyle', options.jingleStyle || 'Pop alegre', jingleStyleOptions, true),
+    selectWithCustom('Estilo musical', 'promptOptions.jingleStyle', options.jingleStyle || 'Pop alegre promocional', jingleStyleOptions, true),
     selectWithCustom('Tipo de voces', 'promptOptions.jingleVoices', options.jingleVoices || 'Voz principal + coros', jingleVoiceOptions, true),
-    select('Duración', 'promptOptions.jingleDuration', options.jingleDuration || 'Automático recomendado', jingleDurationOptions, true),
     selectWithCustom('Destino', 'promptOptions.jingleDestination', options.jingleDestination || 'Instagram / Reels / Stories', jingleDestinationOptions, true),
     selectWithCustom('Mensaje final', 'promptOptions.jingleFinalMessage', options.jingleFinalMessage || 'Consultanos por WhatsApp', jingleFinalMessageOptions, true),
-    textarea('Letra o idea base', 'promptOptions.jingleBaseIdea', options.jingleBaseIdea || '', false, false, 'Escribí una frase, idea o letra breve. Si lo dejás vacío, la app generará una propuesta desde los datos cargados.')
+    textarea('Frase editada opcional', 'promptOptions.jingleCustomPhrase', options.jingleCustomPhrase || '', false, false, 'Si la completás, reemplaza la frase institucional para este audio.'),
+    textarea('Texto exacto o idea base', 'promptOptions.jingleBaseIdea', options.jingleBaseIdea || '', false, false, 'Opcional. Usalo para texto exacto o jingle libre guiado.')
   ];
 }
 
 function renderJingleAdvancedOptions(state) {
   const options = state.promptOptions || {};
+  const selectedAdministrativeData = parseLines(options.jingleAdministrativeDataAllowed);
   const fields = [
     select('Tono emocional', 'promptOptions.jingleEmotionalTone', options.jingleEmotionalTone || 'Profesional', jingleToneOptions),
     select('Velocidad', 'promptOptions.jinglePace', options.jinglePace || 'Media', jinglePaceOptions),
     selectWithCustom('Instrumentación', 'promptOptions.jingleInstrumentation', options.jingleInstrumentation || 'Instrumental corporativo', jingleInstrumentationOptions),
     toggle('Incluir slogan institucional', 'promptOptions.jingleIncludeSlogan', options.jingleIncludeSlogan !== false),
     toggle('Evitar mencionar temas médicos sensibles', 'promptOptions.jingleAvoidSensitiveTopics', options.jingleAvoidSensitiveTopics !== false),
+    toggle('Permitir cantar datos administrativos', 'promptOptions.jingleAllowAdministrativeData', Boolean(options.jingleAllowAdministrativeData)),
     toggle('Versión con letra', 'promptOptions.jingleWithLyrics', options.jingleWithLyrics !== false),
-    toggle('Versión instrumental alternativa', 'promptOptions.jingleInstrumentalAlternative', Boolean(options.jingleInstrumentalAlternative))
+    textarea('Corrección manual de pronunciación', 'promptOptions.jinglePronunciationGuide', options.jinglePronunciationGuide || '', false, false, 'Solo para casos excepcionales.')
   ];
   return `
-    <details class="video-advanced-options jingle-advanced-options">
-      <summary>Más opciones del jingle</summary>
+    <details class="video-advanced-options jingle-advanced-options" ${options.jingleAllowAdministrativeData ? 'open' : ''}>
+      <summary>Más opciones de audio</summary>
+      <p class="helper-text">Si elegís voces infantiles, Gemini puede no respetar siempre el tipo de voz, pero el prompt lo pedirá explícitamente.</p>
       <div class="guided-field-grid">
         ${fields.map(field => renderField(field)).join('')}
       </div>
+      ${options.jingleAllowAdministrativeData ? `
+        <div class="smart-panel content-inline-panel">
+          <div class="list-title">
+            <label>Datos administrativos permitidos en audio</label>
+            <small>Elegí qué dato querés permitir en el audio.</small>
+          </div>
+          <div class="chip-grid">
+            ${jingleAdministrativeDataOptions.map(item => `
+              <label class="chip-check">
+                <input type="checkbox" value="${escapeHtml(item)}" ${selectedAdministrativeData.includes(item) ? 'checked' : ''} data-jingle-admin-option>
+                <span>${escapeHtml(item)}</span>
+              </label>
+            `).join('')}
+          </div>
+          ${selectedAdministrativeData.length ? '' : '<p class="helper-text">Elegí qué dato querés permitir en el audio.</p>'}
+        </div>
+      ` : ''}
     </details>
   `;
 }
@@ -964,7 +991,6 @@ function renderContentSummaryHtml(state, pieceType) {
       <div><dt>Objetivo</dt><dd>${escapeHtml(state.promptOptions.jingleObjective || 'Sin completar')}</dd></div>
       <div><dt>Estilo</dt><dd>${escapeHtml(state.promptOptions.jingleStyle || 'Sin completar')}</dd></div>
       <div><dt>Voces</dt><dd>${escapeHtml(state.promptOptions.jingleVoices || 'Sin completar')}</dd></div>
-      <div><dt>Duración</dt><dd>${escapeHtml(state.promptOptions.jingleDuration || 'Sin completar')}</dd></div>
       <div><dt>Mensaje final</dt><dd>${escapeHtml(state.promptOptions.jingleFinalMessage || 'Sin completar')}</dd></div>
     `
   };
@@ -1141,6 +1167,19 @@ function renderJingleContent(state, handlers) {
     ${renderJingleAdvancedOptions(state)}
   `;
   bindFieldControls(target, handlers);
+  bindJingleAdministrativeControls(target, state, handlers);
+}
+
+function bindJingleAdministrativeControls(target, state, handlers) {
+  target.querySelectorAll('[data-jingle-admin-option]').forEach(input => {
+    input.addEventListener('change', () => {
+      const current = parseLines(state.promptOptions.jingleAdministrativeDataAllowed);
+      const next = input.checked
+        ? [...new Set([...current, input.value])]
+        : current.filter(item => item !== input.value);
+      handlers.onFieldChange('promptOptions.jingleAdministrativeDataAllowed', next.join('\n'));
+    });
+  });
 }
 
 function renderSmartServiceSelector({ state, handlers, preset, title, help }) {
@@ -2045,7 +2084,7 @@ function labelPieceType(value) {
     clinicalInfographic: 'Infografia clinica educativa',
     informativeFlyer: 'Flyer informativo',
     promotionCampaign: 'Promoción / campaña',
-    jinglePromotional: 'Jingle / canción promocional'
+    jinglePromotional: 'Audio / jingle / música'
   }[value] || value;
 }
 

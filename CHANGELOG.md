@@ -1,3 +1,89 @@
+## 2026-06-28 - Tipos de audio separados
+
+### Agregado
+- Selector visible `Tipo de audio` con `Jingle cantado`, `Spot narrado con música de fondo` e `Instrumental / música de fondo`.
+- El spot narrado genera un paquete de producción con `GUION PARA VOZ`, `VOZ SUGERIDA`, `MUSICA DE FONDO`, `MEZCLA`, `HERRAMIENTAS SUGERIDAS` y `CHECKLIST DE PRODUCCION`.
+- El modo instrumental genera un prompt propio de música de fondo de 30 segundos sin voces, palabras, coros, tarareo ni vocalizaciones.
+
+### Modificado
+- El jingle cantado conserva las reglas de Gemini Audio ya definidas.
+- Los datos administrativos permitidos y el texto exacto aplican también al spot narrado, sin contradecir WhatsApp o números escritos en palabras.
+- El resumen de Resultado ahora cambia según el tipo de audio elegido.
+
+### Pruebas
+- `npm test -- audio-prompt.spec.js`
+- `npx playwright test tests/app.spec.js -g "Etapa audio Gemini" --project=chromium-desktop --project=mobile-chrome`
+
+## 2026-06-28 - Datos administrativos de audio sin contradicciones
+
+### Corregido
+- Al activar `Permitir cantar datos administrativos`, ahora aparece el bloque `Datos administrativos permitidos en audio` con opciones seleccionables.
+- La selección se guarda en `promptOptions.jingleAdministrativeDataAllowed`.
+- El prompt ya no prohíbe WhatsApp, teléfonos o redes cuando el usuario los escribió en `TEXTO A CANTAR`.
+- Si el texto exacto incluye WhatsApp u otro dato administrativo, se respeta el texto y se evita agregar otros datos.
+- Los números escritos en palabras se conservan exactamente y no se convierten a dígitos.
+
+### Pruebas
+- `npm test -- audio-prompt.spec.js`
+- `npx playwright test tests/app.spec.js -g "Etapa audio Gemini" --project=chromium-desktop --project=mobile-chrome`
+
+## 2026-06-28 - Reglas definitivas Gemini Audio 30 segundos
+
+### Modificado
+- `Audio / jingle / música` ahora usa duración fija de 30 segundos para Gemini Flash/Gemini Audio.
+- Se quitó el selector visible de duración del módulo de audio.
+- El prompt pide un `spot publicitario musical breve` y `audio publicitario breve para redes`, evitando canción larga.
+- Se agregaron las secciones `DICCIÓN Y FRASEO` y `CIERRE FINAL`.
+- Se agregaron reglas de fraseo compacto: dicción clara, fraseo fluido, sin pausas largas, sin estirar palabras ni vocales finales.
+- El cierre final pide énfasis publicitario breve y recordable sin agregar palabras nuevas.
+- Se ajustaron estilos visibles a opciones controladas: pop alegre promocional, corporativo moderno, infantil puro, folklore/pop argentino suave, cumbia suave profesional, motivador moderno e instrumental corporativo.
+- `Voces infantiles` ahora genera instrucciones explícitas para pedir niñas o niños como voz principal, con fallback honesto si Gemini no lo logra.
+
+### Nota
+- Gemini puede no respetar siempre voces infantiles; la UI lo aclara sin prometer garantía.
+
+### Pruebas
+- `npm test -- audio-prompt.spec.js`
+- `npx playwright test tests/app.spec.js -g "Etapa audio Gemini" --project=chromium-desktop --project=mobile-chrome`
+
+## 2026-06-28 - Audio minimalista para Gemini Audio
+
+### Modificado
+- El prompt de `Audio / jingle / música` ahora queda reducido a seis secciones: `TAREA`, `AUDIO A GENERAR`, `TEXTO A CANTAR`, `ESTILO Y VOZ`, `PRONUNCIACIÓN` y `REGLAS`.
+- `TEXTO A CANTAR` queda cerrado: Gemini debe cantar únicamente ese texto y no agregar frases, datos ni llamadas a la acción.
+- Se dejaron de arrastrar al audio campos de flyer como profesional genérico, prestaciones, especialidad, atención, obras sociales, redes, WhatsApp y adjuntos no usados.
+- La pronunciación automática ahora se limita al texto realmente cantado.
+- El resumen de Resultado para audio muestra solo datos relevantes del audio.
+- El botón principal queda como `Copiar prompt` y confirma temporalmente con `Copiado ✓`.
+
+### Agregado
+- Selector contextual de datos administrativos permitidos en audio: WhatsApp, teléfono, Instagram, Facebook, email, dirección, horarios, obras sociales u otro.
+
+### Pruebas
+- `npm test -- audio-prompt.spec.js`
+- `npx playwright test tests/app.spec.js -g "Etapa audio Gemini" --project=chromium-desktop --project=mobile-chrome`
+
+## 2026-06-28 - Audio / jingle / música para Gemini Audio
+
+### Modificado
+- El tipo visible pasa a `Audio / jingle / música`, manteniendo el identificador interno `jinglePromotional`.
+- El prompt de audio ahora pide una única pista final para Gemini, sin respuesta explicativa, sin letra aparte, sin alternativas y con duración exacta.
+- Se agregaron reglas automáticas de duración para 10, 15, 20 y 30 segundos.
+- El prompt usa frase institucional por defecto o una frase editada opcional antes de generar.
+- Se agregó pronunciación obligatoria automática desde institución, profesional, especialidad, prestaciones y frase.
+- Los datos administrativos no se cantan por defecto; quedan permitidos solo si se activa la opción avanzada.
+- El modo instrumental prohíbe voz, letra y texto hablado.
+
+### Agregado
+- Opciones mínimas para audio: `Desde cero`, `Basado en flyer / imagen`, `Híbrido`.
+- Modos de contenido: datos/frase cargada, frase editada, texto exacto, jingle libre guiado e instrumental.
+- Opción avanzada `Permitir cantar datos administrativos`.
+- Campo avanzado opcional `Corrección manual de pronunciación`.
+- Tests dirigidos en `tests/audio-prompt.spec.js`.
+
+### Pruebas
+- `npm test -- audio-prompt.spec.js`
+
 ## 2026-06-27 - Jingles promocionales con Gemini
 
 ### Agregado
