@@ -2777,6 +2777,12 @@ body.is-wizard-open .side-panel {
   box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
+.piece-option-card strong,
+.piece-option-card small {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
 .piece-option-card:hover {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--accent) 42%, transparent);
@@ -4938,7 +4944,13 @@ textarea,
   }
 
   .piece-step-grid {
-    grid-template-columns: repeat(4, minmax(190px, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #tipo .piece-option-card {
+    min-height: 150px;
+    padding: 14px;
   }
 
   .result-grid-assisted {
