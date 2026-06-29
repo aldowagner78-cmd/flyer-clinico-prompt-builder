@@ -440,7 +440,7 @@ function normalizeLegacyColor(value, type) {
 
 function normalizeLegacyJingleStyle(value) {
   if (!value) return '';
-  const normalized = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const normalized = normalizeForLegacyOptionMatch(value);
   if (normalized === 'pop alegre' || normalized.includes('promocional')) return 'Pop alegre promocional';
   if (normalized.includes('infantil')) return 'Infantil puro';
   if (normalized.includes('folk') || normalized.includes('folklore')) return 'Folklore/pop argentino suave';
@@ -454,6 +454,10 @@ function inferJingleAudioType(promptOptions = {}) {
   const contentMode = stringFrom(promptOptions.jingleContentMode);
   if (voice === 'Instrumental' || contentMode === 'Instrumental' || promptOptions.jingleWithLyrics === false) return 'Instrumental / música de fondo';
   return 'Jingle cantado';
+}
+
+function normalizeForLegacyOptionMatch(value = '') {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 function inferAllowCreativity(value) {

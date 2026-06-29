@@ -1,3 +1,99 @@
+## 2026-06-29 - Revisión final de circuitos, acentos y prompts
+
+### Corregido
+- Se estabilizó la separación IMAGEN / VIDEO / AUDIO con navegación y selector `Ir a...` en el orden del circuito activo.
+- Se corrigió el resumen de Resultado para mostrar contenido específico de campaña, infografía, flyer informativo o flyer profesional.
+- Se aisló la normalización sin diacríticos a búsquedas internas, comparaciones técnicas y slugs de exportación; no se aplica a campos visibles ni prompt final.
+- Se ajustaron pruebas heredadas que todavía buscaban video/animación dentro de IMAGEN.
+
+### Pruebas
+- Se agregó cobertura mínima de IMAGEN, VIDEO y AUDIO hasta Resultado.
+- Se agregó cobertura explícita para conservar `ñ` y acentos en campos, resumen y prompt final.
+- Pasaron dirigidos:
+  - `inicio muestra solo tres circuitos principales`
+  - `acentos|ñ|diacríticos|prompt final`
+  - `flujos IMAGEN VIDEO AUDIO`
+  - `tests/audio-prompt.spec.js`
+  - `tests/demo-video-gemini.spec.js`
+
+### Verificación final
+- `npm test`: 152 passed.
+
+## 2026-06-29 - Hotfix test sin dependencia de barra lateral
+
+### Corregido
+- Se corrigió la prueba dirigida de los tres circuitos para validar títulos y paneles visibles reales, no botones laterales que pueden estar ocultos por diseño responsive.
+
+### Compatibilidad
+- Windows PowerShell.
+- Web/PWA sin cambios funcionales.
+
+
+
+
+## Hotfix test video coherente - 2026-06-29
+
+- Se corrigió la prueba dirigida para no exigir visibilidad del botón lateral `Video`, porque la navegación lateral puede permanecer oculta aunque el paso activo sea correcto.
+- La validación queda centrada en `#workflowTitle` y en el panel real de video (`data-video-config-panel`).
+- No se modifica lógica funcional de la app.
+## 2026-06-29 - Hotfix circuito VIDEO coherente
+
+### Corregido
+- El circuito VIDEO ahora avanza desde `Institución` hacia el paso `Video`, no hacia contenido ni diseño de imagen.
+- Los números de pasos se recalculan según el circuito activo para evitar valores heredados como `5` u `8`.
+- El selector `Ir a...` y la navegación lateral muestran etiquetas coherentes: `Video` para el circuito VIDEO y `Audio` para AUDIO.
+- La configuración guiada de video aparece como primera tarjeta del circuito, usando los selectores existentes de modo, duración, destino, música, ritmo y adjuntos por nombre.
+
+### Pendiente
+- Validación manual completa en navegador de IMAGEN, VIDEO y AUDIO antes de publicar.
+
+
+## 2026-06-29 - Hotfix navegación guiada por circuito
+
+### Corregido
+- Al elegir IMAGEN, VIDEO o AUDIO desde Inicio, el asistente reinicia el circuito en el primer paso real (`Institución`).
+- Se restauran los modos guiados de institución, contenido y diseño al iniciar un nuevo circuito para evitar pantallas completas/manuales heredadas de un uso anterior.
+- Se limpia el estado del contenido anterior conservando la institución cargada, para no mezclar reglas ni datos entre imagen, video y audio.
+
+### Compatibilidad
+- Windows PowerShell.
+- Web/PWA en navegador.
+
+
+## 2026-06-29 - Hotfix test 3 circuitos
+
+### Corregido
+- Se ajustó la prueba dirigida del inicio de 3 circuitos para no exigir la pestaña Diseño mientras el usuario todavía está en la pantalla de institución.
+- Se mantiene la validación principal: Inicio muestra IMAGEN, VIDEO y AUDIO; VIDEO/AUDIO no muestran Tipo; AUDIO no muestra Diseño; IMAGEN no muestra Audio ni Solicitar pieza animada.
+
+### Pendiente
+- Ejecutar prueba dirigida en Windows PowerShell.
+
+## 2026-06-29 - Inicio separado en IMAGEN / VIDEO / AUDIO
+
+### Agregado
+- Pantalla inicial con tres circuitos principales: `IMAGEN`, `VIDEO` y `AUDIO`.
+- Test dirigido para validar que los tres circuitos quedan separados.
+
+### Modificado
+- `Tipo de pieza` queda reservado para variantes de imagen estática.
+- `VIDEO` usa flujo propio y configuración de video sin depender del checkbox de imagen animada.
+- `AUDIO` usa flujo propio para jingle, spot narrado e instrumental.
+- El modo demo de video conserva `requestAnimation` activo y agrega un flyer base demo por nombre.
+
+### Corregido
+- Se elimina la mezcla entre imagen y video mediante el checkbox `Solicitar pieza animada`.
+- Se elimina la mezcla entre imagen y audio dentro de `Tipo de pieza`.
+
+### Pruebas
+- `node --check src/app.js`
+- `node --check src/ui/formRenderer.js`
+- `node --check tests/app.spec.js`
+- Intento de `npm test -- tests/audio-prompt.spec.js`: no se pudo completar en el entorno de análisis porque no había `node_modules` y el comando global disponible respondió `unknown command 'test'`.
+
+### Pendiente
+- Ejecutar Playwright en Windows con dependencias instaladas antes de publicar.
+
 ## 2026-06-28 - Autoavance en Tipo de pieza
 
 ### Modificado
@@ -706,3 +802,26 @@
 - Se reforzó español argentino y pronunciación exacta de nombres propios, especialmente instituciones.
 - Se indicó no cantar teléfonos, WhatsApp numéricos, direcciones, emails, redes, matrículas ni números.
 - Se exige respetar estrictamente el estilo musical elegido por el usuario.
+
+## 2026-06-29 - Hotfix navegación institución en circuitos
+
+### Corregido
+- El botón de continuar/guardar institución ahora avanza al siguiente paso real según el circuito elegido.
+- IMAGEN avanza a Tipo.
+- VIDEO avanza a Contenido/Video sin intentar abrir pasos no disponibles.
+- AUDIO avanza a Contenido/Audio sin intentar abrir pasos no disponibles.
+
+### Pruebas
+- Verificación de sintaxis con `node --check src/app.js`.
+- Prueba manual recomendada: elegir IMAGEN/VIDEO/AUDIO, completar institución y continuar.
+
+
+
+## 2026-06-29 - Hotfix test video coherente
+
+### Corregido
+- Se ajustó la prueba dirigida para no exigir navegación lateral visible antes de completar Institución.
+- Se valida VIDEO como Paso 1 Institución y luego Paso 2 Video con selectores guiados.
+
+### Pendiente
+- Validación visual manual de VIDEO/AUDIO en navegador.

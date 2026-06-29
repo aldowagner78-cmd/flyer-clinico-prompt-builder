@@ -9,6 +9,7 @@ export function renderPreview(state, validation) {
     document.querySelector('#progressBar').style.width = `${validation.percent}%`;
     return;
   }
+  const contentRows = renderPieceContentSummaryRows(state);
   summary.innerHTML = `
     <dl>
       <div><dt>Tipo de pieza</dt><dd>${escapeHtml(labelPieceType(state.promptOptions.pieceType))}</dd></div>
@@ -16,13 +17,14 @@ export function renderPreview(state, validation) {
       <div><dt>Objetivo</dt><dd>${escapeHtml(state.promptOptions.contentGoal) || 'Sin completar'}</dd></div>
       <div><dt>Institución</dt><dd>${escapeHtml(state.clinic.name) || 'Sin completar'}</dd></div>
       <div><dt>Tipo institución</dt><dd>${escapeHtml(state.clinic.institutionType) || 'Sin completar'}</dd></div>
+      ${contentRows}
       <div><dt>Profesional</dt><dd>${escapeHtml([state.professional.title, state.professional.fullName].filter(Boolean).join(' ')) || 'Sin completar'}</dd></div>
       <div><dt>Especialidad principal</dt><dd>${escapeHtml(state.specialty.primaryProfessionalSpecialty) || 'Sin completar'}</dd></div>
       <div><dt>Adicionales</dt><dd>${escapeHtml(listOrFallback(state.specialty.additionalSpecialties))}</dd></div>
       <div><dt>Enfoque</dt><dd>${escapeHtml(state.specialty.communicationFocus) || 'Sin completar'}</dd></div>
       <div><dt>Texto visible</dt><dd>${escapeHtml(state.specialty.visibleSpecialtyText) || 'Sin completar'}</dd></div>
       <div><dt>Prestaciones visibles</dt><dd>${escapeHtml(listOrFallback(state.services.visibleServices))}</dd></div>
-      <div><dt>Atencion</dt><dd>${escapeHtml(formatSchedules(state.schedule.items))}</dd></div>
+      <div><dt>Atención</dt><dd>${escapeHtml(formatSchedules(state.schedule.items))}</dd></div>
       <div><dt>Redes</dt><dd>${escapeHtml(formatSocialLinks(state.clinic.socialLinks))}</dd></div>
       <div><dt>Adjuntos</dt><dd>${escapeHtml(formatAttachments(state.attachments.items, state))}</dd></div>
       <div><dt>Densidad</dt><dd>${escapeHtml(labelContentDensity(state.design.contentDensity))}</dd></div>
@@ -33,6 +35,38 @@ export function renderPreview(state, validation) {
 
   document.querySelector('#progressText').textContent = `${validation.percent}%`;
   document.querySelector('#progressBar').style.width = `${validation.percent}%`;
+}
+
+function renderPieceContentSummaryRows(state) {
+  const options = state.promptOptions || {};
+  const rowsByPiece = {
+    [PIECE_TYPES.professionalFlyer]: [
+      ['Mensaje', options.suggestedPhrase || options.mainMessage || 'Sin completar']
+    ],
+    [PIECE_TYPES.clinicalInfographic]: [
+      ['Tema', options.educationalTopic || 'Sin completar'],
+      ['Público', options.targetAudience || 'Sin completar'],
+      ['Mensaje', options.mainMessage || 'Sin completar'],
+      ['Bloques', options.infoBlocksText || 'Sin completar']
+    ],
+    [PIECE_TYPES.informativeFlyer]: [
+      ['Tipo de información', options.contentGoal || 'Sin completar'],
+      ['Título', options.educationalTopic || 'Sin completar'],
+      ['Mensaje', options.mainMessage || 'Sin completar']
+    ],
+    [PIECE_TYPES.promotionCampaign]: [
+      ['Tipo de campaña', options.campaignType || 'Sin completar'],
+      ['Público', options.targetAudience || 'Sin completar'],
+      ['Mensaje', options.mainMessage || 'Sin completar'],
+      ['Período', campaignValidityText(options) || 'Sin completar'],
+      ['Condiciones', options.campaignConditions || 'Sin completar'],
+      ['Mensaje final', options.campaignCallToAction || 'Sin completar']
+    ]
+  };
+
+  return (rowsByPiece[options.pieceType] || [])
+    .map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`)
+    .join('');
 }
 
 function renderAudioSummary(state) {
@@ -385,10 +419,19 @@ function parseLines(value = '') {
   return String(value || '').split(/\n|;/).map(item => item.trim()).filter(Boolean);
 }
 
+function campaignValidityText(options = {}) {
+  const start = String(options.campaignStartDate || '').trim();
+  const end = String(options.campaignEndDate || '').trim();
+  if (start && end) return `desde ${start} hasta ${end}`;
+  if (start) return `desde ${start}`;
+  if (end) return `hasta ${end}`;
+  return options.campaignValidity || '';
+}
+
 function labelPieceType(value) {
   return {
     professionalFlyer: 'Flyer profesional',
-    clinicalInfographic: 'Infografia clinica',
+    clinicalInfographic: 'Infografía clínica',
     informativeFlyer: 'Flyer informativo',
     promotionCampaign: 'Promoción / campaña',
     jinglePromotional: 'Audio / jingle / música'
@@ -405,10 +448,10 @@ function labelContentDensity(value) {
 
 function labelAttachmentRole(value) {
   return {
-    clinicLogo: 'Logo de clinica',
+    clinicLogo: 'Logo de clínica',
     professionalPhoto: 'Foto profesional',
     referenceFlyer: 'Flyer de referencia',
-    thematicImage: 'Imagen tematica',
+    thematicImage: 'Imagen temática',
     videoBase: 'Video base',
     videoProfessionalPhoto: 'Foto del profesional',
     videoLogo: 'Logo institucional',

@@ -5700,3 +5700,51 @@ body.has-modal-open {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Circuitos principales: imagen, video y audio */
+.media-path-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.media-path-card {
+  display: grid;
+  gap: 12px;
+  min-height: 190px;
+  align-content: start;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--surface-solid) 90%, var(--accent-pale) 10%);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--accent) 11%, transparent);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.media-path-card:hover,
+.media-path-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 44%, transparent);
+  box-shadow: 0 20px 42px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.media-path-card strong {
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+}
+
+.media-path-card small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+@media (max-width: 780px) {
+  .media-path-grid {
+    grid-template-columns: 1fr;
+  }
+}

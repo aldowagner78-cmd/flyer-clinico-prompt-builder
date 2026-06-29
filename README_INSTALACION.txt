@@ -1,11 +1,137 @@
+# Nota de revisión automatizada final - circuitos, acentos y prompt (2026-06-29)
+
+Este parche estabiliza los circuitos antes de publicar y agrega pruebas dirigidas para evitar regresiones.
+
+Flujos validados:
+
+- IMAGEN: `Institución → Tipo de pieza → Contenido → Diseño → Resultado`.
+- VIDEO: `Institución → Video → Contenido → Resultado`.
+- AUDIO: `Institución → Audio → Resultado`.
+
+Puntos corregidos:
+
+- `Ir a...` se reconstruye en el orden real del circuito activo. En VIDEO muestra `Institución → Video → Contenido → Resultado`, no el orden heredado de IMAGEN.
+- La navegación lateral se reordena con el mismo criterio cuando está visible.
+- El resumen de Resultado muestra datos específicos del tipo de pieza, incluyendo campaña, mensaje, período y condiciones.
+- Los textos de usuario y del prompt final conservan acentos y ñ. Las normalizaciones que quitan tildes quedan limitadas a búsquedas internas, comparaciones técnicas o slugs de nombre de archivo.
+- Las pruebas antiguas que buscaban `Solicitar pieza animada` dentro de IMAGEN se actualizaron: el video se valida desde su circuito propio.
+
+Pruebas dirigidas recomendadas desde `C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`:
+
+```powershell
+npx playwright test tests/app.spec.js -g "inicio muestra solo tres circuitos principales" --project=chromium-desktop
+npx playwright test tests/app.spec.js -g "acentos|ñ|diacríticos|prompt final" --project=chromium-desktop
+npx playwright test tests/app.spec.js -g "flujos IMAGEN VIDEO AUDIO" --project=chromium-desktop
+npx playwright test tests/audio-prompt.spec.js --project=chromium-desktop
+npx playwright test tests/demo-video-gemini.spec.js --project=chromium-desktop
+npm test
+```
+
+Notas:
+- La app no sube archivos reales; solo conserva nombres para pedir adjuntos por nombre exacto.
+- No se modificaron `service-worker.js`, `manifest.webmanifest`, iconos ni dependencias.
+- Verificación final local: `npm test` terminó con `152 passed`.
+
+---
+
+# Nota de hotfix - circuito VIDEO coherente (2026-06-29)
+
+Este parche corrige el rediseño de circuitos para que VIDEO no use pasos visuales heredados de IMAGEN.
+
+Flujo esperado:
+
+- IMAGEN: `Institución → Tipo de pieza → Contenido → Diseño → Resultado`.
+- VIDEO: `Institución → Video → Contenido → Resultado`.
+- AUDIO: `Institución → Audio → Resultado`.
+
+En VIDEO, la primera pantalla después de institución debe mostrar opciones guiadas con selectores existentes:
+- Desde cero.
+- Desde flyer / imagen estática.
+- Basado en material.
+- Híbrido.
+- Destino.
+- Duración.
+- Música / sonido.
+- Voz en off.
+- Texto en pantalla.
+- Ritmo.
+- Adjuntos por nombre de archivo cuando corresponda.
+
+Prueba dirigida recomendada en Windows PowerShell, desde `C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`:
+
+```powershell
+npx playwright test tests/app.spec.js -g "inicio muestra solo tres circuitos principales" --project=chromium-desktop
+```
+
+---
+
+# Rediseño inicial: circuitos IMAGEN / VIDEO / AUDIO
+
+La pantalla de inicio ahora muestra tres caminos principales:
+
+- IMAGEN: piezas estáticas como flyer profesional, infografía clínica, flyer informativo y promoción/campaña.
+- VIDEO: circuito propio para video, con modos desde cero, desde flyer/imagen estática, basado en material o híbrido.
+- AUDIO: circuito propio para jingle, spot narrado o música/instrumental.
+
+## Qué cambió en esta etapa
+
+- Se quitó el acceso de audio desde `Tipo de pieza`.
+- En `Tipo de pieza` quedan solo variantes de imagen.
+- Se quitó el checkbox `Solicitar pieza animada` del circuito de imagen.
+- VIDEO entra por inicio y muestra configuración propia de video en el paso `Diseño`.
+- AUDIO entra por inicio y salta directo a contenido de audio, sin pasar por imagen ni diseño visual.
+- La app sigue sin subir archivos: solo guarda nombres para pedirlos luego por nombre exacto en Gemini/ChatGPT.
+
+## Prueba dirigida recomendada
+
+Desde:
+
+```powershell
+C:\Users\usuario\Desktop\flyer-clinico-prompt-builder
+```
+
+Ejecutar:
+
+```powershell
+npx playwright test tests/app.spec.js -g "inicio muestra solo tres circuitos principales" --project=chromium-desktop
+```
+
+Resultado esperado:
+- Inicio muestra solo IMAGEN, VIDEO y AUDIO.
+- IMAGEN muestra variantes estáticas y no muestra audio ni `Solicitar pieza animada`.
+- VIDEO no pasa por `Tipo`.
+- AUDIO no pasa por `Tipo` ni `Diseño`.
+
+## Prueba manual
+
+Desde:
+
+```powershell
+C:\Users\usuario\Desktop\flyer-clinico-prompt-builder
+```
+
+Ejecutar:
+
+```powershell
+npx http-server . -p 4173 -c-1
+```
+
+Abrir `http://localhost:4173` y validar:
+- IMAGEN permite elegir flyer/infografía/informativo/promoción.
+- VIDEO muestra configuración rápida de video.
+- AUDIO muestra campos de jingle/audio.
+- No aparecen textos rotos por codificación.
+- Copiar prompt y accesos ChatGPT/Gemini siguen disponibles.
+
+---
+
 # Ajuste visual: Tipo de pieza
 
-La pantalla `Tipo de pieza` muestra las cinco tarjetas principales en una sola fila en escritorio:
+La pantalla `Tipo de pieza` muestra cuatro tarjetas de imagen estática en una sola fila en escritorio:
 - Flyer profesional
 - Infografía clínica
 - Flyer informativo
 - Promoción / campaña
-- Audio / jingle / música
 
 Al elegir una tarjeta, el asistente avanza automáticamente al paso `Contenido`. No hace falta presionar `Siguiente` en esta pantalla. Desde `Contenido`, el botón `Anterior` vuelve a `Tipo de pieza` y permite elegir otra tarjeta.
 
@@ -24,8 +150,8 @@ npx http-server . -p 4173 -c-1
 ```
 
 Abrir `http://localhost:4173`, entrar al asistente y validar:
-- en escritorio, las 5 tarjetas quedan en una línea;
-- al elegir una tarjeta, avanza automáticamente;
+- en escritorio, las 4 tarjetas de imagen quedan en una línea;
+- al elegir una tarjeta de imagen, avanza automáticamente;
 - al volver con `Anterior`, se puede elegir otra tarjeta;
 - en móvil/responsive, las tarjetas siguen visibles;
 - no hay scroll horizontal;
@@ -34,8 +160,8 @@ Abrir `http://localhost:4173`, entrar al asistente y validar:
 Cómo revertir:
 - En `src/app.js`, volver `selectPieceType` a quedarse en `tipo` después de seleccionar.
 - Restaurar el botón `Siguiente` en el footer del paso `tipo`.
-- En `assets/css/styles.css`, volver la regla desktop de `.piece-step-grid` a 4 columnas.
-- Quitar el ajuste compacto de `#tipo .piece-option-card`.
+- En `assets/css/styles.css`, revisar la regla desktop de `.piece-step-grid`.
+- Quitar el ajuste compacto de `#tipo .piece-option-card` si se revierte el layout.
 
 ---
 

@@ -31,6 +31,11 @@ async function startAssistant(page) {
   await expectCurrentStep(page, 'clinica');
 }
 
+async function startMediaPath(page, mediaType) {
+  await page.locator(`[data-media-start="${mediaType}"]`).click();
+  await expectCurrentStep(page, 'clinica');
+}
+
 async function expectCurrentStep(page, id) {
   await expect(page.locator('.form-section.is-current')).toHaveAttribute('id', id);
 }
@@ -99,6 +104,22 @@ async function selectPath(page, path, value) {
   await field.selectOption(value);
 }
 
+async function selectCustomPath(page, path, value) {
+  const select = page.locator(`select[data-path="${path}"]`).first();
+  await expect(select).toBeVisible();
+  const values = await select.locator('option').evaluateAll(options => options.map(option => option.value));
+
+  if (values.includes(value)) {
+    await select.selectOption(value);
+    return;
+  }
+
+  await select.selectOption('Otro / Personalizar');
+  const customInput = page.locator(`input[data-path="${path}"]`).first();
+  await expect(customInput).toBeVisible();
+  await customInput.fill(value);
+}
+
 async function getPrompt(page) {
   const prompt = page.locator('#promptOutput');
   await expect(prompt).toBeVisible();
@@ -131,7 +152,7 @@ async function fillBasicInstitution(page) {
   await fillPath(page, 'clinic.primaryPhone', '342 555-2488');
 }
 
-async function continueFromInstitution(page) {
+async function continueFromInstitutionTo(page, expectedStep = 'tipo') {
   await expectCurrentStep(page, 'clinica');
   const continueButton = page.locator('#continueInstitutionWithoutSavingButton');
   const saveButton = page.locator('#saveInstitutionAndContinueButton');
@@ -144,7 +165,11 @@ async function continueFromInstitution(page) {
     await clickCurrentNext(page);
   }
 
-  await expectCurrentStep(page, 'tipo');
+  await expectCurrentStep(page, expectedStep);
+}
+
+async function continueFromInstitution(page) {
+  await continueFromInstitutionTo(page, 'tipo');
 }
 
 async function choosePiece(page, pieceType) {
@@ -161,9 +186,23 @@ async function choosePiece(page, pieceType) {
 }
 
 async function startWithPiece(page, pieceType) {
+  if (pieceType === 'jinglePromotional') {
+    await startMediaPath(page, 'audio');
+    await fillBasicInstitution(page);
+    await continueFromInstitutionTo(page, 'prestaciones');
+    return;
+  }
+
   await startAssistant(page);
   await fillBasicInstitution(page);
   await choosePiece(page, pieceType);
+}
+
+async function startVideoConfig(page) {
+  await startMediaPath(page, 'video');
+  await fillBasicInstitution(page);
+  await continueFromInstitutionTo(page, 'diseno');
+  await expect(page.locator('#designFields [data-video-config-panel]')).toBeVisible();
 }
 
 async function setOdontology(page) {
@@ -196,6 +235,133 @@ test.describe('Etapa 10T - flujo principal', () => {
     await expect(page.locator('#clinica .section-heading [data-wizard-action="next"]')).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
     await expect(errors).toEqual([]);
+  });
+
+  test('inicio muestra solo tres circuitos principales y separa imagen, video y audio', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openCleanApp(page);
+
+    await expect(page.locator('[data-media-start="image"]')).toContainText('IMAGEN');
+    await expect(page.locator('[data-media-start="video"]')).toContainText('VIDEO');
+    await expect(page.locator('[data-media-start="audio"]')).toContainText('AUDIO');
+    await expect(page.locator('[data-media-start]')).toHaveCount(3);
+
+    await startMediaPath(page, 'video');
+    await expect(page.locator('#workflowTitle')).toContainText('Paso 1 de 4');
+    await expect(page.locator('#workflowTitle')).toContainText('Institución');
+    await fillBasicInstitution(page);
+    await continueFromInstitutionTo(page, 'diseno');
+    await expect(page.locator('#workflowTitle')).toContainText('Paso 2 de 4');
+    await expect(page.locator('#workflowTitle')).toContainText('Video');
+    await expect(page.locator('#designFields [data-video-config-panel]')).toBeVisible();
+    await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'video');
+
+    await page.reload();
+    await startMediaPath(page, 'audio');
+    await expect(page.locator('#workflowTitle')).toContainText('Paso 1 de 3');
+    await expect(page.locator('#workflowTitle')).toContainText('Institución');
+    await fillBasicInstitution(page);
+    await continueFromInstitutionTo(page, 'prestaciones');
+    await expect(page.locator('#workflowTitle')).toContainText('Paso 2 de 3');
+    await expect(page.locator('#workflowTitle')).toContainText('Audio');
+    await expect(page.locator('#serviceFields')).toContainText('Tipo de audio');
+
+    await page.reload();
+    await startMediaPath(page, 'image');
+    await expect(page.locator('#workflowTitle')).toContainText('Paso 1 de 5');
+    await expect(page.locator('#workflowTitle')).toContainText('Institución');
+    await fillBasicInstitution(page);
+    await continueFromInstitutionTo(page, 'tipo');
+    await expect(page.locator('#workflowTitle')).toContainText('Paso 2 de 5');
+    await expect(page.locator('#workflowTitle')).toContainText('Tipo de pieza');
+    await expect(page.locator('#pieceFields')).toContainText(/Elegí el tipo de pieza/i);
+    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toHaveCount(0);
+    await expect(page.getByText('Solicitar pieza animada')).toHaveCount(0);
+
+    expect(errors).toEqual([]);
+  });
+
+  test('flujos IMAGEN VIDEO AUDIO llegan a Resultado sin mezclar pasos', async ({ page }) => {
+    test.setTimeout(90000);
+    const errors = watchBrowserErrors(page);
+
+    await openCleanApp(page);
+    await startMediaPath(page, 'image');
+    await fillBasicInstitution(page);
+    await continueFromInstitutionTo(page, 'tipo');
+    await expect(page.locator('#quickStepSelect option:not([hidden])')).toHaveText(['Institución', 'Tipo de pieza', 'Contenido', 'Diseño', 'Resultado']);
+    await page.locator('[data-piece-select="promotionCampaign"]').click();
+    await expectCurrentStep(page, 'prestaciones');
+    await goResult(page);
+    let prompt = await getPrompt(page);
+    expect(prompt).toContain('Crear una única imagen vertical completa');
+    expect(prompt).not.toContain('MODO ANIMADO / VIDEO');
+
+    await page.reload();
+    await startMediaPath(page, 'video');
+    await fillBasicInstitution(page);
+    await continueFromInstitutionTo(page, 'diseno');
+    await expect(page.locator('#quickStepSelect option:not([hidden])')).toHaveText(['Institución', 'Video', 'Contenido', 'Resultado']);
+    await expect(page.locator('#designFields [data-video-config-panel]')).toContainText('Desde flyer / imagen');
+    await goResult(page);
+    prompt = await getPrompt(page);
+    expect(prompt).toContain('MODO ANIMADO / VIDEO');
+    expect(prompt).toContain('No generes el video hasta recibir esos archivos');
+
+    await page.reload();
+    await startMediaPath(page, 'audio');
+    await fillBasicInstitution(page);
+    await continueFromInstitutionTo(page, 'prestaciones');
+    await expect(page.locator('#quickStepSelect option:not([hidden])')).toHaveText(['Institución', 'Audio', 'Resultado']);
+    await expect(page.locator('#serviceFields')).toContainText('Jingle cantado');
+    await goResult(page);
+    prompt = await getPrompt(page);
+    expect(prompt).toContain('AUDIO A GENERAR:');
+    expect(prompt).toContain('No mencionar mensajería, teléfonos, redes, direcciones, horarios, coberturas, precios ni matrículas.');
+
+    expect(errors).toEqual([]);
+  });
+
+  test('acentos y ñ se conservan exactamente en campos, resumen y prompt final', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    const expectedTexts = [
+      'Clínica Niño Jesús',
+      'Campaña de prevención pediátrica',
+      'Atención médica para niños y niñas',
+      'Señora Gómez',
+      'Promoción válida por este año'
+    ];
+
+    await openCleanApp(page);
+    await startMediaPath(page, 'image');
+    await openInstitutionFullForm(page);
+    await fillPath(page, 'clinic.name', expectedTexts[0]);
+    await selectCustomPath(page, 'clinic.institutionType', 'Clínica');
+    await selectCustomPath(page, 'clinic.institutionalPhrase', 'Acompañamiento pediátrico para cada niño');
+    await continueFromInstitutionTo(page, 'tipo');
+    await page.locator('[data-piece-select="promotionCampaign"]').click();
+    await expectCurrentStep(page, 'prestaciones');
+
+    await selectCustomPath(page, 'promptOptions.campaignType', expectedTexts[1]);
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await selectCustomPath(page, 'promptOptions.mainMessage', expectedTexts[2]);
+    await page.locator('#serviceFields [data-content-guided="next"]').click();
+    await fillPath(page, 'promptOptions.campaignConditions', `${expectedTexts[3]}. ${expectedTexts[4]}`);
+    await goResult(page);
+
+    const prompt = await getPrompt(page);
+    const summaryText = await page.locator('#resultado #summaryPanel').innerText();
+    for (const text of expectedTexts) {
+      expect(prompt).toContain(text);
+      expect(summaryText).toContain(text);
+    }
+
+    expect(prompt).not.toContain('Clinica Nino Jesus');
+    expect(prompt).not.toContain('Campana de prevencion pediatrica');
+    expect(prompt).not.toContain('Atencion medica para ninos y ninas');
+    expect(prompt).not.toContain('Senora Gomez');
+    expect(prompt).not.toContain('Promocion valida por este ano');
+    expect(errors).toEqual([]);
   });
 
   test('guardar y usar institución funciona desde el flujo intuitivo', async ({ page }) => {
@@ -249,14 +415,14 @@ test.describe('Etapa 10T - flujo principal', () => {
     await expect(page.locator('[data-piece-select="professionalFlyer"]')).toHaveClass(/is-selected/);
     await expect(page.locator('.form-section.is-current [data-wizard-action="next"]')).toHaveCount(0);
 
-    await page.locator('[data-piece-select="jinglePromotional"]').click();
+    await page.locator('[data-piece-select="promotionCampaign"]').click();
     await expectCurrentStep(page, 'prestaciones');
-    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toHaveClass(/is-selected/);
+    await expect(page.locator('[data-piece-select="promotionCampaign"]')).toHaveClass(/is-selected/);
     await expectNoHorizontalOverflow(page);
     expect(errors).toEqual([]);
   });
 
-  test('Tipo de pieza mantiene 5 tarjetas en escritorio y layout responsive sin desborde', async ({ page }) => {
+  test('Tipo de pieza mantiene 4 tarjetas de imagen en escritorio y layout responsive sin desborde', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
     await startAssistant(page);
@@ -265,14 +431,13 @@ test.describe('Etapa 10T - flujo principal', () => {
 
     await expectCurrentStep(page, 'tipo');
     const cards = page.locator('.piece-step-grid [data-piece-select]');
-    await expect(cards).toHaveCount(5);
+    await expect(cards).toHaveCount(4);
 
     for (const label of [
       'Flyer profesional',
       'Infografía clínica',
       'Flyer informativo',
-      'Promoción / campaña',
-      'Audio / jingle / música'
+      'Promoción / campaña'
     ]) {
       await expect(page.locator('.piece-step-grid')).toContainText(label);
     }
@@ -293,9 +458,9 @@ test.describe('Etapa 10T - flujo principal', () => {
     }
 
     await expect(page.locator('.form-section.is-current [data-wizard-action="next"]')).toHaveCount(0);
-    await page.locator('[data-piece-select="jinglePromotional"]').click();
+    await page.locator('[data-piece-select="promotionCampaign"]').click();
     await expectCurrentStep(page, 'prestaciones');
-    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toContainText(/Audio \/ jingle \/ música/i);
+    await expect(page.locator('[data-piece-select="promotionCampaign"]')).toContainText(/Promoción \/ campaña/i);
     await expectNoHorizontalOverflow(page);
 
     expect(errors).toEqual([]);
@@ -632,15 +797,8 @@ test.describe('Etapa 11C - UX de institución y navegación', () => {
   test('video desde flyer / imagen estática exige animar sin rediseñar y lista archivo requerido', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
-    await startWithPiece(page, 'promotionCampaign');
-    await clickCurrentNext(page);
-    await expectCurrentStep(page, 'diseno');
+    await startVideoConfig(page);
 
-    for (let i = 0; i < 5; i += 1) {
-      await page.locator('#designFields [data-design-guided="next"]').click();
-    }
-
-    await page.locator('[data-path="promptOptions.requestAnimation"]').first().check();
     await page.locator('[data-path="promptOptions.videoCreationMode"][value="Desde flyer / imagen estática"]').check();
     await expect(page.locator('.video-material-panel')).toContainText('Flyer o imagen estática base');
     await page.locator('.video-material-panel input[data-multiple-attachment-file="videoStaticFlyer"]').setInputFiles({
@@ -1042,7 +1200,7 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
     await expect(errors).toEqual([]);
   });
 
-  test('las tarjetas de diseño cubren formato, colores, estilo, tipografía, densidad, recursos, animación e imágenes', async ({ page }) => {
+  test('las tarjetas de diseño de imagen cubren formato, colores, estilo, tipografía, densidad, recursos e imágenes', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
     await startWithPiece(page, 'informativeFlyer');
@@ -1056,7 +1214,6 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
       ['style', /Estilo visual/i],
       ['typography-density', /Tipografía y densidad/i],
       ['resources', /Iconos, fondo y recursos/i],
-      ['animation', /Video|animado/i],
       ['images', /Imágenes personalizadas/i]
     ];
 
@@ -1083,7 +1240,7 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
     await expect(errors).toEqual([]);
   });
 
-  test('modo animado desde diseño guiado actualiza el prompt final', async ({ page }) => {
+  test('imagen mantiene diseño estático sin solicitar pieza animada', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
     await startWithPiece(page, 'clinicalInfographic');
@@ -1095,34 +1252,23 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
       await page.locator('#designFields [data-design-guided="next"]').click();
     }
 
-    await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'animation');
-    const animationToggle = page.locator('[data-path="promptOptions.requestAnimation"]').first();
-    await expect(animationToggle).toBeVisible();
-    await animationToggle.check();
+    await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'images');
+    await expect(page.locator('[data-path="promptOptions.requestAnimation"]')).toHaveCount(0);
+    await expect(page.getByText('Solicitar pieza animada')).toHaveCount(0);
 
     await goResult(page);
     const prompt = await getPrompt(page);
-    expect(prompt).toContain('MODO ANIMADO');
-    expect(prompt).toMatch(/pieza animada|video corto|clip animado/i);
+    expect(prompt).toContain('Crear una única imagen vertical completa');
+    expect(prompt).not.toContain('MODO ANIMADO / VIDEO');
+    expect(prompt).not.toMatch(/pieza animada|video corto|clip animado/i);
     await expect(errors).toEqual([]);
   });
 
   test('video animado muestra configuración rápida y genera prompt separado', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
-    await startWithPiece(page, 'promotionCampaign');
+    await startVideoConfig(page);
 
-    await clickCurrentNext(page);
-    await expectCurrentStep(page, 'diseno');
-
-    for (let i = 0; i < 5; i += 1) {
-      await page.locator('#designFields [data-design-guided="next"]').click();
-    }
-
-    const animationToggle = page.locator('[data-path="promptOptions.requestAnimation"]').first();
-    await animationToggle.scrollIntoViewIfNeeded();
-    await expect(animationToggle).toBeVisible();
-    await animationToggle.check({ force: true });
     await expect(page.locator('[data-video-config-panel]')).toBeVisible();
     await expect(page.locator('[data-video-config-panel]')).toContainText(/Configuración rápida de video/i);
     await expect(page.locator('[data-video-config-panel]')).toContainText(/Desde cero/i);
@@ -1141,16 +1287,8 @@ test.describe('Etapa 11D.3 - diseño guiado', () => {
   test('video basado en material usa adjuntos con la misma lógica de nombres', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
-    await startWithPiece(page, 'professionalFlyer');
+    await startVideoConfig(page);
 
-    await clickCurrentNext(page);
-    await expectCurrentStep(page, 'diseno');
-
-    for (let i = 0; i < 5; i += 1) {
-      await page.locator('#designFields [data-design-guided="next"]').click();
-    }
-
-    await page.locator('[data-path="promptOptions.requestAnimation"]').first().check();
     await page.locator('[data-path="promptOptions.videoCreationMode"][value="Basado en material"]').check();
     await expect(page.locator('.video-material-panel')).toBeVisible();
 
@@ -1336,13 +1474,12 @@ test.describe('Etapa audio Gemini', () => {
   test('la opción audio / jingle / música aparece y muestra campos mínimos', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openCleanApp(page);
-    await startAssistant(page);
+    await startMediaPath(page, 'audio');
     await fillBasicInstitution(page);
-    await continueFromInstitution(page);
+    await continueFromInstitutionTo(page, 'prestaciones');
 
-    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toBeVisible();
-    await expect(page.locator('[data-piece-select="jinglePromotional"]')).toContainText(/Audio \/ jingle \/ música/i);
-    await choosePiece(page, 'jinglePromotional');
+    await expect(page.locator('[data-step-target="tipo"]')).toBeHidden();
+    await expect(page.locator('[data-step-target="diseno"]')).toBeHidden();
 
     await expect(page.locator('#serviceFields')).toContainText('Objetivo del audio');
     await expect(page.locator('#serviceFields')).toContainText('Tipo de audio');
@@ -1557,4 +1694,3 @@ test.describe('Etapa PWA - instalable', () => {
     expect(source).toContain('fetch');
   });
 });
-

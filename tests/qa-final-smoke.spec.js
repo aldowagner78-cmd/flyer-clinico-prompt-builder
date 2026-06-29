@@ -77,7 +77,7 @@ async function fillBasicInstitution(page) {
   await fillPath(page, 'clinic.primaryPhone', '342 555-0199');
 }
 
-async function continueFromInstitution(page) {
+async function continueFromInstitution(page, expectedStep = 'tipo') {
   const continueButton = page.locator('#continueInstitutionWithoutSavingButton');
   const saveButton = page.locator('#saveInstitutionAndContinueButton');
 
@@ -89,7 +89,7 @@ async function continueFromInstitution(page) {
     await clickCurrentNext(page);
   }
 
-  await expectCurrentStep(page, 'tipo');
+  await expectCurrentStep(page, expectedStep);
 }
 
 async function clickCurrentNext(page) {
@@ -117,7 +117,6 @@ async function choosePiece(page, pieceType) {
   await expectCurrentStep(page, 'tipo');
   await page.locator(`[data-piece-select="${pieceType}"]`).click();
   await expect(page.locator(`[data-piece-select="${pieceType}"]`)).toHaveClass(/is-selected/);
-  await clickCurrentNext(page);
   await expectCurrentStep(page, 'prestaciones');
 }
 
@@ -146,6 +145,15 @@ async function startWithPiece(page, pieceType) {
   await fillBasicInstitution(page);
   await continueFromInstitution(page);
   await choosePiece(page, pieceType);
+}
+
+async function startVideoConfig(page) {
+  await openCleanApp(page);
+  await page.locator('[data-media-start="video"]').click();
+  await expectCurrentStep(page, 'clinica');
+  await fillBasicInstitution(page);
+  await continueFromInstitution(page, 'diseno');
+  await expect(page.locator('[data-video-config-panel]')).toBeVisible();
 }
 
 test.describe('QA final smoke', () => {
@@ -188,16 +196,9 @@ test.describe('QA final smoke', () => {
 
     await expect(page.locator('input[type="date"][data-path="promptOptions.campaignStartDate"]').first()).toBeVisible();
     await expect(page.locator('input[type="date"][data-path="promptOptions.campaignEndDate"]').first()).toBeVisible();
+    await expect(page.getByText('Solicitar pieza animada')).toHaveCount(0);
 
-    await clickCurrentNext(page);
-    await expectCurrentStep(page, 'diseno');
-
-    for (let i = 0; i < 5; i += 1) {
-      await page.locator('#designFields [data-design-guided="next"]').click();
-    }
-
-    await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'animation');
-    await page.locator('[data-path="promptOptions.requestAnimation"]').first().check();
+    await startVideoConfig(page);
 
     const videoPanel = page.locator('[data-video-config-panel]');
     await expect(videoPanel).toBeVisible();
@@ -219,10 +220,6 @@ test.describe('QA final smoke', () => {
       buffer: Buffer.from('qa-video')
     });
     await expect(page.locator('.video-material-panel')).toContainText('qa-video-base.mp4');
-
-    await page.locator('#designFields [data-design-guided="next"]').click();
-    await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'images');
-    await expect(page.locator('#designFields')).toContainText('Imágenes/videos personalizados para Gemini');
 
     await expectNoBrokenVisibleText(page);
     await goResult(page);

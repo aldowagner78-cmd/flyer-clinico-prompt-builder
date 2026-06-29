@@ -610,8 +610,8 @@ function geminiAudioDurationRules(duration) {
 
 function isJingleInstrumental(options = {}) {
   if (options.jingleAudioType === 'Instrumental / música de fondo') return true;
-  const voice = normalize(options.jingleVoices);
-  const mode = normalize(options.jingleContentMode);
+  const voice = normalizeForInternalMatch(options.jingleVoices);
+  const mode = normalizeForInternalMatch(options.jingleContentMode);
   return voice.includes('instrumental') || mode === 'instrumental' || options.jingleWithLyrics === false;
 }
 
@@ -666,7 +666,7 @@ function narratedVoiceSuggestion(voice = '') {
 }
 
 function narratedMusicSuggestion(style = '') {
-  const normalized = normalize(style);
+  const normalized = normalizeForInternalMatch(style);
   if (normalized.includes('cumbia')) return 'Cumbia suave profesional, cálida, moderada y optimista.';
   if (normalized.includes('infantil')) return 'Música cálida y luminosa, sin tono caricaturesco.';
   if (normalized.includes('instrumental')) return 'Instrumental corporativa suave, moderna, cálida y optimista.';
@@ -711,7 +711,7 @@ function buildAdministrativeAudioRules({ textToSing = '', options = {}, adminIte
 }
 
 function detectAdministrativeItemsInText(text = '') {
-  const normalized = normalize(text);
+  const normalized = normalizeForInternalMatch(text);
   const found = [];
   if (normalized.includes('whatsapp')) found.push('WhatsApp');
   if (normalized.includes('instagram') || normalized.includes('@')) found.push('Instagram');
@@ -725,7 +725,7 @@ function detectAdministrativeItemsInText(text = '') {
 }
 
 function containsNumberWords(text = '') {
-  const normalized = normalize(text);
+  const normalized = normalizeForInternalMatch(text);
   const numberWords = ['cero', 'uno', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez'];
   return numberWords.filter(word => new RegExp(`\\b${word}\\b`, 'i').test(normalized)).length >= 2;
 }
@@ -741,7 +741,7 @@ function buildCompactPronunciationRules(text = '', options = {}) {
 }
 
 function audioStyleInstruction(style = '') {
-  const normalized = normalize(style);
+  const normalized = normalizeForInternalMatch(style);
   if (normalized.includes('infantil puro')) {
     return 'infantil puro, alegre, dulce, luminoso y fácil de recordar. Instrumentación infantil: campanillas suaves, palmas livianas, percusión simple, guitarra o piano alegre. No usar voces exageradas ni caricaturescas. Mantener tono apto para salud.';
   }
@@ -952,7 +952,7 @@ function colorName(key, custom) {
 }
 
 function needsStoryRule(format = '') {
-  const normalized = normalize(format);
+  const normalized = normalizeForInternalMatch(format);
   return normalized.includes('historia') || normalized.includes('estado') || normalized.includes('whatsapp');
 }
 
@@ -1036,7 +1036,7 @@ function hasText(value = '') {
   return String(value ?? '').trim().length > 0;
 }
 
-function normalize(value = '') {
+function normalizeForInternalMatch(value = '') {
   return String(value ?? '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')

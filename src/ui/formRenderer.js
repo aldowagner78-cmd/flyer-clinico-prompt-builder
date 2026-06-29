@@ -1302,7 +1302,6 @@ function designFields(state, colorKeys) {
     select('Densidad del contenido', 'design.contentDensity', state.design.contentDensity, contentDensityOptions, false, labelContentDensity),
     select('Nivel de impacto visual', 'design.visualImpact', state.design.visualImpact, impactLevels),
     selectWithCustom('Tipografía sugerida', 'design.typography', state.design.typography, typographyOptions),
-    toggle('Solicitar pieza animada', 'promptOptions.requestAnimation', state.promptOptions.requestAnimation),
     toggle('Incluir iconos médicos', 'design.includeMedicalIcons', state.design.includeMedicalIcons),
     toggle('Incluir fondo temático', 'design.includeThematicBackground', state.design.includeThematicBackground),
     toggle('Usar recursos según especialidad', 'design.useAutomaticTheme', state.design.useAutomaticTheme)
@@ -1314,12 +1313,9 @@ function renderFullDesignStep(state, handlers, fields) {
 
   const target = document.querySelector('#designFields');
   if (!target) return;
-  target.insertAdjacentHTML('afterbegin', renderDesignModeBanner());
+  target.insertAdjacentHTML('afterbegin', renderDesignModeBanner(state));
   if (state.promptOptions.requestAnimation) {
-    const animationField = target.querySelector('[data-path="promptOptions.requestAnimation"]')?.closest('.field');
-    const videoHtml = renderVideoConfigurationHtml(state, true);
-    if (animationField) animationField.insertAdjacentHTML('afterend', videoHtml);
-    else target.insertAdjacentHTML('beforeend', videoHtml);
+    target.insertAdjacentHTML('beforeend', renderVideoConfigurationHtml(state, true));
   }
   const videoPanel = target.querySelector('[data-video-config-panel]');
   if (videoPanel) bindFieldControls(videoPanel, handlers);
@@ -1344,7 +1340,7 @@ function renderGuidedDesignStep(state, handlers, fields) {
     <div class="guided-card design-guided-card" data-design-guided-key="${escapeHtml(step.key)}">
       <div class="guided-card-head">
         <div>
-          <span class="guided-kicker">Diseño guiado · Tarjeta ${current} de ${steps.length}</span>
+          <span class="guided-kicker">${state.promptOptions.requestAnimation ? 'Video guiado' : 'Diseño guiado'} · Tarjeta ${current} de ${steps.length}</span>
           <h3>${escapeHtml(step.title)}</h3>
           <p>${escapeHtml(step.help)}</p>
         </div>
@@ -1385,7 +1381,7 @@ function renderVideoConfigurationHtml(state, includeModeHelp = true) {
           <p>Completá pocos datos; la app generará un prompt de video profesional con escenas, duración, formato, música y mensaje final.</p>
         </div>
       </div>
-      ${includeModeHelp ? '<p class="helper-text">Si no querés video, desmarcá “Solicitar pieza animada”.</p>' : ''}
+      ${includeModeHelp ? '<p class="helper-text">Este circuito genera un prompt propio de video. La app no sube archivos: solo copia nombres para adjuntarlos después.</p>' : ''}
       <div class="video-mode-grid" role="group" aria-label="Cómo crear el video">
         ${videoCreationModes.map(option => `
           <label class="video-mode-card${mode === option ? ' is-selected' : ''}">
@@ -1499,12 +1495,12 @@ function videoModeHelp(value) {
   }[value] || '';
 }
 
-function renderDesignModeBanner() {
+function renderDesignModeBanner(state) {
   return `
     <div class="smart-panel design-mode-panel">
       <div class="list-title">
         <label>Formulario completo</label>
-        <small>Editá formato, colores, estilo, tipografía, densidad, recursos visuales, animación e imágenes en una sola pantalla.</small>
+        <small>Editá formato, colores, estilo, tipografía, densidad, recursos visuales e imágenes en una sola pantalla.</small>
       </div>
       <p class="helper-text">También podés volver al flujo guiado por tarjetas para revisar el diseño paso a paso.</p>
       <div class="institution-method-actions">
@@ -1517,6 +1513,17 @@ function renderDesignModeBanner() {
 function designGuidedSteps(state, fields) {
   const byPath = new Map(fields.map(field => [field.path, field]));
   const visible = (...paths) => paths.map(path => byPath.get(path)).filter(field => field && !field.hidden);
+
+  if (state.promptOptions.requestAnimation) {
+    return [
+      {
+        key: 'video',
+        title: 'Video',
+        help: 'Elegí cómo crear el video, duración, destino, música, ritmo y archivos por nombre. Después completás el contenido.',
+        html: () => renderVideoConfigurationHtml(state, true)
+      }
+    ];
+  }
 
   return [
     {
@@ -1548,13 +1555,6 @@ function designGuidedSteps(state, fields) {
       title: 'Iconos, fondo y recursos',
       help: 'Indicá si debe usar iconos médicos, fondo temático y recursos relacionados con la especialidad.',
       fields: visible('design.includeMedicalIcons', 'design.includeThematicBackground', 'design.useAutomaticTheme')
-    },
-    {
-      key: 'animation',
-      title: 'Video / animación',
-      help: 'Activá video solo si querés generar una pieza animada y configurala con pocos datos.',
-      fields: visible('promptOptions.requestAnimation'),
-      html: () => state.promptOptions.requestAnimation ? renderVideoConfigurationHtml(state, false) : ''
     },
     {
       key: 'images',

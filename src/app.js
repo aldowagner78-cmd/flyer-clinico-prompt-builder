@@ -14,11 +14,13 @@ const DEFAULT_ATTACHMENT_INSTRUCTION = 'Usar como referencia visual.';
 let state = loadState();
 let currentStep = '';
 const pieceWorkflows = {
+  image: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
+  video: ['clinica', 'diseno', 'prestaciones', 'resultado'],
   [PIECE_TYPES.professionalFlyer]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
   [PIECE_TYPES.clinicalInfographic]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
   [PIECE_TYPES.informativeFlyer]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
   [PIECE_TYPES.promotionCampaign]: ['clinica', 'tipo', 'prestaciones', 'diseno', 'resultado'],
-  [PIECE_TYPES.jinglePromotional]: ['clinica', 'tipo', 'prestaciones', 'resultado']
+  [PIECE_TYPES.jinglePromotional]: ['clinica', 'prestaciones', 'resultado']
 };
 
 const resultStep = 'resultado';
@@ -231,6 +233,13 @@ function bindStaticActions() {
     });
   });
 
+  document.querySelectorAll('[data-media-start]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      startMediaFlow(button.dataset.mediaStart);
+    });
+  });
+
   document.querySelectorAll('[data-piece-select]').forEach(button => {
     button.addEventListener('click', event => {
       event.stopPropagation();
@@ -245,10 +254,6 @@ function bindStaticActions() {
     });
   });
 
-  document.querySelector('#startAssistantButton')?.addEventListener('click', () => {
-    currentStep = 'clinica';
-    startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false, 'Asistente iniciado. Primero cargá la institución.');
-  });
   document.querySelector('#continueCurrentButton')?.addEventListener('click', () => {
     currentStep = currentStep || 'clinica';
     startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false, 'Trabajo guardado cargado.');
@@ -378,7 +383,7 @@ function bindStaticActions() {
     button.addEventListener('click', copyPromptAndOpenPlatform);
   });
   document.querySelector('#copyAttachmentsButton')?.addEventListener('click', copyAttachmentsChecklist);
-  document.querySelector('#loadDemoButton')?.addEventListener('click', () => loadDemoData(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer));
+  document.querySelector('#loadDemoButton')?.addEventListener('click', () => loadDemoData(isVideoCircuit() ? 'video' : (state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer)));
   document.querySelector('#downloadPromptButton')?.addEventListener('click', downloadPrompt);
   document.querySelector('#saveTemplateButton').addEventListener('click', () => {
     saveTemplate(state);
@@ -405,10 +410,30 @@ function bindStaticActions() {
 }
 
 function loadDemoData(pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer) {
-  state = createDemoState(pieceType);
+  const wantsVideoDemo = pieceType === 'video';
+  state = createDemoState(wantsVideoDemo ? PIECE_TYPES.professionalFlyer : pieceType);
+
+  if (wantsVideoDemo) {
+    state.promptOptions.requestAnimation = true;
+    state.promptOptions.pieceTypeConfirmed = true;
+    state.promptOptions.videoCreationMode = 'Desde flyer / imagen estática';
+    state.promptOptions.videoDestination = 'Instagram / WhatsApp vertical 9:16';
+    state.promptOptions.videoDuration = '15 segundos';
+    state.promptOptions.videoMotionStyle = 'Suave profesional';
+    state.promptOptions.videoMusic = 'Instrumental suave';
+    state.attachments.items.push({
+      id: 'attachment_video_static_flyer_demo',
+      role: ATTACHMENT_ROLES.videoStaticFlyer,
+      fileName: 'flyer-base-demo.png',
+      mimeType: 'image/png',
+      status: 'selected',
+      instruction: 'Usar como flyer o imagen estática base para animar.'
+    });
+  }
+
   currentStep = firstStepForPiece(state.promptOptions.pieceType);
   startPieceFlow(state.promptOptions.pieceType, false);
-  showStatus(`Ejemplo cargado: ${labelPieceType(state.promptOptions.pieceType)}.`);
+  showStatus(`Ejemplo cargado: ${wantsVideoDemo ? 'Video' : labelPieceType(state.promptOptions.pieceType)}.`);
 }
 
 function createDemoState(pieceType = PIECE_TYPES.professionalFlyer) {
@@ -890,7 +915,7 @@ function suggestedPhraseForPreset(preset, specialtyName) {
 }
 
 function detectSpecialtyMention(value = '') {
-  const normalizedValue = normalizeText(value);
+  const normalizedValue = normalizeForInternalSearch(value);
   if (!normalizedValue) return '';
 
   for (const specialty of specialties) {
@@ -913,16 +938,16 @@ function specialtyKeywords(specialty = {}) {
   ];
 
   const words = rawKeywords
-    .flatMap(item => normalizeText(item).split(' '))
+    .flatMap(item => normalizeForInternalSearch(item).split(' '))
     .filter(word => word.length >= 6 && !GENERIC_SPECIALTY_WORDS.has(word));
 
   return [...new Set([
-    ...rawKeywords.map(normalizeText).filter(item => item.length >= 8),
+    ...rawKeywords.map(normalizeForInternalSearch).filter(item => item.length >= 8),
     ...words
   ])];
 }
 
-function normalizeText(value = '') {
+function normalizeForInternalSearch(value = '') {
   return String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -1004,6 +1029,7 @@ function applyInterfaceTheme(color = 'violet', mode = 'light') {
 function selectPieceType(pieceType) {
   state.promptOptions.pieceType = pieceType || PIECE_TYPES.professionalFlyer;
   state.promptOptions.pieceTypeConfirmed = true;
+  if (state.promptOptions.pieceType !== PIECE_TYPES.jinglePromotional) state.promptOptions.requestAnimation = false;
   if (state.promptOptions.pieceType === PIECE_TYPES.jinglePromotional) {
     state.promptOptions.requestAnimation = false;
     state.professional.showPhoto = false;
@@ -1268,9 +1294,9 @@ function updateSavedInstitutionSummary(id, institutions = loadInstitutions()) {
 }
 
 function findSocialValue(socialLinks = [], type = '') {
-  const normalizedType = normalizeText(type);
+  const normalizedType = normalizeForInternalSearch(type);
   const item = Array.isArray(socialLinks)
-    ? socialLinks.find(link => normalizeText(link?.type) === normalizedType && String(link?.value || '').trim())
+    ? socialLinks.find(link => normalizeForInternalSearch(link?.type) === normalizedType && String(link?.value || '').trim())
     : null;
   return item?.value || '';
 }
@@ -1309,12 +1335,28 @@ function cancelInstitutionEditor() {
   showStatus('Edición de institución cerrada.');
 }
 
+
+function stepAfterInstitution() {
+  const steps = availableSteps();
+  const currentIndex = steps.indexOf('clinica');
+  return steps[Math.min(currentIndex + 1, steps.length - 1)] || 'prestaciones';
+}
+
+function labelAfterInstitution() {
+  const next = stepAfterInstitution();
+  if (next === 'tipo') return 'Ahora elegí el tipo de pieza.';
+  if (state.promptOptions.pieceType === PIECE_TYPES.jinglePromotional) return 'Ahora definí el audio.';
+  if (isVideoCircuit()) return 'Ahora definí el video.';
+  return 'Ahora completá el contenido.';
+}
+
 function continueInstitutionWithoutSaving() {
   syncCurrentClinicFieldsFromDom();
   institutionEditorOpen = false;
   update(true);
-  showStep('tipo');
-  showStatus('Institución cargada sin guardar. Ahora elegí el tipo de pieza.');
+  const nextStep = stepAfterInstitution();
+  showStep(nextStep);
+  showStatus(`Institución cargada sin guardar. ${labelAfterInstitution()}`);
 }
 
 function saveInstitutionAndContinue() {
@@ -1328,8 +1370,9 @@ function saveInstitutionAndContinue() {
   saveSelectedInstitutionId(id);
   institutionEditorOpen = false;
   update(true);
-  showStep('tipo');
-  showStatus('Institución guardada. Ahora elegí el tipo de pieza.');
+  const nextStep = stepAfterInstitution();
+  showStep(nextStep);
+  showStatus(`Institución guardada. ${labelAfterInstitution()}`);
 }
 
 
@@ -1387,8 +1430,9 @@ function useSelectedInstitutionAndContinue(id) {
   saveSelectedInstitutionId(id);
   institutionEditorOpen = false;
   update(true);
-  showStep('tipo');
-  showStatus('Institución cargada. Ahora elegí el tipo de pieza.');
+  const nextStep = stepAfterInstitution();
+  showStep(nextStep);
+  showStatus(`Institución cargada. ${labelAfterInstitution()}`);
 }
 
 function updateSelectedInstitution(id) {
@@ -1419,9 +1463,18 @@ function deleteSelectedInstitution(id) {
 function exportInstitution(id) {
   const selected = loadInstitutions().find(item => item.id === id);
   const payload = selected || { id: `institution_${Date.now()}`, clinic: clinicSnapshot(), updatedAt: new Date().toISOString() };
-  const safeName = (payload.clinic?.name || 'institucion').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+  const safeName = technicalSlug(payload.clinic?.name || 'institucion');
   downloadFile(`institucion-${safeName || 'datos'}.json`, JSON.stringify({ type: 'institution', version: 1, ...payload }, null, 2), 'application/json');
   showStatus('Institución exportada.');
+}
+
+function technicalSlug(value = '') {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
 }
 
 function importInstitution(event) {
@@ -1488,6 +1541,57 @@ function escapeHtmlAttr(value = '') {
   return escapeHtml(value);
 }
 
+
+
+function resetWizardModesForNewCircuit() {
+  window.__setInstitutionViewMode?.('choice');
+  window.__setContentViewMode?.('guided');
+  window.__setDesignViewMode?.('guided');
+}
+
+function resetStateForMediaCircuit() {
+  const preservedClinic = state?.clinic ? structuredCloneSafe(state.clinic) : null;
+  state = createDefaultState();
+  if (preservedClinic?.name) state.clinic = preservedClinic;
+  syncSingleLogoAttachment(state);
+}
+
+function startMediaFlow(mediaType = 'image') {
+  const normalizedMedia = ['image', 'video', 'audio'].includes(mediaType) ? mediaType : 'image';
+  resetStateForMediaCircuit();
+  resetWizardModesForNewCircuit();
+
+  if (normalizedMedia === 'audio') {
+    state.promptOptions.pieceType = PIECE_TYPES.jinglePromotional;
+    state.promptOptions.pieceTypeConfirmed = true;
+    state.promptOptions.requestAnimation = false;
+    state.professional.showPhoto = false;
+    syncSingleAttachment(ATTACHMENT_ROLES.professionalPhoto, '', '');
+    currentStep = 'clinica';
+    startPieceFlow(state.promptOptions.pieceType, false, 'Circuito AUDIO abierto. Completá institución y luego definí el jingle o pista.');
+    return;
+  }
+
+  if (normalizedMedia === 'video') {
+    if (state.promptOptions.pieceType === PIECE_TYPES.jinglePromotional) {
+      state.promptOptions.pieceType = PIECE_TYPES.professionalFlyer;
+    }
+    state.promptOptions.pieceTypeConfirmed = true;
+    state.promptOptions.requestAnimation = true;
+    state.promptOptions.videoCreationMode = state.promptOptions.videoCreationMode || 'Desde cero';
+    currentStep = 'clinica';
+    startPieceFlow(state.promptOptions.pieceType, false, 'Circuito VIDEO abierto. El prompt final será de video, no de imagen modificada.');
+    return;
+  }
+
+  if (state.promptOptions.pieceType === PIECE_TYPES.jinglePromotional) {
+    state.promptOptions.pieceType = PIECE_TYPES.professionalFlyer;
+  }
+  state.promptOptions.requestAnimation = false;
+  state.promptOptions.pieceTypeConfirmed = false;
+  currentStep = 'clinica';
+  startPieceFlow(state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer, false, 'Circuito IMAGEN abierto. Elegí una pieza estática en el paso Tipo.');
+}
 
 function startNewPiece(pieceType = PIECE_TYPES.professionalFlyer) {
   const preservedClinic = state?.clinic ? structuredCloneSafe(state.clinic) : null;
@@ -1793,11 +1897,19 @@ function previousStep() {
 }
 
 function firstStepForPiece(pieceType) {
+  if (pieceType === PIECE_TYPES.jinglePromotional) return pieceWorkflows[PIECE_TYPES.jinglePromotional][0];
+  if (isVideoCircuit()) return pieceWorkflows.video[0];
   return (pieceWorkflows[pieceType] || pieceWorkflows[PIECE_TYPES.professionalFlyer])[0];
 }
 
 function availableSteps() {
+  if (state.promptOptions.pieceType === PIECE_TYPES.jinglePromotional) return pieceWorkflows[PIECE_TYPES.jinglePromotional];
+  if (isVideoCircuit()) return pieceWorkflows.video;
   return pieceWorkflows[state.promptOptions.pieceType] || pieceWorkflows[PIECE_TYPES.professionalFlyer];
+}
+
+function isVideoCircuit() {
+  return Boolean(state?.promptOptions?.requestAnimation) && state?.promptOptions?.pieceType !== PIECE_TYPES.jinglePromotional;
 }
 
 
@@ -1840,12 +1952,23 @@ function syncStepFooterControls(steps = availableSteps()) {
   });
 }
 
+
+function updateStepHeadingNumbers(steps = availableSteps()) {
+  document.querySelectorAll('.form-section[data-step]').forEach(section => {
+    const numberNode = section.querySelector(':scope > .section-heading > span');
+    if (!numberNode) return;
+    const index = steps.indexOf(section.dataset.step);
+    numberNode.textContent = index >= 0 ? String(index + 1) : '';
+  });
+}
+
 function updateWorkflowChrome() {
   const steps = availableSteps();
   const index = Math.max(steps.indexOf(currentStep), 0);
   const pieceType = state.promptOptions.pieceType || PIECE_TYPES.professionalFlyer;
   document.body.dataset.pieceType = pieceType;
   syncStepFooterControls(steps);
+  updateStepHeadingNumbers(steps);
 
   const title = document.querySelector('#workflowTitle');
   const subtitle = document.querySelector('#workflowSubtitle');
@@ -1855,13 +1978,29 @@ function updateWorkflowChrome() {
   const resultButtons = document.querySelectorAll('[data-wizard-action="result"], #resultStepButton');
 
   if (title) title.textContent = `Paso ${index + 1} de ${steps.length} — ${labelStepForPiece(currentStep, pieceType)}`;
-  if (subtitle) subtitle.textContent = workflowSubtitleForStep(currentStep);
+  if (subtitle) subtitle.textContent = workflowSubtitleForStep(currentStep, isVideoCircuit());
   if (quickStepSelect) {
+    quickStepSelect.innerHTML = steps
+      .map(step => `<option value="${step}">${escapeHtmlAttr(labelStepForPiece(step, pieceType))}</option>`)
+      .join('');
     quickStepSelect.value = currentStep;
-    Array.from(quickStepSelect.options).forEach(option => {
-      option.hidden = Boolean(option.value) && !steps.includes(option.value);
+  }
+
+  const stepNav = document.querySelector('.step-nav');
+  if (stepNav) {
+    steps.forEach(step => {
+      const button = stepNav.querySelector(`[data-step-target="${step}"]`);
+      if (button) stepNav.appendChild(button);
     });
   }
+
+  document.querySelectorAll('[data-step-target]').forEach(button => {
+    const targetStep = button.dataset.stepTarget;
+    if (targetStep && steps.includes(targetStep)) {
+      button.textContent = labelStepForPiece(targetStep, pieceType);
+    }
+  });
+
   previousButtons.forEach(button => {
     button.disabled = index <= 0;
   });
@@ -1874,8 +2013,8 @@ function updateWorkflowChrome() {
     button.hidden = currentStep === resultStep;
   });
 
-  updateSectionHeadings(pieceType);
-  updateActionLabels(pieceType);
+  updateSectionHeadings(pieceType, isVideoCircuit());
+  updateActionLabels(pieceType, isVideoCircuit());
 }
 
 async function writePromptToClipboard(prompt) {
@@ -2091,19 +2230,38 @@ function isLegacyColorValue(value) {
 
 
 
-function workflowSubtitleForStep(step) {
+function workflowSubtitleForStep(step, videoCircuit = false) {
+  if (videoCircuit) {
+    return {
+      clinica: 'Primero cargá datos institucionales. Después configurás el video con opciones guiadas.',
+      diseno: 'Elegí modo de creación, duración, destino, música, ritmo y material referido por nombre.',
+      prestaciones: 'Definí mensaje, prestaciones y datos que deben convertirse en escenas.',
+      resultado: 'Revisá el prompt final de video y el checklist de archivos para adjuntar manualmente.'
+    }[step] || 'Completá el circuito de video y generá el prompt final.';
+  }
+
+  if (state.promptOptions.pieceType === PIECE_TYPES.jinglePromotional) {
+    return {
+      clinica: 'Primero cargá datos institucionales. Después definís el audio con selectores guiados.',
+      prestaciones: 'Elegí tipo de audio, estilo, voces, destino y mensaje sin cargar datos manuales innecesarios.',
+      resultado: 'Revisá el prompt final de audio y copiá las instrucciones para Gemini.'
+    }[step] || 'Completá el circuito de audio y generá el prompt final.';
+  }
+
   return {
     clinica: 'Primero cargá los datos institucionales. Después elegís qué pieza querés crear.',
-    tipo: 'Elegí flyer, infografía, campaña o flyer informativo.',
-    prestaciones: 'Completá el contenido visible y las sugerencias según la especialidad.',
-    diseno: 'Definí formato, colores, estilo, adjuntos y modo animado si corresponde.',
+    tipo: 'Elegí una variante de imagen estática: flyer, infografía, pieza informativa o campaña.',
+    prestaciones: 'Definí contenidos visibles, servicios y mensajes principales.',
+    diseno: 'Elegí formato, estilo, colores y recursos visuales.',
     resultado: 'Revisá el prompt final y el checklist de archivos para adjuntar manualmente.'
   }[step] || 'Completá los pasos y generá el prompt final.';
 }
 
-function updateSectionHeadings(pieceType) {
+function updateSectionHeadings(pieceType, videoCircuit = false) {
   const contentTitle = document.querySelector('#prestaciones .section-heading h2');
   const contentDescription = document.querySelector('#prestaciones .section-heading p');
+  const designTitle = document.querySelector('#diseno .section-heading h2');
+  const designDescription = document.querySelector('#diseno .section-heading p');
   const resultTitle = document.querySelector('#resultado .section-heading h2');
   const resultDescription = document.querySelector('#resultado .section-heading p');
 
@@ -2115,15 +2273,21 @@ function updateSectionHeadings(pieceType) {
     [PIECE_TYPES.jinglePromotional]: ['Audio / jingle / música', 'Objetivo, estilo musical, voces, frase y modo de contenido. Duración fija: 30 segundos.']
   };
 
-  const [mainTitle, mainDescription] = contentLabels[pieceType] || contentLabels[PIECE_TYPES.professionalFlyer];
+  const [mainTitle, mainDescription] = videoCircuit
+    ? ['Contenido del video', 'Mensaje, prestaciones y datos que deben transformarse en escenas de video.']
+    : (contentLabels[pieceType] || contentLabels[PIECE_TYPES.professionalFlyer]);
 
   if (contentTitle) contentTitle.textContent = mainTitle;
   if (contentDescription) contentDescription.textContent = mainDescription;
-  if (resultTitle) resultTitle.textContent = `Resultado: ${labelPieceType(pieceType)}`;
+  if (designTitle) designTitle.textContent = videoCircuit ? 'Video' : 'Diseño visual';
+  if (designDescription) designDescription.textContent = videoCircuit
+    ? 'Modo de creación, duración, destino, música, ritmo y archivos referidos por nombre.'
+    : 'Formato, colores, estilo y recursos gráficos esperados.';
+  if (resultTitle) resultTitle.textContent = `Resultado: ${videoCircuit ? 'Video' : labelPieceType(pieceType)}`;
   if (resultDescription) resultDescription.textContent = 'Prompt final, checklist de adjuntos, advertencias y acciones.';
 }
 
-function updateActionLabels(pieceType) {
+function updateActionLabels(pieceType, videoCircuit = false) {
   const actionTitle = document.querySelector('#primaryActionTitle');
   const secondaryTitle = document.querySelector('#secondaryActionTitle');
   const copyButton = document.querySelector('#copyPromptButton');
@@ -2138,20 +2302,40 @@ function updateActionLabels(pieceType) {
     [PIECE_TYPES.jinglePromotional]: ['Acción principal', 'Copiar prompt', 'Descargar prompt de audio', 'Cargar ejemplo de audio']
   };
 
-  const [, copyLabel, downloadLabel, demoLabel] = labels[pieceType] || labels[PIECE_TYPES.professionalFlyer];
+  const [, copyLabel, downloadLabel, demoLabel] = videoCircuit
+    ? ['Acción principal', 'Copiar prompt de video', 'Descargar prompt de video', 'Cargar ejemplo de video']
+    : (labels[pieceType] || labels[PIECE_TYPES.professionalFlyer]);
 
   if (actionTitle) actionTitle.textContent = 'Acción principal';
-  if (secondaryTitle) secondaryTitle.textContent = pieceType === PIECE_TYPES.jinglePromotional ? 'Enviar a Gemini' : 'Enviar a ChatGPT';
+  if (secondaryTitle) secondaryTitle.textContent = pieceType === PIECE_TYPES.jinglePromotional || videoCircuit ? 'Enviar a Gemini' : 'Enviar a ChatGPT';
   if (copyButton) copyButton.textContent = copyLabel;
   if (downloadButton) downloadButton.textContent = downloadLabel;
   if (demoButton) demoButton.textContent = demoLabel;
   document.querySelectorAll('[data-open-platform]').forEach(button => {
     const isGeminiForJingle = pieceType === PIECE_TYPES.jinglePromotional && button.dataset.platformName === 'Gemini';
-    button.classList.toggle('is-recommended-platform', isGeminiForJingle);
+    const isGeminiForVideo = videoCircuit && button.dataset.platformName === 'Gemini';
+    button.classList.toggle('is-recommended-platform', isGeminiForJingle || isGeminiForVideo);
   });
 }
 
 function labelStepForPiece(step, pieceType) {
+  if (isVideoCircuit()) {
+    return {
+      clinica: 'Institución',
+      diseno: 'Video',
+      prestaciones: 'Contenido',
+      resultado: 'Resultado'
+    }[step] || labelStep(step);
+  }
+
+  if (pieceType === PIECE_TYPES.jinglePromotional) {
+    return {
+      clinica: 'Institución',
+      prestaciones: 'Audio',
+      resultado: 'Resultado'
+    }[step] || labelStep(step);
+  }
+
   const labels = {
     clinica: 'Institución',
     tipo: 'Tipo de pieza',
@@ -2260,4 +2444,3 @@ function showStatus(message) {
   window.addEventListener('DOMContentLoaded', bindThemeControls);
   window.addEventListener('pageshow', bindThemeControls);
 })();
-

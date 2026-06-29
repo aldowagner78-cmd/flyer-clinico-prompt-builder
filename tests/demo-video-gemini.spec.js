@@ -116,7 +116,7 @@ async function openInstitutionFullForm(page) {
   await expect(nameField).toBeVisible();
 }
 
-async function createDemoInstitution(page) {
+async function createDemoInstitution(page, expectedStep = 'tipo') {
   await openInstitutionFullForm(page);
   await fillPath(page, 'clinic.name', 'Centro Demo Metabolico');
   await selectCustomPath(page, 'clinic.institutionType', 'Centro médico');
@@ -131,7 +131,7 @@ async function createDemoInstitution(page) {
     await continueButton.click();
   }
   await pauseVisual(page);
-  await expectCurrentStep(page, 'tipo');
+  await expectCurrentStep(page, expectedStep);
 }
 
 async function choosePromotionCampaign(page) {
@@ -183,14 +183,17 @@ async function completeCampaignContent(page) {
 
 async function completeVideoDesign(page) {
   await expectCurrentStep(page, 'diseno');
-  for (let i = 0; i < 5; i += 1) {
-    await page.locator('#designFields [data-design-guided="next"]').click();
+  if (!(await page.locator('[data-video-config-panel]').isVisible().catch(() => false))) {
+    for (let i = 0; i < 5; i += 1) {
+      await page.locator('#designFields [data-design-guided="next"]').click();
+      await pauseVisual(page);
+    }
+
+    await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'animation');
+    await page.locator('[data-path="promptOptions.requestAnimation"]').first().check();
     await pauseVisual(page);
   }
 
-  await expect(page.locator('#designFields .design-guided-card')).toHaveAttribute('data-design-guided-key', 'animation');
-  await page.locator('[data-path="promptOptions.requestAnimation"]').first().check();
-  await pauseVisual(page);
   await expect(page.locator('[data-video-config-panel]')).toBeVisible();
 
   await page.locator('[data-path="promptOptions.videoCreationMode"][value="Desde cero"]').check();
@@ -216,13 +219,11 @@ test.describe('Demo visual - prompt Gemini video desde cero', () => {
   test('genera y guarda un prompt de video para Gemini', async ({ page }) => {
     await openCleanApp(page);
 
-    await page.getByRole('button', { name: /Comenzar asistente/i }).click();
+    await page.locator('[data-media-start="video"]').click();
     await pauseVisual(page);
     await expectCurrentStep(page, 'clinica');
 
-    await createDemoInstitution(page);
-    await choosePromotionCampaign(page);
-    await completeCampaignContent(page);
+    await createDemoInstitution(page, 'diseno');
     await completeVideoDesign(page);
     await goResult(page);
 

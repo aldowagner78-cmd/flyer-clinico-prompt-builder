@@ -63,21 +63,35 @@
     <section class="piece-home piece-home-clean" id="pieceHome" aria-label="Inicio del generador">
       <div class="home-welcome-card">
         <p class="eyebrow">Inicio</p>
-        <h2>Creá tu contenido médico paso a paso</h2>
-        <p>El asistente empieza por la institución. Después elegís el tipo de pieza, completás el contenido, definís el diseño y copiás el prompt final.</p>
+        <h2>Elegí qué querés crear</h2>
+        <p>La app separa los circuitos para que imagen, video y audio no mezclen reglas ni generen prompts confusos.</p>
+
+        <div class="media-path-grid" aria-label="Elegir circuito principal">
+          <button class="media-path-card" type="button" id="startAssistantButton" data-media-start="image">
+            <span class="piece-card-icon" aria-hidden="true">🖼️</span>
+            <strong>IMAGEN</strong>
+            <small>Flyers, infografías, campañas y piezas estáticas listas para generar como imagen.</small>
+          </button>
+          <button class="media-path-card" type="button" data-media-start="video">
+            <span class="piece-card-icon" aria-hidden="true">🎬</span>
+            <strong>VIDEO</strong>
+            <small>Videos desde cero, desde flyer/imagen, basados en material o híbridos.</small>
+          </button>
+          <button class="media-path-card" type="button" data-media-start="audio">
+            <span class="piece-card-icon" aria-hidden="true">🎵</span>
+            <strong>AUDIO</strong>
+            <small>Jingles, canciones, pistas, cortinas breves y audio para flyer animado o video.</small>
+          </button>
+        </div>
 
         <div class="home-start-actions home-start-actions-clean">
-          <button class="primary-button home-wizard-button" type="button" id="startAssistantButton">
-            <span aria-hidden="true">🧙‍♂️</span>
-            Comenzar asistente
-          </button>
           <button class="secondary-button compact-action" type="button" id="continueCurrentButton">Continuar trabajo guardado</button>
           <a class="secondary-button compact-action manual-link manual-link-home" href="docs/manual-usuario.html" target="_blank" rel="noopener">
             Abrir manual
           </a>
         </div>
 
-        <p class="home-note">Los tipos de pieza se eligen dentro del asistente, en el paso 2.</p>
+        <p class="home-note">Cada camino usa sus propios campos y reglas para mantener el prompt limpio.</p>
       </div>
     </section>
 
@@ -130,7 +144,7 @@
               <span>2</span>
               <div>
                 <h2>Tipo de pieza</h2>
-                <p>Elegí si querés crear un flyer, una infografía, una campaña/promoción o un jingle para Gemini.</p>
+                <p>Elegí la variante de imagen estática: flyer, infografía, pieza informativa o campaña/promoción.</p>
               </div>
               <div class="step-header-controls step-header-home" aria-label="Navegación del paso">
                 <button class="icon-home-button" type="button" data-wizard-action="home" aria-label="Volver al inicio" title="Inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
@@ -157,14 +171,9 @@
                 <strong>Promoción / campaña</strong>
                 <small>Agenda abierta, jornadas, campañas preventivas y llamados a la acción.</small>
               </button>
-              <button class="piece-option-card" type="button" data-piece-select="jinglePromotional">
-                <span class="piece-card-icon" aria-hidden="true">♪</span>
-                <strong>Audio / jingle / música</strong>
-                <small>Prompt para pista de audio, jingle o música breve para Gemini.</small>
-              </button>
             </div>
             <div id="pieceFields" class="field-grid helper-field-grid"></div>
-            <p class="warning-text">Este selector adapta el prompt y las prioridades de contenido. El resultado final se ajustará al tipo elegido.</p>
+            <p class="warning-text">Este selector solo define piezas estáticas. Para video o audio, volvé al inicio y elegí el circuito correspondiente.</p>
           </section>
 
           <section class="form-section" id="clinica" data-step="clinica">

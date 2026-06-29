@@ -229,11 +229,11 @@ function validateSpecialtyCoherence(state, issues, fieldPaths) {
   const focus = specialty.communicationFocus || '';
   const visibleText = specialty.visibleSpecialtyText || '';
 
-  const loadedSpecialties = [primary, ...additional].map(normalize).filter(Boolean);
+  const loadedSpecialties = [primary, ...additional].map(normalizeForInternalMatch).filter(Boolean);
   const loadedText = loadedSpecialties.join(' ');
 
   if (hasText(focus)) {
-    const focusNorm = normalize(focus);
+    const focusNorm = normalizeForInternalMatch(focus);
     const detectedSpecialty = detectKnownSpecialty(focusNorm);
 
     if (detectedSpecialty && !specialtyIsLoaded(detectedSpecialty, loadedSpecialties)) {
@@ -256,7 +256,7 @@ function validateSpecialtyCoherence(state, issues, fieldPaths) {
   }
 
   if (hasText(visibleText)) {
-    const visibleNorm = normalize(visibleText);
+    const visibleNorm = normalizeForInternalMatch(visibleText);
     const detectedSpecialty = detectKnownSpecialty(visibleNorm);
 
     if (detectedSpecialty && !specialtyIsLoaded(detectedSpecialty, loadedSpecialties)) {
@@ -405,7 +405,7 @@ function validateContentDensity(state, issues, fieldPaths) {
   if (state?.promptOptions?.pieceType === 'jinglePromotional') return;
 
   const density = state?.design?.contentDensity || 'balanced';
-  const format = normalize(state?.design?.format || '');
+  const format = normalizeForInternalMatch(state?.design?.format || '');
   const visibleServicesCount = getArray(state?.services?.visibleServices).filter(hasText).length;
   const scheduleCount = getArray(state?.schedule?.items).filter(isCompleteSchedule).length;
   const isStoryLike = format.includes('historia') || format.includes('story') || format.includes('whatsapp') || format.includes('estado');
@@ -496,7 +496,7 @@ function detectKnownSpecialty(normalizedText) {
 }
 
 function specialtyIsLoaded(specialty, loadedSpecialties) {
-  const normalizedSpecialty = normalize(specialty);
+  const normalizedSpecialty = normalizeForInternalMatch(specialty);
   return loadedSpecialties.some(item => item === normalizedSpecialty || item.includes(normalizedSpecialty) || normalizedSpecialty.includes(item));
 }
 
@@ -558,7 +558,7 @@ function hasText(value = '') {
   return String(value ?? '').trim().length > 0;
 }
 
-function normalize(value = '') {
+function normalizeForInternalMatch(value = '') {
   return String(value ?? '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')

@@ -1,3 +1,236 @@
+# Revisión final automatizada de circuitos y acentos - 2026-06-29
+
+## Archivos modificados
+- `src/app.js`
+- `src/ui/previewRenderer.js`
+- `src/prompt/promptBuilder.js`
+- `src/ui/validation.js`
+- `src/state/migrations.js`
+- `tests/app.spec.js`
+- `tests/demo-video-gemini.spec.js`
+- `tests/qa-final-smoke.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se corrigió
+- El selector `Ir a...` ahora se arma desde el workflow activo, por lo que VIDEO queda en orden `Institución → Video → Contenido → Resultado` y AUDIO queda `Institución → Audio → Resultado`.
+- La navegación lateral, cuando está visible, se reordena con el mismo workflow activo.
+- El resumen de Resultado muestra campos específicos del tipo de pieza, incluyendo campaña, mensaje, período y condiciones.
+- Se renombraron funciones de normalización para dejar claro que solo sirven para búsqueda interna, comparación técnica o slug de exportación.
+- Se agregó test de conservación exacta de acentos y ñ con:
+  - `Clínica Niño Jesús`
+  - `Campaña de prevención pediátrica`
+  - `Atención médica para niños y niñas`
+  - `Señora Gómez`
+  - `Promoción válida por este año`
+- Se actualizaron tests heredados que esperaban `Solicitar pieza animada` dentro de IMAGEN; ahora validan video desde el circuito VIDEO.
+
+## Por qué
+- El pedido exige publicar con circuitos separados y sin mezclar pasos.
+- El bug más sensible era evitar que textos visibles o prompts finales degradaran `ñ` y acentos.
+- El selector `Ir a...` mostraba solo pasos coherentes, pero en VIDEO podía conservar orden visual heredado; eso podía confundir al usuario.
+
+## Cómo probar
+Desde `C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`:
+
+```powershell
+npx playwright test tests/app.spec.js -g "inicio muestra solo tres circuitos principales" --project=chromium-desktop
+npx playwright test tests/app.spec.js -g "acentos|ñ|diacríticos|prompt final" --project=chromium-desktop
+npx playwright test tests/app.spec.js -g "flujos IMAGEN VIDEO AUDIO" --project=chromium-desktop
+npx playwright test tests/audio-prompt.spec.js --project=chromium-desktop
+npx playwright test tests/demo-video-gemini.spec.js --project=chromium-desktop
+```
+
+## Resultado esperado
+- Todos los comandos dirigidos deben pasar.
+- `npm test` completo debe finalizar con `152 passed`.
+- IMAGEN no debe mostrar audio/jingle ni `Solicitar pieza animada`.
+- VIDEO debe abrir el paso `Video` después de institución.
+- AUDIO debe abrir el paso `Audio` después de institución.
+- El prompt final debe conservar acentos y ñ exactamente.
+
+## Cómo revertir
+- Revertir los archivos listados en esta sección desde el backup o desde control de versiones.
+- Si se quiere revertir solo la navegación, restaurar `updateWorkflowChrome` en `src/app.js`.
+- Si se quiere revertir solo el resumen, restaurar `renderPreview` en `src/ui/previewRenderer.js`.
+- Si se quiere revertir solo pruebas, restaurar `tests/app.spec.js` y `tests/demo-video-gemini.spec.js`.
+
+---
+
+# Hotfix test sin barra lateral visible
+
+## Archivos modificados
+- tests/app.spec.js
+- CHANGELOG.md
+- CAMBIOS_REALIZADOS.md
+
+## Qué se cambió
+- La prueba dirigida de IMAGEN / VIDEO / AUDIO dejó de exigir `toBeVisible()` sobre botones laterales `data-step-target`.
+- Ahora valida el flujo por `#workflowTitle` y por paneles/campos visibles reales:
+  - VIDEO: Paso 2 de 4, Video, panel guiado de video.
+  - AUDIO: Paso 2 de 3, Audio, campos de audio.
+  - IMAGEN: Paso 2 de 5, Tipo de pieza, tarjetas de imagen.
+
+## Por qué
+- La barra lateral puede estar oculta por diseño/interfaz responsive aunque el paso actual sea correcto.
+- El test anterior fallaba por validar un elemento oculto que no representa el estado funcional del flujo.
+
+## Cómo probar
+Desde `C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`:
+```powershell
+npx playwright test tests/app.spec.js -g "inicio muestra solo tres circuitos principales" --project=chromium-desktop
+```
+
+## Resultado esperado
+- `1 passed`
+
+## Cómo revertir
+- Restaurar `tests/app.spec.js`, `CHANGELOG.md` y `CAMBIOS_REALIZADOS.md` desde el backup previo.
+
+
+---
+
+
+
+## Hotfix test video coherente - 2026-06-29
+
+- Se corrigió la prueba dirigida para no exigir visibilidad del botón lateral `Video`, porque la navegación lateral puede permanecer oculta aunque el paso activo sea correcto.
+- La validación queda centrada en `#workflowTitle` y en el panel real de video (`data-video-config-panel`).
+- No se modifica lógica funcional de la app.
+# Hotfix circuito VIDEO coherente - 2026-06-29
+
+## Archivos modificados
+- `src/app.js`
+- `src/ui/formRenderer.js`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- Se reordenó el flujo VIDEO a `Institución → Video → Contenido → Resultado`.
+- Se corrigieron etiquetas y números dinámicos de pasos según el circuito activo.
+- Se actualizó `Ir a...` y la navegación lateral para mostrar `Video` y `Audio` cuando corresponde.
+- Se dejó la configuración rápida de video como primera tarjeta guiada, sin quitar selectores existentes.
+- Se ajustó la prueba dirigida del inicio para verificar el circuito VIDEO real.
+
+## Por qué se cambió
+- El circuito VIDEO estaba usando estructura visual de IMAGEN y abría la configuración de video dentro de tarjetas de diseño.
+- Eso generaba pasos incoherentes, números incorrectos y una experiencia confusa.
+
+## Cómo probar
+1. Abrir la app.
+2. Elegir `VIDEO`.
+3. Continuar desde `Institución`.
+4. Verificar que abre el paso `Video` como `Paso 2 de 4`.
+5. Confirmar que aparecen los selectores de modo de creación, duración, destino, música y adjuntos.
+6. Elegir `AUDIO` y verificar que abre `Audio` como `Paso 2 de 3`.
+7. Elegir `IMAGEN` y verificar que mantiene `Tipo de pieza`.
+
+## Cómo revertir
+- Restaurar los archivos modificados desde el backup limpio previo o volver a aplicar el ZIP base anterior.
+
+---
+
+
+# Hotfix navegación guiada por circuito - 2026-06-29
+
+## Archivos modificados
+- `src/app.js`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- Se agregó reinicio de modos guiados al elegir IMAGEN, VIDEO o AUDIO.
+- Se reinicia el estado del circuito elegido conservando la institución ya cargada.
+- Se evita heredar formularios completos/manuales o datos del circuito anterior.
+
+## Por qué se cambió
+- El usuario necesita poca interacción manual y muchos selectores guiados.
+- Cada circuito debe comenzar desde el primer paso y no mezclar datos previos.
+
+## Cómo probar
+1. Abrir la app.
+2. Elegir IMAGEN: debe iniciar en Institución y luego mostrar Tipo de pieza con tarjetas.
+3. Volver a Inicio.
+4. Elegir VIDEO: debe iniciar en Institución y luego avanzar por opciones guiadas, no por formulario manual heredado.
+5. Volver a Inicio.
+6. Elegir AUDIO: debe iniciar en Institución y luego mostrar selectores de audio/jingle.
+
+## Cómo revertir
+- Restaurar `src/app.js`, `CHANGELOG.md` y `CAMBIOS_REALIZADOS.md` desde el backup anterior.
+
+
+## 2026-06-29 - Hotfix prueba dirigida 3 circuitos
+
+### Archivos modificados
+- `tests/app.spec.js`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se corrigió la expectativa errónea que pedía `[data-step-target="diseno"]` visible inmediatamente después de elegir VIDEO.
+- Ahora el test valida que VIDEO y AUDIO no muestren `Tipo` en el inicio del circuito, y que AUDIO tampoco muestre `Diseño`.
+
+### Por qué se cambió
+- El flujo real queda en la pantalla de institución al iniciar un circuito; por eso la navegación lateral todavía no debe exigirse visible.
+
+### Cómo probar
+- Desde `C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`, ejecutar:
+  `npx playwright test tests/app.spec.js -g "inicio muestra solo tres circuitos principales" --project=chromium-desktop`
+
+### Cómo revertir
+- Restaurar `tests/app.spec.js`, `CHANGELOG.md` y `CAMBIOS_REALIZADOS.md` desde `C:\Users\usuario\Desktop\fc_backup_3_circuitos`.
+
+# Inicio separado en IMAGEN / VIDEO / AUDIO - 2026-06-29
+
+## Archivos modificados
+- `index.html`
+- `assets/css/styles.css`
+- `src/app.js`
+- `src/ui/formRenderer.js`
+- `tests/app.spec.js`
+- `README_INSTALACION.txt`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+## Qué se cambió
+- La pantalla inicial ahora ofrece solo tres caminos: `IMAGEN`, `VIDEO` y `AUDIO`.
+- `IMAGEN` mantiene variantes estáticas: flyer profesional, infografía clínica, flyer informativo y promoción/campaña.
+- `VIDEO` entra como circuito separado y activa prompt propio de video con configuración en `Diseño`.
+- `AUDIO` entra como circuito separado y lleva directo al contenido de jingle/audio.
+- Se quitó `Audio / jingle / música` del selector de tipo de pieza.
+- Se quitó el checkbox `Solicitar pieza animada` del diseño de imagen.
+- Se mantiene la lógica de adjuntos por nombre, sin subir archivos reales.
+- Se ajustó el modo demo de video para conservar flujo de video.
+
+## Por qué se cambió
+- Para evitar que imagen, video y audio mezclen reglas y generen prompts confusos.
+- Para que cada camino tenga un objetivo claro desde el inicio.
+
+## Cómo probar
+```powershell
+npx playwright test tests/app.spec.js -g "inicio muestra solo tres circuitos principales" --project=chromium-desktop
+```
+
+## Checklist manual
+- Abrir la app.
+- Confirmar que el inicio muestra solo `IMAGEN`, `VIDEO` y `AUDIO`.
+- Entrar en `IMAGEN` y confirmar que `Tipo de pieza` no muestra audio.
+- Confirmar que no aparece `Solicitar pieza animada` en imagen.
+- Entrar en `VIDEO` y confirmar que no pasa por `Tipo`, pero sí muestra configuración de video.
+- Entrar en `AUDIO` y confirmar que no pasa por `Tipo` ni `Diseño`.
+- Generar prompt en cada circuito y verificar que no hay mojibake.
+
+## Cómo revertir
+- Restaurar el bloque anterior de inicio en `index.html`.
+- Restaurar el checkbox `promptOptions.requestAnimation` en `src/ui/formRenderer.js`.
+- Restaurar `jinglePromotional` dentro de `Tipo de pieza`.
+- Restaurar helpers/tests anteriores en `tests/app.spec.js`.
+
+---
+
 # Autoavance en Tipo de pieza - 2026-06-28
 
 ## Archivos modificados
@@ -1402,3 +1635,49 @@ Cómo probar:
 - Verificar que el prompt indique 30 segundos, fraseo compacto y español argentino.
 - Verificar que prohíba cantar teléfonos, redes, direcciones, emails y números.
 - Probar en Gemini que la salida sea más breve y respete el estilo elegido.
+
+## 2026-06-29 - Hotfix navegación institución en circuitos
+
+### Archivos modificados
+- `src/app.js`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se agregó una función auxiliar para calcular el paso siguiente después de Institución según el circuito activo.
+- Se actualizaron las acciones de continuar sin guardar, guardar y continuar, y usar institución guardada.
+- Se reemplazó el avance fijo a `tipo` por avance dinámico.
+
+### Por qué se cambió
+- En VIDEO y AUDIO el paso `tipo` no forma parte del circuito, por eso después de Institución el flujo podía quedarse bloqueado o intentar abrir un paso oculto.
+
+### Cómo probar
+- Desde `C:\Users\usuario\Desktop\flyer-clinico-prompt-builder`, ejecutar `npx http-server . -p 4173 -c-1`.
+- Abrir `http://localhost:4173`.
+- Elegir IMAGEN, completar institución y continuar: debe avanzar a Tipo.
+- Elegir VIDEO, completar institución y continuar: debe avanzar a Contenido/Video.
+- Elegir AUDIO, completar institución y continuar: debe avanzar a Contenido/Audio.
+
+### Cómo revertir
+- Restaurar `src/app.js`, `CHANGELOG.md` y `CAMBIOS_REALIZADOS.md` desde el backup limpio `C:\Users\usuario\Desktop\fc_backup_3_circuitos`.
+
+
+## Hotfix test video coherente
+
+### Archivos modificados
+- `tests/app.spec.js`
+- `CHANGELOG.md`
+- `CAMBIOS_REALIZADOS.md`
+
+### Qué se cambió
+- Se corrigió la expectativa del test dirigido: la navegación lateral puede estar oculta durante el paso Institución.
+- La prueba ahora avanza por Institución y recién después valida el paso Video.
+
+### Por qué se cambió
+- El test fallaba por una expectativa incorrecta, no por el flujo funcional corregido.
+
+### Cómo probar
+- `npx playwright test tests/app.spec.js -g "inicio muestra solo tres circuitos principales" --project=chromium-desktop`
+
+### Cómo revertir
+- Restaurar `tests/app.spec.js` desde el backup previo.
